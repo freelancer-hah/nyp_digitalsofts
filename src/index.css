@@ -15,20 +15,93 @@
     color: #0f172a;
   }
 
+  html.dark body {
+    background-color: #0b1320;
+    color: #f8fafc;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
     letter-spacing: -0.025em;
   }
 }
 
-/* Light Mode Comprehensive Overrides */
+/* ================= 1. GLOBAL DARK MODE ADAPTATIONS ================= */
+html.dark body,
+html.dark .bg-slate-50 {
+  background-color: #0b1320 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .ui-card,
+html.dark .bg-white {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-slate-100 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark input:not([type="checkbox"]),
+html.dark select,
+html.dark textarea {
+  background-color: #020617 !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+/* ================= 2. GLOBAL LIGHT MODE ADAPTATIONS ================= */
 html.light {
   color-scheme: light;
 }
 
-html.light body {
+html.light body,
+html.light .bg-slate-50 {
   background-color: #f8fafc !important;
   color: #0f172a !important;
+}
+
+html.light .ui-card,
+html.light .bg-white {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.06) !important;
+}
+
+html.light .text-slate-900,
+html.light .text-slate-800,
+html.light .text-slate-700 {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-500,
+html.light .text-slate-600 {
+  color: #475569 !important;
+}
+
+html.light input:not([type="checkbox"]),
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
 }
 
 /* Background Gradients & Hero / Summit / CTA Green Sections in Light Mode */
