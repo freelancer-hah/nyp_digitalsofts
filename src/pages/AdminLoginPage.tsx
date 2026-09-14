@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { store, formatCnic } from '../services/store';
-import { ShieldCheck, LogIn, AlertCircle, ArrowLeft, KeyRound, Building2, UserCheck, Layout } from 'lucide-react';
+import { ShieldCheck, LogIn, AlertCircle, ArrowLeft, KeyRound, Building2, UserCheck, Layout, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const [cnicNumber, setCnicNumber] = useState('');
   const [error, setError] = useState('');
@@ -49,6 +51,28 @@ export const AdminLoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden font-sans">
+      {/* Top Right Theme Toggle Button */}
+      <div className="absolute top-6 right-6 z-20">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all shadow-lg backdrop-blur-md flex items-center space-x-2 text-xs font-extrabold cursor-pointer"
+          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+        >
+          {theme === 'dark' ? (
+            <>
+              <Sun className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">Light Mode</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-4 h-4 text-emerald-600" />
+              <span className="hidden sm:inline">Dark Mode</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Subtle Background Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>

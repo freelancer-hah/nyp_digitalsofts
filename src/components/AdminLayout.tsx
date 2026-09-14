@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { store } from '../services/store';
-import { ShieldCheck, LogOut, Layout, CheckSquare, Layers, Globe, Building2 } from 'lucide-react';
+import { ShieldCheck, LogOut, Layout, CheckSquare, Layers, Globe, Building2, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = store.getCurrentUser();
+  const { theme, toggleTheme } = useTheme();
 
   // Protect Admin Routes: If not logged in or role is APPLICANT, redirect to Admin Login
   if (!currentUser || currentUser.role === 'APPLICANT') {
@@ -154,6 +156,19 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 </span>
                 <div>{getRoleBadge(currentUser.role)}</div>
               </div>
+
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-2 text-slate-400 hover:text-amber-400 bg-slate-950 dark:bg-slate-950 hover:bg-slate-800 rounded-xl border border-slate-800 transition-all flex items-center space-x-1 text-xs font-semibold cursor-pointer"
+                title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <Moon className="w-4 h-4 text-emerald-400" />
+                )}
+              </button>
 
               <Link
                 to="/"
