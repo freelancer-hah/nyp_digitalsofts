@@ -462,7 +462,7 @@ class StoreService {
           province: profileData.province,
           division_id: profileData.divisionId,
           district_id: profileData.districtId,
-          taluka_id: profileData.talukaId,
+          taluka_id: (profileData.talukaId && profileData.talukaId.trim() !== '') ? profileData.talukaId : null,
           qualification: profileData.qualification,
           institution_name: profileData.institutionName,
           profession: profileData.profession,
@@ -477,7 +477,13 @@ class StoreService {
           social_links: profileData.socialLinks,
           declaration_accepted: profileData.declarationAccepted,
           status: 'PENDING_VERIFICATION',
-        }]);
+        }]).then(({ error }) => {
+          if (error) {
+            console.error('🔴 Supabase Profile Insert Error:', error);
+          } else {
+            console.log('🟢 Supabase Profile Insert Successful');
+          }
+        });
       } catch (e) {
         console.warn('Supabase insert notice:', e);
       }

@@ -162,6 +162,38 @@ INSERT INTO districts (id, name, division_id) VALUES
 ('dist-sanghar', 'Sanghar', 'div-sba')
 ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO talukas (id, name, district_id) VALUES
+('tal-saddar', 'Saddar', 'dist-khi-south'),
+('tal-lyari', 'Lyari', 'dist-khi-south'),
+('tal-civil-line', 'Civil Line', 'dist-khi-south'),
+('tal-gulshan', 'Gulshan-e-Iqbal', 'dist-khi-east'),
+('tal-jamshed', 'Jamshed Town', 'dist-khi-east'),
+('tal-ferozabad', 'Ferozabad', 'dist-khi-east'),
+('tal-gulberg', 'Gulberg', 'dist-khi-central'),
+('tal-liaquatabad', 'Liaquatabad', 'dist-khi-central'),
+('tal-north-nazimabad', 'North Nazimabad', 'dist-khi-central'),
+('tal-new-karachi', 'New Karachi', 'dist-khi-central'),
+('tal-bin-qasim', 'Bin Qasim', 'dist-khi-malir'),
+('tal-gadap', 'Gadap', 'dist-khi-malir'),
+('tal-ibrahim-hyderi', 'Ibrahim Hyderi', 'dist-khi-malir'),
+('tal-hyd-city', 'Hyderabad City', 'dist-hyd'),
+('tal-hyd-latifabad', 'Latifabad', 'dist-hyd'),
+('tal-hyd-qasimabad', 'Qasimabad', 'dist-hyd'),
+('tal-hyd-rural', 'Hyderabad Rural', 'dist-hyd'),
+('tal-sukkur-city', 'Sukkur City', 'dist-sukkur'),
+('tal-rohri', 'Rohri', 'dist-sukkur'),
+('tal-pano-aqil', 'Pano Aqil', 'dist-sukkur'),
+('tal-larkana-city', 'Larkana City', 'dist-larkana'),
+('tal-ratodero', 'Ratodero', 'dist-larkana'),
+('tal-dokri', 'Dokri', 'dist-larkana'),
+('tal-mirpurkhas-city', 'Mirpurkhas City', 'dist-mirpurkhas'),
+('tal-kot-ghulam-muhammad', 'Kot Ghulam Muhammad', 'dist-mirpurkhas'),
+('tal-digri', 'Digri', 'dist-mirpurkhas'),
+('tal-nawabshah', 'Nawabshah', 'dist-sba'),
+('tal-sakrand', 'Sakrand', 'dist-sba'),
+('tal-dazi', 'Daur', 'dist-sba')
+ON CONFLICT (id) DO NOTHING;
+
 -- 6. WORKING GOALS TABLE
 CREATE TABLE IF NOT EXISTS working_goals (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
