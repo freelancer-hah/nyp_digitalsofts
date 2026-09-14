@@ -1,0 +1,568 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #0b1320;
+    color: #f8fafc;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  html.light body {
+    background-color: #f8fafc;
+    color: #0f172a;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.025em;
+  }
+}
+
+/* Light Mode Comprehensive Overrides */
+html.light {
+  color-scheme: light;
+}
+
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Background Gradients & Hero / Summit / CTA Green Sections in Light Mode */
+html.light .from-\[\#062016\],
+html.light .bg-gradient-to-b.from-\[\#062016\],
+html.light section.bg-gradient-to-b {
+  background: linear-gradient(180deg, #ecfdf5 0%, #f1f5f9 60%, #ffffff 100%) !important;
+}
+
+html.light .from-\[\#032417\],
+html.light .bg-gradient-to-r.from-\[\#032417\],
+html.light section.bg-gradient-to-r {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 50%, #e6f4ea 100%) !important;
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 20px 40px -15px rgba(5, 150, 105, 0.08) !important;
+}
+
+html.light .from-emerald-950,
+html.light .bg-gradient-to-br.from-emerald-950 {
+  background: linear-gradient(135deg, #e6f4ea 0%, #f0fdf4 100%) !important;
+  border-color: #a7f3d0 !important;
+}
+
+/* Container Solid & Semi-transparent Dark Backgrounds in Light Mode */
+html.light .bg-\[\#090e17\],
+html.light .bg-\[\#070d17\],
+html.light .bg-\[\#041a12\],
+html.light .bg-slate-900,
+html.light .bg-slate-950 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/70,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/90,
+html.light .bg-slate-950\/70,
+html.light .bg-slate-950\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Dark Green & Accent Badges / Pill Tags in Light Mode */
+html.light .bg-emerald-950,
+html.light .bg-emerald-950\/80,
+html.light .bg-emerald-950\/90,
+html.light .bg-emerald-900,
+html.light .bg-emerald-900\/60 {
+  background-color: #d1fae5 !important;
+  color: #047857 !important;
+  border-color: #6ee7b7 !important;
+}
+
+html.light .bg-amber-950,
+html.light .bg-amber-950\/60,
+html.light .bg-amber-950\/90,
+html.light .bg-amber-900 {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+html.light .bg-teal-950,
+html.light .bg-teal-950\/60,
+html.light .bg-teal-950\/90 {
+  background-color: #ccfbf1 !important;
+  color: #0f766e !important;
+  border-color: #99f6e4 !important;
+}
+
+html.light .bg-purple-950,
+html.light .bg-purple-950\/60,
+html.light .bg-purple-950\/90 {
+  background-color: #f3e8ff !important;
+  color: #7e22ce !important;
+  border-color: #e9d5ff !important;
+}
+
+/* Glass Panels & Navigation in Light Mode */
+html.light .glass-nav {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+  color: #0f172a !important;
+}
+
+html.light .glass-nav .text-white {
+  color: #0f172a !important;
+}
+
+html.light .glass-nav .text-slate-300 {
+  color: #475569 !important;
+}
+
+html.light .glass-nav .bg-slate-900\/90 {
+  background-color: rgba(241, 245, 249, 0.9) !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .glass-panel-dark {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Text Colors in Light Mode */
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300,
+html.light .text-slate-400 {
+  color: #334155 !important;
+}
+
+html.light .text-emerald-100,
+html.light .text-emerald-200,
+html.light .text-emerald-300 {
+  color: #065f46 !important;
+}
+
+html.light .text-emerald-400 {
+  color: #047857 !important;
+}
+
+html.light .text-amber-300,
+html.light .text-amber-400 {
+  color: #d97706 !important;
+}
+
+/* Borders in Light Mode */
+html.light .border-slate-800,
+html.light .border-slate-700,
+html.light .border-emerald-500\/20,
+html.light .border-emerald-500\/30,
+html.light .border-emerald-500\/40,
+html.light .border-emerald-600\/50,
+html.light .border-emerald-700,
+html.light .border-emerald-800\/60,
+html.light .border-emerald-900\/60 {
+  border-color: #cbd5e1 !important;
+}
+
+/* Button Contrast Preservation in Light Mode */
+html.light .ui-btn-primary {
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%) !important;
+  color: #ffffff !important;
+}
+
+html.light .ui-btn-primary *,
+html.light .ui-btn-primary span,
+html.light .ui-btn-primary svg {
+  color: #ffffff !important;
+}
+
+html.light .ui-btn-gold {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%) !important;
+  color: #0f172a !important;
+}
+
+html.light .ui-btn-gold *,
+html.light .ui-btn-gold span,
+html.light .ui-btn-gold svg {
+  color: #0f172a !important;
+}
+
+html.light .ui-btn-secondary {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .ui-btn-secondary * {
+  color: #0f172a !important;
+}
+
+/* Text Gradients in Light Mode */
+html.light .text-gradient-emerald {
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.light .text-gradient-silver {
+  background: linear-gradient(135deg, #0f172a 0%, #334155 50%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Ambient glow subtle opacity reduction in Light Mode */
+html.light .bg-emerald-500\/15,
+html.light .bg-emerald-500\/10,
+html.light .bg-amber-500\/10,
+html.light .bg-teal-500\/10 {
+  opacity: 0.2 !important;
+}
+
+/* Footer in Light Mode */
+html.light footer {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+html.light footer .bg-\[\#070d17\] {
+  background-color: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light footer .bg-slate-900\/90 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Contact Helpline Cards in Light Mode */
+html.light footer .bg-emerald-950\/40,
+html.light footer .bg-emerald-950\/30,
+html.light footer .bg-emerald-950\/80 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03) !important;
+}
+
+html.light footer .bg-emerald-950\/40:hover,
+html.light footer .bg-emerald-950\/80:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light footer .bg-emerald-900\/60 {
+  background-color: #d1fae5 !important;
+  color: #047857 !important;
+}
+
+html.light footer .text-amber-300\/90,
+html.light footer .text-amber-300 {
+  color: #047857 !important; /* High contrast emerald for phone numbers in light mode */
+  font-weight: 700 !important;
+}
+
+/* Admin Access Box in Light Mode */
+html.light footer .bg-gradient-to-b.from-emerald-950\/60,
+html.light footer .bg-gradient-to-b.from-emerald-950\/60.to-\[\#02140c\] {
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%) !important;
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.08) !important;
+}
+
+html.light footer .from-emerald-900.to-emerald-950,
+html.light footer .from-emerald-900 {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+
+html.light footer .from-emerald-900.to-emerald-950 *,
+html.light footer .from-emerald-900 * {
+  color: #ffffff !important;
+}
+
+html.light footer .from-emerald-900.to-emerald-950 svg,
+html.light footer .from-emerald-900 svg {
+  color: #fef08a !important; /* Gold lock icon */
+}
+
+/* Border lines in Footer in Light Mode */
+html.light footer .border-emerald-900\/60,
+html.light footer .border-emerald-900\/50,
+html.light footer .border-emerald-900\/40,
+html.light footer .border-emerald-900\/30 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light footer .text-slate-300,
+html.light footer .text-slate-400 {
+  color: #475569 !important;
+}
+
+
+/* Animations & Keyframes */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 20px rgba(16, 185, 129, 0.25); }
+  50% { opacity: 0.85; transform: scale(1.03); box-shadow: 0 0 35px rgba(245, 158, 11, 0.4); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes borderRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-marquee {
+  display: flex;
+  width: 200%;
+  animation: marquee 28s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom Text Gradients & Typography */
+.font-heading {
+  font-family: 'Outfit', sans-serif;
+}
+
+.text-gradient-emerald {
+  background: linear-gradient(135deg, #34d399 0%, #059669 50%, #0d9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-silver {
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glassmorphism & Modern Premium UI Classes */
+.glass-nav {
+  background: rgba(11, 19, 32, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.06);
+}
+
+.glow-card {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.3), rgba(245, 158, 11, 0.2), rgba(255, 255, 255, 0.05));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.glow-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 25px 50px -12px rgba(4, 120, 87, 0.25);
+}
+
+/* Premium Buttons */
+.ui-btn-primary {
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+  color: #ffffff;
+  font-weight: 800;
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 25px -5px rgba(5, 150, 105, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.ui-btn-primary:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+  box-shadow: 0 14px 35px -5px rgba(16, 185, 129, 0.5);
+  transform: translateY(-3px);
+}
+
+.ui-btn-gold {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+  color: #020617;
+  font-weight: 900;
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 25px -5px rgba(245, 158, 11, 0.4);
+}
+
+.ui-btn-gold:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  box-shadow: 0 14px 35px -5px rgba(251, 191, 36, 0.5);
+  transform: translateY(-3px);
+}
+
+.ui-btn-secondary {
+  background: rgba(30, 41, 59, 0.8);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-weight: 700;
+  border-radius: 1rem;
+  transition: all 0.25s ease-in-out;
+  backdrop-filter: blur(10px);
+}
+
+.ui-btn-secondary:hover {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: #34d399;
+  color: #34d399;
+  transform: translateY(-2px);
+}
+
+/* Badge System */
+.gold-badge {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%);
+  color: #fde68a;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  font-weight: 800;
+}
+
+.emerald-badge {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
+  color: #6ee7b7;
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  font-weight: 800;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #059669;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .no-print,
+  nav,
+  footer,
+  header,
+  button {
+    display: none !important;
+  }
+
+  .id-card-printable-container {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .print-card-side {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 12px !important;
+    box-shadow: none !important;
+  }
+}
+
