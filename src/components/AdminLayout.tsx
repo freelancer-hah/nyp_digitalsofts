@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { store } from '../services/store';
-import { ShieldCheck, LogOut, Layout, CheckSquare, Layers, Globe, Building2, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
+import { ShieldCheck, LogOut, Layout, CheckSquare, Layers, Globe, Building2 } from 'lucide-react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -12,7 +11,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = store.getCurrentUser();
-  const { theme, toggleTheme } = useTheme();
 
   // Protect Admin Routes: If not logged in or role is APPLICANT, redirect to Admin Login
   if (!currentUser || currentUser.role === 'APPLICANT') {
@@ -42,7 +40,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="dark min-h-screen bg-[#090e17] text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
       
       {/* Executive Admin Navigation Header */}
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
@@ -55,7 +53,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain rounded-lg" />
               </div>
               <div className="text-left">
-                <div className="text-sm sm:text-base font-black tracking-tight text-white flex items-center space-x-2">
+                <div className="text-sm sm:text-base font-black tracking-tight text-white flex items-center space-x-2 font-heading">
                   <span>NYP SINDH</span>
                   <span className="text-[10px] uppercase bg-emerald-900/80 text-emerald-300 border border-emerald-700/60 px-2 py-0.5 rounded-full font-bold">
                     ADMIN PORTAL
@@ -157,19 +155,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <div>{getRoleBadge(currentUser.role)}</div>
               </div>
 
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="p-2 text-slate-400 hover:text-amber-400 bg-slate-950 dark:bg-slate-950 hover:bg-slate-800 rounded-xl border border-slate-800 transition-all flex items-center space-x-1 text-xs font-semibold cursor-pointer"
-                title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-              >
-                {theme === 'dark' ? (
-                  <Sun className="w-4 h-4 text-amber-400" />
-                ) : (
-                  <Moon className="w-4 h-4 text-emerald-400" />
-                )}
-              </button>
-
               <Link
                 to="/"
                 title="View Main Public Website"
@@ -181,7 +166,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-rose-400 bg-slate-950 hover:bg-rose-950/40 rounded-xl border border-slate-800 hover:border-rose-900 transition-all flex items-center space-x-1 text-xs font-semibold"
+                className="p-2 text-slate-400 hover:text-rose-400 bg-slate-950 hover:bg-rose-950/40 rounded-xl border border-slate-800 hover:border-rose-900 transition-all flex items-center space-x-1 text-xs font-semibold cursor-pointer"
                 title="Sign Out of Admin Portal"
               >
                 <LogOut className="w-4 h-4 text-rose-400" />
@@ -233,12 +218,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       </header>
 
       {/* Admin Content Area */}
-      <main className="flex-1 bg-slate-950">
+      <main className="flex-1 bg-[#090e17]">
         {children}
       </main>
 
       {/* Admin Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-4 px-4 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-900 bg-[#090e17] py-4 px-4 text-center text-xs text-slate-500">
         NYP Sindh Executive Portal • Logged in as <span className="text-slate-300 font-bold">{currentUser.fullName}</span> ({currentUser.role})
       </footer>
 
