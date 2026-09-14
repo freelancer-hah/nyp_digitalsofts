@@ -26,6 +26,51 @@
   }
 }
 
+/* Executive Demo Access Buttons Contrast Guarantee */
+.demo-btn-verifier {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #fde68a !important; /* Bright Gold */
+}
+.demo-btn-verifier:hover {
+  background: rgba(245, 158, 11, 0.3) !important;
+  color: #ffffff !important;
+  border-color: #fbbf24 !important;
+}
+
+.demo-btn-president {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  color: #6ee7b7 !important; /* Bright Emerald */
+}
+.demo-btn-president:hover {
+  background: rgba(16, 185, 129, 0.3) !important;
+  color: #ffffff !important;
+  border-color: #34d399 !important;
+}
+
+.demo-btn-superadmin {
+  background: rgba(168, 85, 247, 0.15) !important;
+  border: 1px solid rgba(168, 85, 247, 0.4) !important;
+  color: #d8b4fe !important; /* Bright Purple */
+}
+.demo-btn-superadmin:hover {
+  background: rgba(168, 85, 247, 0.3) !important;
+  color: #ffffff !important;
+  border-color: #c084fc !important;
+}
+
+.demo-btn-cms {
+  background: rgba(20, 184, 166, 0.15) !important;
+  border: 1px solid rgba(20, 184, 166, 0.4) !important;
+  color: #5eead4 !important; /* Bright Teal */
+}
+.demo-btn-cms:hover {
+  background: rgba(20, 184, 166, 0.3) !important;
+  color: #ffffff !important;
+  border-color: #2dd4bf !important;
+}
+
 /* ================= 1. GLOBAL DARK MODE ADAPTATIONS ================= */
 html.dark body,
 html.dark .bg-slate-50 {

@@ -119,30 +119,30 @@ export const AdminLoginPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 onClick={() => handleQuickDemoLogin('41304-1111111-1')}
-                className="bg-slate-800/80 hover:bg-slate-800 text-amber-300 p-2.5 rounded-xl border border-amber-500/20 text-[11px] font-bold text-left transition-colors truncate cursor-pointer"
+                className="demo-btn-verifier p-2.5 rounded-xl text-[11px] font-bold text-left transition-all truncate cursor-pointer shadow-sm"
               >
                 🔎 Verifier Desk
               </button>
 
               <button
                 onClick={() => handleQuickDemoLogin('41304-2222222-2')}
-                className="bg-slate-800/80 hover:bg-slate-800 text-emerald-300 p-2.5 rounded-xl border border-emerald-500/20 text-[11px] font-bold text-left transition-colors truncate cursor-pointer"
+                className="demo-btn-president p-2.5 rounded-xl text-[11px] font-bold text-left transition-all truncate cursor-pointer shadow-sm"
               >
                 ✍️ President Desk
               </button>
 
               <button
                 onClick={() => handleQuickDemoLogin('41304-0000000-0')}
-                className="bg-slate-800/80 hover:bg-slate-800 text-purple-300 p-2.5 rounded-xl border border-purple-500/20 text-[11px] font-bold text-left transition-colors truncate cursor-pointer"
+                className="demo-btn-superadmin p-2.5 rounded-xl text-[11px] font-bold text-left transition-all truncate cursor-pointer shadow-sm"
               >
                 👑 Super Admin
               </button>
 
               <button
                 onClick={() => navigate('/admin/cms')}
-                className="bg-slate-800/80 hover:bg-slate-800 text-teal-300 p-2.5 rounded-xl border border-teal-500/20 text-[11px] font-bold text-left transition-colors truncate flex items-center space-x-1 cursor-pointer"
+                className="demo-btn-cms p-2.5 rounded-xl text-[11px] font-bold text-left transition-all truncate flex items-center space-x-1 cursor-pointer shadow-sm"
               >
-                <Layout className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                <Layout className="w-3.5 h-3.5 shrink-0" />
                 <span>CMS Manager</span>
               </button>
             </div>
