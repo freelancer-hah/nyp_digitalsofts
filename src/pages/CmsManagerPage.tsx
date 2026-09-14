@@ -230,35 +230,35 @@ export const CmsManagerPage: React.FC = () => {
   const goalsList = store.getWorkingGoals();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10 text-left space-y-8 bg-slate-50">
+    <div className="max-w-7xl mx-auto px-4 py-10 text-left space-y-8 bg-slate-50 text-slate-900 dark:bg-[#090e17] dark:text-slate-100 transition-colors duration-300">
       
       {/* CMS Header & Role Status Banner */}
-      <div className="ui-card p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-sm border-slate-200">
+      <div className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 rounded-3xl flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-md backdrop-blur-md">
         <div className="flex items-center space-x-3.5">
           <div className="w-14 h-14 rounded-2xl bg-white p-0.5 border-2 border-emerald-600/30 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
             <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-xl" />
           </div>
           <div>
             <div className="flex items-center space-x-2 mb-1">
-              <h1 className="text-2xl font-extrabold text-slate-900">Website Content Management System (CMS)</h1>
+              <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white font-heading">Website Content Management System (CMS)</h1>
               <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${
-                isSuperAdmin ? 'bg-emerald-700 text-white' : 'bg-amber-100 text-amber-900 border border-amber-300'
+                isSuperAdmin ? 'bg-emerald-700 text-white' : 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-700/60'
               }`}>
                 {isSuperAdmin ? 'Super Admin Central Access' : `Divisional Sub-Admin (${store.getDivisionName(assignedDivId)})`}
               </span>
             </div>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               Manage website announcements, news ticker, working goals, executive leadership messages, and provincial & divisional cabinet directories.
             </p>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-900 dark:bg-slate-950 dark:border-slate-800 dark:text-white p-1.5 rounded-2xl">
           <button
             onClick={() => setActiveTab('CABINET')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeTab === 'CABINET' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 hover:bg-white'
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              activeTab === 'CABINET' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -267,8 +267,8 @@ export const CmsManagerPage: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('ANNOUNCEMENTS')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeTab === 'ANNOUNCEMENTS' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 hover:bg-white'
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              activeTab === 'ANNOUNCEMENTS' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
             }`}
           >
             <Megaphone className="w-4 h-4" />
@@ -277,8 +277,8 @@ export const CmsManagerPage: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('LEADERSHIP')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeTab === 'LEADERSHIP' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 hover:bg-white'
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              activeTab === 'LEADERSHIP' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
             }`}
           >
             <Award className="w-4 h-4" />
@@ -287,8 +287,8 @@ export const CmsManagerPage: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('GOALS')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeTab === 'GOALS' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 hover:bg-white'
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              activeTab === 'GOALS' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
             }`}
           >
             <Target className="w-4 h-4" />
@@ -303,26 +303,26 @@ export const CmsManagerPage: React.FC = () => {
           
           {/* Add Cabinet Member Form */}
           <div className="lg:col-span-5">
-            <form onSubmit={handleAddCabinetMember} className="ui-card p-6 space-y-5 shadow-sm border-slate-200">
-              <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider flex items-center space-x-2">
-                  <Plus className="w-4 h-4 text-emerald-700" />
+            <form onSubmit={handleAddCabinetMember} className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 space-y-5 shadow-md rounded-3xl backdrop-blur-md">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center justify-between">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider flex items-center space-x-2 font-heading">
+                  <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Add Cabinet Member / Ehedadar</span>
                 </h3>
                 {isDivisionalAdmin && (
-                  <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-300">
+                  <span className="text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-700 px-2 py-0.5 rounded">
                     Regional Lock
                   </span>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Cabinet Level *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Cabinet Level *</label>
                 <select
                   value={cabLevel}
                   disabled={isDivisionalAdmin}
                   onChange={(e) => setCabLevel(e.target.value as any)}
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 font-bold outline-none disabled:bg-slate-100"
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs font-bold outline-none disabled:bg-slate-100 dark:disabled:bg-slate-900"
                 >
                   <option value="PROVINCIAL">Sindh Provincial Cabinet (Central Office Bearer)</option>
                   <option value="DIVISIONAL">Divisional Cabinet (Regional Member)</option>
@@ -331,12 +331,12 @@ export const CmsManagerPage: React.FC = () => {
 
               {cabLevel === 'DIVISIONAL' && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Assigned Division *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assigned Division *</label>
                   <select
                     value={cabDivisionId}
                     disabled={isDivisionalAdmin}
                     onChange={(e) => setCabDivisionId(e.target.value)}
-                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-xs text-slate-900 font-bold outline-none disabled:bg-slate-100"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs font-bold outline-none disabled:bg-slate-100 dark:disabled:bg-slate-900"
                   >
                     {SINDH_DIVISIONS.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -348,42 +348,42 @@ export const CmsManagerPage: React.FC = () => {
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
                 <input
                   type="text"
                   required
                   value={cabFullName}
                   onChange={(e) => setCabFullName(e.target.value)}
                   placeholder="e.g. Abdul Rehman Halepoto"
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Designation / Office Title *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Designation / Office Title *</label>
                 <input
                   type="text"
                   required
                   value={cabDesignation}
                   onChange={(e) => setCabDesignation(e.target.value)}
                   placeholder="e.g. Divisional President / Youth MPA"
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Profile Photograph *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Profile Photograph *</label>
                 <div className="flex items-center space-x-3">
                   <img
                     src={cabPhotoUrl}
                     alt="Preview"
-                    className="w-12 h-14 object-cover rounded-lg border border-slate-300 shrink-0 bg-slate-100"
+                    className="w-12 h-14 object-cover rounded-lg border border-slate-300 dark:border-slate-700 shrink-0 bg-slate-100 dark:bg-slate-800"
                   />
-                  <label className="flex-1 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center space-x-2 transition-colors border border-slate-300">
+                  <label className="flex-1 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:text-slate-200 font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center space-x-2 transition-colors border border-slate-300 dark:border-slate-700">
                     {isUploadingCabPhoto ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-600 dark:text-emerald-400" />
                     ) : (
-                      <Upload className="w-4 h-4 text-emerald-700" />
+                      <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     )}
                     <span>Upload Photo to Cloudinary</span>
                     <input type="file" accept="image/*" onChange={handleCabPhotoUpload} className="hidden" />
@@ -392,19 +392,19 @@ export const CmsManagerPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Short Profile Bio</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Short Profile Bio</label>
                 <textarea
                   rows={2}
                   value={cabBio}
                   onChange={(e) => setCabBio(e.target.value)}
                   placeholder="Key responsibilities summary"
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full ui-btn-primary py-3 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center space-x-2"
+                className="w-full ui-btn-primary py-3 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>PUBLISH TO CABINET DIRECTORY</span>
@@ -414,13 +414,13 @@ export const CmsManagerPage: React.FC = () => {
 
           {/* Cabinet Members Active Roster */}
           <div className="lg:col-span-7">
-            <div className="ui-card p-6 space-y-4 shadow-sm border-slate-200">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
+            <div className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 space-y-4 shadow-md rounded-3xl backdrop-blur-md">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider font-heading">
                   Active Cabinet Members ({cabinetList.length})
                 </h3>
                 {isDivisionalAdmin && (
-                  <span className="text-xs font-bold text-emerald-700 flex items-center space-x-1">
+                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center space-x-1">
                     <MapPin className="w-3.5 h-3.5" />
                     <span>{store.getDivisionName(assignedDivId)} Roster</span>
                   </span>
@@ -429,12 +429,12 @@ export const CmsManagerPage: React.FC = () => {
 
               <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                 {cabinetList.length === 0 ? (
-                  <div className="p-8 text-center text-slate-500 text-xs italic bg-slate-50 rounded-2xl">
+                  <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs italic bg-slate-50 dark:bg-slate-950 rounded-2xl">
                     No cabinet members found in this view.
                   </div>
                 ) : (
                   cabinetList.map((m) => (
-                    <div key={m.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center justify-between">
+                    <div key={m.id} className="bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-950 dark:border-slate-800 dark:text-white p-4 rounded-2xl flex items-center justify-between">
                       <div className="flex items-center space-x-3.5">
                         <img
                           src={m.photoUrl}
@@ -442,17 +442,17 @@ export const CmsManagerPage: React.FC = () => {
                           className="w-12 h-14 object-cover rounded-xl border border-emerald-600 bg-white shrink-0 shadow-sm"
                         />
                         <div>
-                          <span className="ui-badge-green text-[9px] font-bold px-2 py-0.5 rounded uppercase">
+                          <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-700/60 text-[9px] font-bold px-2 py-0.5 rounded uppercase">
                             {m.cabinetLevel} {m.divisionId ? `• ${store.getDivisionName(m.divisionId)}` : ''}
                           </span>
-                          <h4 className="font-bold text-slate-900 text-sm mt-0.5">{m.fullName}</h4>
-                          <span className="text-xs text-emerald-800 font-semibold block">{m.designation}</span>
+                          <h4 className="font-bold text-slate-900 dark:text-white text-sm mt-0.5 font-heading">{m.fullName}</h4>
+                          <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold block">{m.designation}</span>
                         </div>
                       </div>
 
                       <button
                         onClick={() => handleDeleteCabinet(m.id)}
-                        className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                        className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
                         title="Remove Cabinet Member"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -474,45 +474,45 @@ export const CmsManagerPage: React.FC = () => {
           {/* Add Announcement Form */}
           <div className="lg:col-span-5">
             {!isSuperAdmin ? (
-              <div className="ui-card p-8 text-center space-y-4 border-amber-200 bg-amber-50/50">
-                <Lock className="w-10 h-10 text-amber-700 mx-auto" />
-                <h3 className="font-bold text-slate-900 text-base">Super Admin Central Access Required</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-200 p-8 rounded-3xl text-center space-y-4">
+                <Lock className="w-10 h-10 text-amber-700 dark:text-amber-400 mx-auto" />
+                <h3 className="font-bold text-slate-900 dark:text-white text-base font-heading">Super Admin Central Access Required</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Website main announcements, news ticker bulletins, and banners can only be published by Super Admin central authority.
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleAddAnnouncement} className="ui-card p-6 space-y-5 shadow-sm border-slate-200">
-                <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center space-x-2">
-                  <Plus className="w-4 h-4 text-emerald-700" />
+              <form onSubmit={handleAddAnnouncement} className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 space-y-5 shadow-md rounded-3xl backdrop-blur-md">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center space-x-2 font-heading">
+                  <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Publish News Bulletin / Announcement</span>
                 </h3>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Announcement Title *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Announcement Title *</label>
                   <input
                     type="text"
                     required
                     value={annTitle}
                     onChange={(e) => setAnnTitle(e.target.value)}
                     placeholder="e.g. Schedule for Sindh Youth Assembly Summit 2026"
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Banner Image *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Banner Image *</label>
                   <div className="space-y-2">
                     <img
                       src={annBannerUrl}
                       alt="Banner Preview"
-                      className="w-full h-32 object-cover rounded-xl border border-slate-300 bg-slate-100"
+                      className="w-full h-32 object-cover rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800"
                     />
-                    <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center space-x-2 transition-colors border border-slate-300">
+                    <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:text-slate-200 font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center space-x-2 transition-colors border border-slate-300 dark:border-slate-700">
                       {isUploadingBanner ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
+                        <Loader2 className="w-4 h-4 animate-spin text-emerald-600 dark:text-emerald-400" />
                       ) : (
-                        <Upload className="w-4 h-4 text-emerald-700" />
+                        <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       )}
                       <span>Upload Banner Image</span>
                       <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
@@ -521,20 +521,20 @@ export const CmsManagerPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Announcement Content *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Announcement Content *</label>
                   <textarea
                     rows={4}
                     required
                     value={annContent}
                     onChange={(e) => setAnnContent(e.target.value)}
                     placeholder="Detailed press release or notification description..."
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full ui-btn-primary py-3 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center space-x-2"
+                  className="w-full ui-btn-primary py-3 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>PUBLISH ANNOUNCEMENT TO WEBSITE</span>
@@ -545,30 +545,30 @@ export const CmsManagerPage: React.FC = () => {
 
           {/* Published Announcements List */}
           <div className="lg:col-span-7">
-            <div className="ui-card p-6 space-y-4 shadow-sm border-slate-200">
-              <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider border-b border-slate-100 pb-3">
+            <div className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 space-y-4 shadow-md rounded-3xl backdrop-blur-md">
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-3 font-heading">
                 Published News Bulletins ({announcementsList.length})
               </h3>
 
               <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
                 {announcementsList.map((ann) => (
-                  <div key={ann.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 relative">
+                  <div key={ann.id} className="bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-950 dark:border-slate-800 dark:text-white p-4 rounded-2xl space-y-2 relative">
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="text-[10px] font-bold text-emerald-700 uppercase block">{ann.publishedAt}</span>
-                        <h4 className="font-bold text-slate-900 text-sm">{ann.title}</h4>
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase block">{ann.publishedAt}</span>
+                        <h4 className="font-bold text-slate-900 dark:text-white text-sm font-heading">{ann.title}</h4>
                       </div>
                       {isSuperAdmin && (
                         <button
                           onClick={() => handleDeleteAnnouncement(ann.id)}
-                          className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
                           title="Delete Announcement"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
-                    <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{ann.content}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">{ann.content}</p>
                   </div>
                 ))}
               </div>
@@ -585,69 +585,69 @@ export const CmsManagerPage: React.FC = () => {
           {/* Add Leadership Message Form */}
           <div className="lg:col-span-5">
             {!isSuperAdmin ? (
-              <div className="ui-card p-8 text-center space-y-4 border-amber-200 bg-amber-50/50">
-                <Lock className="w-10 h-10 text-amber-700 mx-auto" />
-                <h3 className="font-bold text-slate-900 text-base">Super Admin Central Access Required</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-200 p-8 rounded-3xl text-center space-y-4">
+                <Lock className="w-10 h-10 text-amber-700 dark:text-amber-400 mx-auto" />
+                <h3 className="font-bold text-slate-900 dark:text-white text-base font-heading">Super Admin Central Access Required</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Executive leadership messages (Patron/President statements) are managed centrally by Super Admin.
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleAddLeadershipMessage} className="ui-card p-6 space-y-5 shadow-sm border-slate-200">
-                <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center space-x-2">
-                  <Plus className="w-4 h-4 text-emerald-700" />
+              <form onSubmit={handleAddLeadershipMessage} className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 space-y-5 shadow-md rounded-3xl backdrop-blur-md">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center space-x-2 font-heading">
+                  <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Publish Executive Leadership Message</span>
                 </h3>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Message Header Title *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Message Header Title *</label>
                   <input
                     type="text"
                     required
                     value={leadTitle}
                     onChange={(e) => setLeadTitle(e.target.value)}
                     placeholder="e.g. President's Message / Chairman's Message"
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Leader Full Name *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Leader Full Name *</label>
                   <input
                     type="text"
                     required
                     value={leadName}
                     onChange={(e) => setLeadName(e.target.value)}
                     placeholder="e.g. Abdul Rehman Halepoto"
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Leader Title / Designation *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Leader Title / Designation *</label>
                   <input
                     type="text"
                     required
                     value={leadRoleTitle}
                     onChange={(e) => setLeadRoleTitle(e.target.value)}
                     placeholder="e.g. President, National Youth Parliament (NYP) Sindh"
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Leader Portrait Photograph *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Leader Portrait Photograph *</label>
                   <div className="flex items-center space-x-3">
                     <img
                       src={leadPhotoUrl}
                       alt="Preview"
-                      className="w-12 h-14 object-cover rounded-lg border border-slate-300 shrink-0 bg-slate-100"
+                      className="w-12 h-14 object-cover rounded-lg border border-slate-300 dark:border-slate-700 shrink-0 bg-slate-100 dark:bg-slate-800"
                     />
-                    <label className="flex-1 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center space-x-2 transition-colors border border-slate-300">
+                    <label className="flex-1 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:text-slate-200 font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center space-x-2 transition-colors border border-slate-300 dark:border-slate-700">
                       {isUploadingLeadPhoto ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
+                        <Loader2 className="w-4 h-4 animate-spin text-emerald-600 dark:text-emerald-400" />
                       ) : (
-                        <Upload className="w-4 h-4 text-emerald-700" />
+                        <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       )}
                       <span>Upload Portrait Photo</span>
                       <input type="file" accept="image/*" onChange={handleLeadPhotoUpload} className="hidden" />
@@ -656,20 +656,20 @@ export const CmsManagerPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Official Statement / Quote *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Official Statement / Quote *</label>
                   <textarea
                     rows={4}
                     required
                     value={leadMessage}
                     onChange={(e) => setLeadMessage(e.target.value)}
                     placeholder="Full executive message to youth of Sindh..."
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full ui-btn-primary py-3 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center space-x-2"
+                  className="w-full ui-btn-primary py-3 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>PUBLISH LEADERSHIP MESSAGE</span>
@@ -680,14 +680,14 @@ export const CmsManagerPage: React.FC = () => {
 
           {/* Active Leadership Messages */}
           <div className="lg:col-span-7">
-            <div className="ui-card p-6 space-y-4 shadow-sm border-slate-200">
-              <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider border-b border-slate-100 pb-3">
+            <div className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 space-y-4 shadow-md rounded-3xl backdrop-blur-md">
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-3 font-heading">
                 Active Leadership Messages ({leadershipList.length})
               </h3>
 
               <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
                 {leadershipList.map((msg) => (
-                  <div key={msg.id} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3 relative">
+                  <div key={msg.id} className="bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-950 dark:border-slate-800 dark:text-white p-5 rounded-2xl space-y-3 relative">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3.5">
                         <img
@@ -696,22 +696,22 @@ export const CmsManagerPage: React.FC = () => {
                           className="w-12 h-14 object-cover rounded-xl border-2 border-emerald-600 bg-white shrink-0"
                         />
                         <div>
-                          <span className="text-[10px] font-bold text-emerald-800 uppercase block">{msg.title}</span>
-                          <h4 className="font-bold text-slate-900 text-sm">{msg.leaderName}</h4>
-                          <span className="text-xs text-slate-500 font-medium block">{msg.leaderTitle}</span>
+                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase block">{msg.title}</span>
+                          <h4 className="font-bold text-slate-900 dark:text-white text-sm font-heading">{msg.leaderName}</h4>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">{msg.leaderTitle}</span>
                         </div>
                       </div>
                       {isSuperAdmin && (
                         <button
                           onClick={() => handleDeleteLeadershipMessage(msg.id)}
-                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
                           title="Delete Message"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
-                    <blockquote className="text-xs text-slate-600 italic border-l-2 border-emerald-600 pl-3 py-1">
+                    <blockquote className="text-xs text-slate-600 dark:text-slate-300 italic border-l-2 border-emerald-600 pl-3 py-1">
                       "{msg.messageText}"
                     </blockquote>
                   </div>
@@ -730,26 +730,26 @@ export const CmsManagerPage: React.FC = () => {
           {/* Add Goal Form */}
           <div className="lg:col-span-5">
             {!isSuperAdmin ? (
-              <div className="ui-card p-8 text-center space-y-4 border-amber-200 bg-amber-50/50">
-                <Lock className="w-10 h-10 text-amber-700 mx-auto" />
-                <h3 className="font-bold text-slate-900 text-base">Super Admin Central Access Required</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-200 p-8 rounded-3xl text-center space-y-4">
+                <Lock className="w-10 h-10 text-amber-700 dark:text-amber-400 mx-auto" />
+                <h3 className="font-bold text-slate-900 dark:text-white text-base font-heading">Super Admin Central Access Required</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Provincial working goals and strategic pillars can only be edited by Super Admin central authority.
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleAddWorkingGoal} className="ui-card p-6 space-y-5 shadow-sm border-slate-200">
-                <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center space-x-2">
-                  <Plus className="w-4 h-4 text-emerald-700" />
+              <form onSubmit={handleAddWorkingGoal} className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 space-y-5 shadow-md rounded-3xl backdrop-blur-md">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center space-x-2 font-heading">
+                  <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Add Strategic Working Goal</span>
                 </h3>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Goal Category *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Goal Category *</label>
                   <select
                     value={goalCategory}
                     onChange={(e) => setGoalCategory(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 font-bold outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs font-bold outline-none"
                   >
                     <option value="Parliamentary Education">Parliamentary Education</option>
                     <option value="Civic Governance">Civic Governance</option>
@@ -760,32 +760,32 @@ export const CmsManagerPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Goal Title *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Goal Title *</label>
                   <input
                     type="text"
                     required
                     value={goalTitle}
                     onChange={(e) => setGoalTitle(e.target.value)}
                     placeholder="e.g. Constitutional & Legislative Literacy"
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Detailed Description *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Detailed Description *</label>
                   <textarea
                     rows={4}
                     required
                     value={goalDescription}
                     onChange={(e) => setGoalDescription(e.target.value)}
                     placeholder="Describe how this working goal empowers youth in Sindh..."
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:border-emerald-600 outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs focus:border-emerald-600 outline-none"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full ui-btn-primary py-3 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center space-x-2"
+                  className="w-full ui-btn-primary py-3 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>PUBLISH WORKING GOAL</span>
@@ -796,32 +796,32 @@ export const CmsManagerPage: React.FC = () => {
 
           {/* Active Goals List */}
           <div className="lg:col-span-7">
-            <div className="ui-card p-6 space-y-4 shadow-sm border-slate-200">
-              <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider border-b border-slate-100 pb-3">
+            <div className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 space-y-4 shadow-md rounded-3xl backdrop-blur-md">
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-3 font-heading">
                 Active Strategic Working Goals ({goalsList.length})
               </h3>
 
               <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
                 {goalsList.map((g) => (
-                  <div key={g.id} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2 relative">
+                  <div key={g.id} className="bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-950 dark:border-slate-800 dark:text-white p-5 rounded-2xl space-y-2 relative">
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full uppercase inline-block mb-1">
+                        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-700/60 px-2.5 py-0.5 rounded-full uppercase inline-block mb-1">
                           {g.category}
                         </span>
-                        <h4 className="font-bold text-slate-900 text-sm">{g.title}</h4>
+                        <h4 className="font-bold text-slate-900 dark:text-white text-sm font-heading">{g.title}</h4>
                       </div>
                       {isSuperAdmin && (
                         <button
                           onClick={() => handleDeleteWorkingGoal(g.id)}
-                          className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
                           title="Delete Goal"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">{g.description}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{g.description}</p>
                   </div>
                 ))}
               </div>
