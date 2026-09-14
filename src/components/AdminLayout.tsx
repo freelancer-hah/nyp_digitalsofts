@@ -43,23 +43,23 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     <div className="dark min-h-screen bg-[#090e17] text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
       
       {/* Executive Admin Navigation Header */}
-      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
+      <header className="admin-header sticky top-0 z-50 bg-[#0b1320] backdrop-blur-md border-b border-emerald-500/20 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             
             {/* Left: Admin Brand */}
             <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-500/40 bg-white p-0.5 shadow-lg shrink-0">
+              <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-500/50 bg-white p-0.5 shadow-lg shrink-0">
                 <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain rounded-lg" />
               </div>
               <div className="text-left">
                 <div className="text-sm sm:text-base font-black tracking-tight text-white flex items-center space-x-2 font-heading">
-                  <span>NYP SINDH</span>
-                  <span className="text-[10px] uppercase bg-emerald-900/80 text-emerald-300 border border-emerald-700/60 px-2 py-0.5 rounded-full font-bold">
+                  <span className="admin-brand-title text-white">NYP SINDH</span>
+                  <span className="text-[10px] uppercase bg-emerald-950/90 text-emerald-300 border border-emerald-600/60 px-2 py-0.5 rounded-full font-extrabold shadow-sm">
                     ADMIN PORTAL
                   </span>
                 </div>
-                <div className="text-[10px] font-medium text-slate-400">
+                <div className="admin-brand-sub text-[10px] font-semibold text-slate-400">
                   {currentUser.role === 'SUPER_ADMIN' && 'Super Admin Master Control'}
                   {currentUser.role === 'VERIFYING_OFFICER' && 'Verification & Scrutiny Portal'}
                   {currentUser.role === 'APPROVAL_AUTHORITY' && 'President Approval Desk'}
@@ -69,7 +69,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </div>
 
             {/* Middle: Role-Specific Navigation Links ONLY */}
-            <nav className="hidden md:flex items-center space-x-1 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800">
+            <nav className="hidden md:flex items-center space-x-1 bg-[#030914] p-1.5 rounded-2xl border border-slate-800">
               
               {/* VERIFYING_OFFICER ONLY LINKS */}
               {currentUser.role === 'VERIFYING_OFFICER' && (
@@ -77,8 +77,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   to="/admin/verification"
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
                     isActive('/admin/verification')
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-md'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                   }`}
                 >
                   <CheckSquare className="w-4 h-4 text-amber-400" />
@@ -92,8 +92,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   to="/admin/approval"
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
                     isActive('/admin/approval')
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                   }`}
                 >
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -107,8 +107,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   to="/admin/regional"
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
                     isActive('/admin/regional') || isActive('/admin/master')
-                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/50 shadow-md'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                   }`}
                 >
                   <Building2 className="w-4 h-4 text-blue-400" />
@@ -123,8 +123,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     to="/admin/master"
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
                       isActive('/admin/master') || isActive('/admin/regional')
-                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-md'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                     }`}
                   >
                     <Layers className="w-3.5 h-3.5 text-purple-400" />
@@ -135,8 +135,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     to="/admin/cms"
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
                       isActive('/admin/cms')
-                        ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                        ? 'bg-teal-500/20 text-teal-300 border border-teal-500/50 shadow-md'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                     }`}
                   >
                     <Layout className="w-3.5 h-3.5 text-teal-400" />
@@ -149,7 +149,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             {/* Right: User Profile & Actions */}
             <div className="flex items-center space-x-3">
               <div className="hidden sm:flex flex-col items-end">
-                <span className="text-xs font-bold text-slate-200 flex items-center space-x-1">
+                <span className="admin-user-name text-xs font-extrabold text-slate-100 flex items-center space-x-1">
                   <span>{currentUser.fullName}</span>
                 </span>
                 <div>{getRoleBadge(currentUser.role)}</div>
@@ -158,7 +158,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <Link
                 to="/"
                 title="View Main Public Website"
-                className="p-2 text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 rounded-xl border border-slate-800 transition-all flex items-center space-x-1 text-xs font-semibold"
+                className="admin-btn-action px-3 py-2 text-slate-200 bg-slate-950 hover:bg-slate-900 rounded-xl border border-slate-800 hover:border-emerald-500/50 transition-all flex items-center space-x-1.5 text-xs font-bold shadow-sm"
               >
                 <Globe className="w-4 h-4 text-emerald-400" />
                 <span className="hidden sm:inline">Main Website</span>
@@ -166,7 +166,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-rose-400 bg-slate-950 hover:bg-rose-950/40 rounded-xl border border-slate-800 hover:border-rose-900 transition-all flex items-center space-x-1 text-xs font-semibold cursor-pointer"
+                className="admin-btn-logout px-3 py-2 text-rose-300 bg-slate-950 hover:bg-rose-950/60 rounded-xl border border-slate-800 hover:border-rose-700 transition-all flex items-center space-x-1.5 text-xs font-bold cursor-pointer shadow-sm"
                 title="Sign Out of Admin Portal"
               >
                 <LogOut className="w-4 h-4 text-rose-400" />

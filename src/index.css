@@ -26,6 +26,65 @@
   }
 }
 
+/* Executive Admin Navigation Header High Contrast Protection */
+header.admin-header,
+html.light header.admin-header,
+html.dark header.admin-header {
+  background-color: #0b1320 !important;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.25) !important;
+  color: #ffffff !important;
+}
+
+header.admin-header .admin-brand-title,
+html.light header.admin-header .admin-brand-title,
+html.dark header.admin-header .admin-brand-title {
+  color: #ffffff !important;
+  font-weight: 900 !important;
+}
+
+header.admin-header .admin-brand-sub,
+html.light header.admin-header .admin-brand-sub,
+html.dark header.admin-header .admin-brand-sub {
+  color: #94a3b8 !important;
+}
+
+header.admin-header .admin-user-name,
+html.light header.admin-header .admin-user-name,
+html.dark header.admin-header .admin-user-name {
+  color: #f8fafc !important;
+  font-weight: 800 !important;
+}
+
+header.admin-header .admin-btn-action,
+html.light header.admin-header .admin-btn-action,
+html.dark header.admin-header .admin-btn-action {
+  background-color: #020617 !important;
+  border: 1px solid #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+header.admin-header .admin-btn-action:hover,
+html.light header.admin-header .admin-btn-action:hover {
+  background-color: #0f172a !important;
+  border-color: #34d399 !important;
+  color: #34d399 !important;
+}
+
+header.admin-header .admin-btn-logout,
+html.light header.admin-header .admin-btn-logout,
+html.dark header.admin-header .admin-btn-logout {
+  background-color: #020617 !important;
+  border: 1px solid #1e293b !important;
+  color: #fca5a5 !important;
+}
+
+header.admin-header .admin-btn-logout:hover,
+html.light header.admin-header .admin-btn-logout:hover {
+  background-color: #450a0a !important;
+  border-color: #f87171 !important;
+  color: #ffffff !important;
+}
+
 /* Executive Demo Access Buttons Contrast Guarantee */
 .demo-btn-verifier {
   background: rgba(245, 158, 11, 0.15) !important;
