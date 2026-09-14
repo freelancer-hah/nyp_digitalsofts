@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { store } from '../services/store';
 import { MemberProfile } from '../types';
 import { ShieldCheck, CheckCircle2, Search, User } from 'lucide-react';
@@ -8,6 +8,12 @@ export const VerificationDeskPage: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+
+  useEffect(() => {
+    store.fetchFromSupabase().then(() => {
+      setProfiles([...store.getAllProfiles()]);
+    });
+  }, []);
 
   const refreshProfiles = () => {
     setProfiles([...store.getAllProfiles()]);

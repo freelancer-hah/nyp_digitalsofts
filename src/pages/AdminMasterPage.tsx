@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { store } from '../services/store';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS } from '../data/sindhHierarchy';
@@ -8,11 +8,17 @@ import * as XLSX from 'xlsx';
 import { DigitalIdCard } from '../components/DigitalIdCard';
 
 export const AdminMasterPage: React.FC = () => {
-  const profiles = store.getAllProfiles();
+  const [profiles, setProfiles] = useState<MemberProfile[]>(store.getAllProfiles());
   const [selectedDivision, setSelectedDivision] = useState<string>('ALL');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedCardProfile, setSelectedCardProfile] = useState<MemberProfile | null>(null);
+
+  useEffect(() => {
+    store.fetchFromSupabase().then(() => {
+      setProfiles([...store.getAllProfiles()]);
+    });
+  }, []);
 
   // Officer Accounts State
   const [officers, setOfficers] = useState<User[]>(store.getOfficerUsers());

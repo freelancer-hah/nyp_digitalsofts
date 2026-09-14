@@ -112,11 +112,8 @@ class StoreService {
     if (storedProfiles) {
       try {
         const parsed: MemberProfile[] = JSON.parse(storedProfiles);
-        const hannanOnly = parsed.filter(
-          (p) => p.fullName.toLowerCase().includes('hannan') || isSameCnic(p.cnicNumber, '33105-7853093-7')
-        );
-        if (hannanOnly.length > 0) {
-          this.profiles = hannanOnly;
+        if (parsed && parsed.length > 0) {
+          this.profiles = parsed;
         } else {
           this.profiles = INITIAL_MEMBER_PROFILES;
         }

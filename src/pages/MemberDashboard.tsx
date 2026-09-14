@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { store } from '../services/store';
 import { DigitalIdCard } from '../components/DigitalIdCard';
 import { CheckCircle2, Clock, XCircle, FileText, UserCheck, AlertTriangle } from 'lucide-react';
+import { MemberProfile } from '../types';
 
 export const MemberDashboard: React.FC = () => {
   const currentUser = store.getCurrentUser();
-  const profile = store.getProfileByUserId(currentUser?.id || '');
+  const [profile, setProfile] = useState<MemberProfile | undefined>(store.getProfileByUserId(currentUser?.id || ''));
+
+  useEffect(() => {
+    store.fetchFromSupabase().then(() => {
+      setProfile(store.getProfileByUserId(currentUser?.id || ''));
+    });
+  }, [currentUser?.id]);
 
   if (!profile) {
     return (

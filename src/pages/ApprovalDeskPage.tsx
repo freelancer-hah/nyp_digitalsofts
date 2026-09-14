@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { store } from '../services/store';
 import { MemberProfile } from '../types';
 import { Award, Search, UserCheck, Shield } from 'lucide-react';
@@ -8,6 +8,12 @@ export const ApprovalDeskPage: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
   const [designation, setDesignation] = useState('Youth MPA (Member of Provincial Assembly)');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    store.fetchFromSupabase().then(() => {
+      setProfiles([...store.getAllProfiles()]);
+    });
+  }, []);
 
   const refreshProfiles = () => {
     setProfiles([...store.getAllProfiles()]);
