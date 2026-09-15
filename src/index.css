@@ -173,6 +173,16 @@ html:not(.dark) .bg-slate-50 {
   color: #0f172a !important;
 }
 
+html.light .glass-nav,
+html:not(.dark) .glass-nav {
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
+}
+
 html.light .ui-card,
 html:not(.dark) .ui-card {
   background-color: #ffffff !important;
@@ -196,6 +206,14 @@ html:not(.dark) textarea {
 html.dark body,
 html.dark .bg-slate-50 {
   background-color: #0b1320 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .glass-nav {
+  background: rgba(11, 19, 32, 0.88) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   color: #f8fafc !important;
 }
 
@@ -455,10 +473,10 @@ html.light footer .text-slate-400 {
 
 /* Glassmorphism & Modern Premium UI Classes */
 .glass-nav {
-  background: rgba(11, 19, 32, 0.88);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 .glass-panel-dark {
