@@ -20,13 +20,13 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 glass-nav text-slate-100 shadow-xl transition-all duration-300">
+    <nav className="sticky top-0 z-50 glass-nav text-slate-900 dark:text-slate-100 shadow-xl transition-all duration-300">
       
       {/* Dynamic Animated News Ticker Bar */}
-      <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 text-emerald-100 text-[11px] py-1.5 px-4 overflow-hidden border-b border-emerald-800/60 font-medium relative">
+      <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 dark:from-emerald-950 dark:via-emerald-900 dark:to-emerald-950 text-emerald-100 text-[11px] py-1.5 px-4 overflow-hidden border-b border-emerald-700/60 dark:border-emerald-800/60 font-medium relative">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
-          <div className="flex items-center space-x-2 shrink-0 z-10 bg-emerald-950 pr-3 font-bold text-amber-300 uppercase tracking-wider text-[10px]">
+          <div className="flex items-center space-x-2 shrink-0 z-10 bg-emerald-900 dark:bg-emerald-950 pr-3 font-bold text-amber-300 uppercase tracking-wider text-[10px]">
             <Megaphone className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
             <span>LATEST BULLETIN:</span>
           </div>
@@ -44,7 +44,7 @@ export const Navbar: React.FC = () => {
             </div>
           </div>
 
-          <div className="hidden lg:flex items-center space-x-4 shrink-0 z-10 bg-emerald-950 pl-3 text-[10px]">
+          <div className="hidden lg:flex items-center space-x-4 shrink-0 z-10 bg-emerald-900 dark:bg-emerald-950 pl-3 text-[10px]">
             <span className="text-emerald-300 font-semibold">Helpline: 0331 9226110</span>
             <span className="text-amber-300 font-bold uppercase tracking-wider flex items-center space-x-1">
               <Sparkles className="w-3 h-3" />
@@ -65,23 +65,25 @@ export const Navbar: React.FC = () => {
               <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain rounded-lg" />
             </div>
             <div className="text-left">
-              <div className="text-base sm:text-lg font-black tracking-tight text-white leading-tight group-hover:text-amber-400 transition-colors">
+              <div className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white leading-tight group-hover:text-amber-500 transition-colors">
                 NATIONAL YOUTH PARLIAMENT
               </div>
-              <div className="text-[11px] font-extrabold text-emerald-400 tracking-wider flex items-center space-x-1.5">
+              <div className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 tracking-wider flex items-center space-x-1.5">
                 <span>S I N D H</span>
-                <span className="text-slate-600 font-normal">|</span>
-                <span className="text-slate-400 font-medium text-[10px]">Official Public Website</span>
+                <span className="text-slate-400 font-normal">|</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium text-[10px]">Official Public Website</span>
               </div>
             </div>
           </Link>
 
           {/* Desktop Navigation Links with Active Pill Highlights */}
-          <div className="hidden lg:flex items-center space-x-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 backdrop-blur-md">
+          <div className="hidden lg:flex items-center space-x-1 bg-slate-100/90 border border-slate-200 dark:bg-slate-900/90 dark:border-slate-800 p-1.5 rounded-2xl backdrop-blur-md">
             <Link 
               to="/" 
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/') ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                isActive('/') 
+                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
+                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
               }`}
             >
               Home
@@ -89,7 +91,9 @@ export const Navbar: React.FC = () => {
             <Link 
               to="/cabinets" 
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/cabinets') ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                isActive('/cabinets') 
+                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
+                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
               }`}
             >
               Cabinet & MPAs
@@ -97,7 +101,9 @@ export const Navbar: React.FC = () => {
             <Link 
               to="/announcements" 
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/announcements') ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                isActive('/announcements') 
+                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
+                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
               }`}
             >
               News Bulletins
@@ -105,7 +111,9 @@ export const Navbar: React.FC = () => {
             <Link 
               to="/contact" 
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/contact') ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                isActive('/contact') 
+                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
+                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
               }`}
             >
               Contact Us
@@ -118,26 +126,26 @@ export const Navbar: React.FC = () => {
             {/* Dark / Light Mode Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-amber-400 text-amber-400 transition-all shadow-md flex items-center justify-center cursor-pointer"
+              className="p-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:border-emerald-500 dark:bg-slate-900/90 dark:border-slate-700 dark:text-amber-400 transition-all shadow-md flex items-center justify-center cursor-pointer"
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               aria-label="Toggle Theme Mode"
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-emerald-400" />}
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-emerald-600" />}
             </button>
 
             {currentUser && currentUser.role === 'APPLICANT' ? (
               <div className="flex items-center space-x-2">
                 <Link
                   to="/member/dashboard"
-                  className="flex items-center space-x-2 bg-emerald-950 text-emerald-300 border border-emerald-700/60 hover:bg-emerald-900 px-4 py-2 rounded-xl font-bold text-xs transition-all duration-200 shadow-md"
+                  className="flex items-center space-x-2 bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-700/60 dark:hover:bg-emerald-900 px-4 py-2 rounded-xl font-bold text-xs transition-all duration-200 shadow-md"
                 >
-                  <UserCheck className="w-4 h-4 text-emerald-400" />
+                  <UserCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                   <span>Dashboard ({currentUser.fullName.split(' ')[0]})</span>
                 </Link>
 
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-slate-400 hover:text-rose-400 transition-colors rounded-lg hover:bg-slate-800"
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -160,15 +168,15 @@ export const Navbar: React.FC = () => {
           <div className="flex lg:hidden items-center space-x-2">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-slate-800 text-amber-400 border border-slate-700"
+              className="p-2 rounded-lg bg-white border border-slate-300 text-slate-700 dark:bg-slate-800 dark:text-amber-400 dark:border-slate-700"
               title="Toggle Theme"
             >
-              {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-emerald-400" />}
+              {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-emerald-600" />}
             </button>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-slate-200 hover:text-white rounded-lg bg-slate-800 border border-slate-700"
+              className="p-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -179,43 +187,43 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-slate-200 px-5 pt-3 pb-6 space-y-3 text-left animate-fade-in">
+        <div className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-5 pt-3 pb-6 space-y-3 text-left animate-fade-in">
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-slate-800 py-2 text-sm font-semibold hover:text-emerald-700"
+            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-400"
           >
             Home
           </Link>
           <Link
             to="/cabinets"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-slate-800 py-2 text-sm font-semibold hover:text-emerald-700"
+            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-400"
           >
             Cabinet & MPAs
           </Link>
           <Link
             to="/announcements"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-slate-800 py-2 text-sm font-semibold hover:text-emerald-700"
+            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-400"
           >
             News Bulletins
           </Link>
           <Link
             to="/contact"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-slate-800 py-2 text-sm font-semibold hover:text-emerald-700"
+            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-400"
           >
             Contact Us
           </Link>
 
-          <div className="pt-4 border-t border-slate-200 flex flex-col space-y-2.5">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col space-y-2.5">
             {currentUser && currentUser.role === 'APPLICANT' ? (
               <div className="space-y-2">
                 <Link
                   to="/member/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full block text-center bg-emerald-50 text-emerald-800 py-3 rounded-xl font-bold text-xs font-semibold"
+                  className="w-full block text-center bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 py-3 rounded-xl font-bold text-xs"
                 >
                   My Member Dashboard
                 </Link>
@@ -224,7 +232,7 @@ export const Navbar: React.FC = () => {
                     setMobileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="w-full text-center text-rose-600 py-2 text-xs font-bold"
+                  className="w-full text-center text-rose-600 dark:text-rose-400 py-2 text-xs font-bold"
                 >
                   Log Out
                 </button>

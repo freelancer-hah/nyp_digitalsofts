@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { store } from '../services/store';
-import { ShieldCheck, LogOut, Layout, CheckSquare, Layers, Globe, Building2 } from 'lucide-react';
+import { ShieldCheck, LogOut, Layout, CheckSquare, Layers, Globe, Building2, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = store.getCurrentUser();
+  const { theme, toggleTheme } = useTheme();
 
   // Protect Admin Routes: If not logged in or role is APPLICANT, redirect to Admin Login
   if (!currentUser || currentUser.role === 'APPLICANT') {
@@ -148,6 +150,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
             {/* Right: User Profile & Actions */}
             <div className="flex items-center space-x-3">
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 hover:border-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-amber-400 transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                aria-label="Toggle Theme Mode"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-emerald-600" />}
+              </button>
+
               <div className="hidden sm:flex flex-col items-end">
                 <span className="admin-user-name text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center space-x-1">
                   <span>{currentUser.fullName}</span>
