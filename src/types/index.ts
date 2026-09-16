@@ -1,5 +1,9 @@
 export type UserRole = 
   | 'APPLICANT' 
+  | 'MEMBER'
+  | 'VERIFICATION_DESK' 
+  | 'AUTHORISATION_DESK' 
+  | 'PRESIDENT'
   | 'VERIFYING_OFFICER' 
   | 'APPROVAL_AUTHORITY' 
   | 'DIVISIONAL_ADMIN' 
@@ -38,9 +42,48 @@ export interface User {
   email: string;
   mobileNumber: string;
   role: UserRole;
+  password?: string;
+  isBlocked?: boolean;
   assignedDivisionId?: string;
   assignedDistrictId?: string;
   createdAt: string;
+}
+
+export type RoleTier = 
+  | 'YOUTH_MPA'
+  | 'YOUTH_MNA'
+  | 'DIVISIONAL_ROLE'
+  | 'DISTRICT_ROLE'
+  | 'TALUKA_ROLE'
+  | 'PHYSICAL_CARD';
+
+export type RoleApplicationStatus = 
+  | 'PENDING_VERIFICATION'
+  | 'VERIFIED_PENDING_PAYMENT'
+  | 'PAYMENT_SUBMITTED_PENDING_AUTHORISATION'
+  | 'AUTHORISED'
+  | 'REJECTED';
+
+export interface RoleApplicationRequest {
+  id: string;
+  userId: string;
+  cnicNumber: string;
+  profileId: string;
+  roleTier: RoleTier;
+  targetRoleTitle: string; // e.g. "Youth MPA Assembly Delegate", "Youth MNA Representative"
+  reason: string;
+  feeAmount: number; // MNA: 5000, MPA: 4000, Division: 3000, District: 2000, Taluka: 1500, Physical Card: 1000
+  status: RoleApplicationStatus;
+  paymentDetails?: {
+    paymentMethod: string; // JazzCash, EasyPaisa, Bank Transfer
+    transactionId: string;
+    submittedAt: string;
+  };
+  rejectionReason?: string;
+  verifiedByUserId?: string;
+  authorizedByUserId?: string;
+  submittedAt: string;
+  updatedAt: string;
 }
 
 export interface MemberProfile {
@@ -71,7 +114,7 @@ export interface MemberProfile {
   organizationName?: string;
   
   // Application Preferences & SOP
-  levelApplied: 'Provincial Level' | 'Divisional Level' | 'District Level' | 'Taluka Level' | 'City Level';
+  levelApplied?: 'Provincial Level' | 'Divisional Level' | 'District Level' | 'Taluka Level' | 'City Level';
   preferredDepartment: string;
   statementOfPurpose: string;
   
@@ -111,6 +154,8 @@ export interface CabinetMember {
   bio?: string;
   displayOrder: number;
   isActive: boolean;
+  memberProfileId?: string;
+  cnicNumber?: string;
 }
 
 export interface Announcement {
@@ -129,6 +174,7 @@ export interface LeadershipMessage {
   leaderTitle: string;
   messageText: string;
   photoUrl: string;
+  subtitle?: string;
 }
 
 export interface WorkingGoal {
@@ -137,4 +183,3 @@ export interface WorkingGoal {
   description: string;
   category: string;
 }
-

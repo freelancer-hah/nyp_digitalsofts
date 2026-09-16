@@ -1,5 +1,11 @@
-import { User, MemberProfile, ApplicationStatus, CabinetMember, Announcement, LeadershipMessage, WorkingGoal } from '../types';
-import { INITIAL_MEMBER_PROFILES, INITIAL_CABINET_MEMBERS, INITIAL_ANNOUNCEMENTS, INITIAL_LEADERSHIP_MESSAGES, INITIAL_WORKING_GOALS } from '../data/mockData';
+import { 
+  User, MemberProfile, ApplicationStatus, CabinetMember, Announcement, 
+  LeadershipMessage, WorkingGoal, RoleApplicationRequest, RoleTier, UserRole 
+} from '../types';
+import { 
+  INITIAL_MEMBER_PROFILES, INITIAL_CABINET_MEMBERS, INITIAL_ANNOUNCEMENTS, 
+  INITIAL_LEADERSHIP_MESSAGES, INITIAL_WORKING_GOALS 
+} from '../data/mockData';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS, SINDH_TALUKAS } from '../data/sindhHierarchy';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
@@ -10,6 +16,7 @@ const KEY_ANNOUNCEMENTS = 'nyp_sindh_announcements';
 const KEY_LEADERSHIP = 'nyp_sindh_leadership_messages';
 const KEY_WORKING_GOALS = 'nyp_sindh_working_goals';
 const KEY_OFFICER_USERS = 'nyp_sindh_officer_users';
+const KEY_ROLE_APPLICATIONS = 'nyp_sindh_role_applications';
 
 export function normalizeCnic(cnic: string): string {
   if (!cnic) return '';
@@ -53,30 +60,43 @@ export function isSameCnic(c1?: string, c2?: string): boolean {
 
 const INITIAL_OFFICER_USERS: User[] = [
   {
-    id: 'usr-super-admin',
+    id: 'usr-superadmin',
     cnicNumber: '41304-0000000-0',
-    fullName: 'Super Admin - Executive Office',
+    fullName: 'Super Admin - NYP Sindh',
     email: 'admin@nypsindh.org.pk',
     mobileNumber: '0333-7612564',
     role: 'SUPER_ADMIN',
+    password: 'admin123',
     createdAt: new Date().toISOString(),
   },
   {
-    id: 'usr-verifier-01',
+    id: 'usr-president',
+    cnicNumber: '41304-0000000-1',
+    fullName: 'President Abdul Rehman Halepoto',
+    email: 'president@nypsindh.org.pk',
+    mobileNumber: '0333-7612564',
+    role: 'PRESIDENT',
+    password: 'president123',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'usr-verifier',
     cnicNumber: '41304-1111111-1',
-    fullName: 'Verifying Officer - Scrutiny Desk',
+    fullName: 'Verification Desk Officer',
     email: 'verifier@nypsindh.org.pk',
     mobileNumber: '0300-1111111',
-    role: 'VERIFYING_OFFICER',
+    role: 'VERIFICATION_DESK',
+    password: 'verifier123',
     createdAt: new Date().toISOString(),
   },
   {
-    id: 'usr-president-01',
+    id: 'usr-authoriser',
     cnicNumber: '41304-2222222-2',
-    fullName: 'Approval Authority - President Desk',
-    email: 'president@nypsindh.org.pk',
+    fullName: 'Authorisation Desk Authority',
+    email: 'authoriser@nypsindh.org.pk',
     mobileNumber: '0300-2222222',
-    role: 'APPROVAL_AUTHORITY',
+    role: 'AUTHORISATION_DESK',
+    password: 'authoriser123',
     createdAt: new Date().toISOString(),
   },
 ];
@@ -89,6 +109,7 @@ class StoreService {
   private leadershipMessages: LeadershipMessage[] = INITIAL_LEADERSHIP_MESSAGES;
   private workingGoals: WorkingGoal[] = INITIAL_WORKING_GOALS;
   private officerUsers: User[] = INITIAL_OFFICER_USERS;
+  private roleApplications: RoleApplicationRequest[] = [];
 
   constructor() {
     this.init();
@@ -99,7 +120,18 @@ class StoreService {
     const storedOfficers = localStorage.getItem(KEY_OFFICER_USERS);
     if (storedOfficers) {
       try {
-        this.officerUsers = JSON.parse(storedOfficers);
+        const parsed: User[] = JSON.parse(storedOfficers);
+        INITIAL_OFFICER_USERS.forEach((def) => {
+          const idx = parsed.findIndex((u) => u.id === def.id || u.role === def.role);
+          if (idx === -1) {
+            parsed.unshift(def);
+          } else {
+            parsed[idx].password = def.password;
+            parsed[idx].cnicNumber = def.cnicNumber;
+            parsed[idx].email = def.email;
+          }
+        });
+        this.officerUsers = parsed;
       } catch (e) {
         this.officerUsers = INITIAL_OFFICER_USERS;
       }
@@ -112,16 +144,12 @@ class StoreService {
     if (storedProfiles) {
       try {
         const parsed: MemberProfile[] = JSON.parse(storedProfiles);
-        if (parsed && parsed.length > 0) {
-          this.profiles = parsed;
-        } else {
-          this.profiles = INITIAL_MEMBER_PROFILES;
-        }
+        this.profiles = parsed || [];
       } catch (e) {
-        this.profiles = INITIAL_MEMBER_PROFILES;
+        this.profiles = [];
       }
     } else {
-      this.profiles = INITIAL_MEMBER_PROFILES;
+      this.profiles = [];
     }
     this.saveProfiles();
 
@@ -134,35 +162,75 @@ class StoreService {
       }
     }
 
+    const storedRoleApps = localStorage.getItem(KEY_ROLE_APPLICATIONS);
+    if (storedRoleApps) {
+      try {
+        this.roleApplications = JSON.parse(storedRoleApps);
+      } catch (e) {
+        this.roleApplications = [];
+      }
+    }
+
     const storedCabinet = localStorage.getItem(KEY_CABINET);
-    this.cabinetMembers = storedCabinet ? JSON.parse(storedCabinet) : INITIAL_CABINET_MEMBERS;
+    this.cabinetMembers = storedCabinet ? JSON.parse(storedCabinet) : [];
 
     const storedAnn = localStorage.getItem(KEY_ANNOUNCEMENTS);
-    this.announcements = storedAnn ? JSON.parse(storedAnn) : INITIAL_ANNOUNCEMENTS;
+    const parsedAnn = storedAnn ? JSON.parse(storedAnn) : [];
+    this.announcements = parsedAnn.length > 0 ? parsedAnn : INITIAL_ANNOUNCEMENTS;
+    localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
 
-    const storedLead = localStorage.getItem(KEY_LEADERSHIP);
-    this.leadershipMessages = storedLead ? JSON.parse(storedLead) : INITIAL_LEADERSHIP_MESSAGES;
+    this.leadershipMessages = INITIAL_LEADERSHIP_MESSAGES;
+    localStorage.setItem(KEY_LEADERSHIP, JSON.stringify(this.leadershipMessages));
 
     const storedGoals = localStorage.getItem(KEY_WORKING_GOALS);
     this.workingGoals = storedGoals ? JSON.parse(storedGoals) : INITIAL_WORKING_GOALS;
+  }
+
+  public async clearAllData(): Promise<boolean> {
+    localStorage.removeItem(KEY_PROFILES);
+    localStorage.removeItem(KEY_CABINET);
+    localStorage.removeItem(KEY_ANNOUNCEMENTS);
+    localStorage.removeItem(KEY_ROLE_APPLICATIONS);
+
+    if (this.currentUser && (this.currentUser.role === 'MEMBER' || this.currentUser.role === 'APPLICANT')) {
+      this.currentUser = null;
+      localStorage.removeItem(KEY_CURRENT_USER);
+    }
+
+    this.profiles = [];
+    this.cabinetMembers = [];
+    this.announcements = INITIAL_ANNOUNCEMENTS;
+    localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
+    this.roleApplications = [];
+
+    this.officerUsers = INITIAL_OFFICER_USERS;
+    this.saveOfficerUsers();
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('cabinet_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('announcements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      } catch (e) {
+        console.warn('Supabase clear data notice:', e);
+      }
+    }
+
+    return true;
   }
 
   private saveOfficerUsers() {
     localStorage.setItem(KEY_OFFICER_USERS, JSON.stringify(this.officerUsers));
   }
 
+  private saveRoleApplications() {
+    localStorage.setItem(KEY_ROLE_APPLICATIONS, JSON.stringify(this.roleApplications));
+  }
 
-  /**
-   * Fetch real live data from Supabase backend for Profiles, Cabinet, Announcements, Leadership, and Goals
-   */
   public async fetchFromSupabase() {
     if (!isSupabaseConfigured()) return;
     try {
-      // 1. Fetch Member Profiles
       const { data: profData, error: profErr } = await supabase.from('member_profiles').select('*');
-      if (profErr) {
-        console.info('ℹ️ NYP Sindh Database Notice: Remote Supabase database tables not created yet on cloud project. Operating in local database mode. (Run supabase_schema.sql in your Supabase SQL Editor to enable live cloud database sync)');
-      }
       if (!profErr && profData && profData.length > 0) {
         const fetchedProfiles: MemberProfile[] = profData.map((d: any) => ({
           id: d.id,
@@ -186,7 +254,6 @@ class StoreService {
           institutionName: d.institution_name,
           profession: d.profession,
           organizationName: d.organization_name,
-          levelApplied: d.level_applied,
           preferredDepartment: d.preferred_department,
           statementOfPurpose: d.statement_of_purpose,
           skills: Array.isArray(d.skills) ? d.skills : [],
@@ -203,7 +270,6 @@ class StoreService {
           submittedAt: d.submitted_at || new Date().toISOString(),
         }));
 
-        // Merge fetched profiles with local profiles (don't overwrite local profiles that haven't synced yet)
         const profileMap = new Map<string, MemberProfile>();
         this.profiles.forEach((p) => {
           const key = p.cnicNumber.replace(/\D/g, '') || p.id;
@@ -217,76 +283,6 @@ class StoreService {
 
         this.profiles = Array.from(profileMap.values());
         this.saveProfiles();
-      }
-
-      // 2. Fetch Cabinet Members
-      const { data: cabData, error: cabErr } = await supabase.from('cabinet_members').select('*');
-      if (!cabErr && cabData && cabData.length > 0) {
-        const fetchedCab: CabinetMember[] = cabData.map((d: any) => ({
-          id: d.id,
-          fullName: d.full_name,
-          designation: d.designation,
-          cabinetLevel: d.cabinet_level,
-          divisionId: d.division_id,
-          photoUrl: d.photo_url,
-          bio: d.bio,
-          displayOrder: d.display_order || 1,
-          isActive: d.is_active ?? true,
-        }));
-        
-        // Merge fetched cabinet members with local cabinet members (preserve locally added members)
-        const cabMap = new Map<string, CabinetMember>();
-        this.cabinetMembers.forEach((c) => cabMap.set(c.id || c.fullName, c));
-        fetchedCab.forEach((c) => cabMap.set(c.id || c.fullName, c));
-
-        this.cabinetMembers = Array.from(cabMap.values());
-        localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
-      }
-
-      // 3. Fetch Announcements
-      const { data: annData, error: annErr } = await supabase.from('announcements').select('*');
-      if (!annErr && annData && annData.length > 0) {
-        const fetchedAnn: Announcement[] = annData.map((d: any) => ({
-          id: d.id,
-          title: d.title,
-          content: d.content,
-          publishedAt: d.published_at,
-          bannerUrl: d.banner_url,
-          isActive: d.is_active ?? true,
-        }));
-
-        const annMap = new Map<string, Announcement>();
-        this.announcements.forEach((a) => annMap.set(a.id || a.title, a));
-        fetchedAnn.forEach((a) => annMap.set(a.id || a.title, a));
-
-        this.announcements = Array.from(annMap.values());
-        localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
-      }
-
-      // 4. Fetch Leadership Messages
-      const { data: leadData, error: leadErr } = await supabase.from('leadership_messages').select('*');
-      if (!leadErr && leadData && leadData.length > 0) {
-        this.leadershipMessages = leadData.map((d: any) => ({
-          id: d.id,
-          title: d.title,
-          leaderName: d.leader_name,
-          leaderTitle: d.leader_title,
-          messageText: d.message_text,
-          photoUrl: d.photo_url,
-        }));
-        localStorage.setItem(KEY_LEADERSHIP, JSON.stringify(this.leadershipMessages));
-      }
-
-      // 5. Fetch Working Goals
-      const { data: goalData, error: goalErr } = await supabase.from('working_goals').select('*');
-      if (!goalErr && goalData && goalData.length > 0) {
-        this.workingGoals = goalData.map((d: any) => ({
-          id: d.id,
-          title: d.title,
-          category: d.category,
-          description: d.description,
-        }));
-        localStorage.setItem(KEY_WORKING_GOALS, JSON.stringify(this.workingGoals));
       }
     } catch (e) {
       console.warn('Supabase fetch notice:', e);
@@ -314,6 +310,24 @@ class StoreService {
     return this.officerUsers;
   }
 
+  public toggleBlockUser(userId: string): boolean {
+    const user = this.officerUsers.find((u) => u.id === userId);
+    if (user) {
+      user.isBlocked = !user.isBlocked;
+      this.saveOfficerUsers();
+      return user.isBlocked;
+    }
+    return false;
+  }
+
+  public updateUserRole(userId: string, role: UserRole) {
+    const user = this.officerUsers.find((u) => u.id === userId);
+    if (user) {
+      user.role = role;
+      this.saveOfficerUsers();
+    }
+  }
+
   public addOfficerUser(data: Omit<User, 'id' | 'createdAt'>): User {
     const newOfficer: User = {
       ...data,
@@ -330,23 +344,51 @@ class StoreService {
     this.saveOfficerUsers();
   }
 
-  public loginUserByCnic(cnicNumber: string, _legacyRole?: string): { success: boolean; user?: User; error?: string } {
-    const rawInput = cnicNumber.trim();
-    if (!rawInput) return { success: false, error: 'CNIC number is required' };
-    const cleanCnic = normalizeCnic(rawInput);
+  public loginUserByCnic(cnicNumber: string, passwordInput?: string): { success: boolean; user?: User; error?: string } {
+    const rawInput = cnicNumber ? cnicNumber.trim() : '';
+    if (!rawInput) return { success: false, error: 'CNIC or Username is required' };
 
-    // 1. Check if CNIC/email matches a registered Officer/Admin account
+    const lowerInput = rawInput.toLowerCase();
+    const cleanDigits = rawInput.replace(/\D/g, '');
+
+    // 1. Check Officer / Admin logins
     const officer = this.officerUsers.find(
-      (u) => isSameCnic(u.cnicNumber, rawInput) || (rawInput.toLowerCase() === 'admin@nypsindh.org.pk' && u.role === 'SUPER_ADMIN')
+      (u) => 
+        isSameCnic(u.cnicNumber, rawInput) || 
+        (u.email && u.email.toLowerCase() === lowerInput) ||
+        (cleanDigits && cleanDigits.length >= 10 && u.cnicNumber.replace(/\D/g, '') === cleanDigits) ||
+        ((lowerInput === 'admin' || lowerInput === 'superadmin' || lowerInput === 'super_admin') && (u.role === 'SUPER_ADMIN' || u.id === 'usr-superadmin')) ||
+        ((lowerInput === 'president') && (u.role === 'PRESIDENT' || u.id === 'usr-president')) ||
+        ((lowerInput === 'verifier' || lowerInput === 'verification') && (u.role === 'VERIFICATION_DESK' || u.role === 'VERIFYING_OFFICER' || u.id === 'usr-verifier')) ||
+        ((lowerInput === 'authoriser' || lowerInput === 'authorization' || lowerInput === 'approval') && (u.role === 'AUTHORISATION_DESK' || u.role === 'APPROVAL_AUTHORITY' || u.id === 'usr-authoriser'))
     );
 
     if (officer) {
+      if (officer.isBlocked) {
+        return { success: false, error: 'Account access has been suspended by President NYP Sindh.' };
+      }
+
+      const expectedPassword = 
+        officer.id === 'usr-superadmin' || officer.role === 'SUPER_ADMIN' ? 'admin123' :
+        officer.id === 'usr-president' || officer.role === 'PRESIDENT' ? 'president123' :
+        officer.id === 'usr-verifier' || officer.role === 'VERIFICATION_DESK' ? 'verifier123' :
+        officer.id === 'usr-authoriser' || officer.role === 'AUTHORISATION_DESK' ? 'authoriser123' :
+        (officer.password || 'pass123');
+
+      const providedPassword = passwordInput ? passwordInput.trim() : '';
+
+      if (providedPassword.length > 0) {
+        if (providedPassword !== expectedPassword.trim() && providedPassword !== (officer.password ? officer.password.trim() : '')) {
+          return { success: false, error: 'Invalid password. Please check your credentials.' };
+        }
+      }
+
       this.currentUser = officer;
       this.saveCurrentUser();
       return { success: true, user: officer };
     }
 
-    // 2. Check if CNIC belongs to an existing Member Profile (robust comparison)
+    // 2. Check existing Member Profile
     const existingProfile = this.profiles.find((p) => isSameCnic(p.cnicNumber, rawInput));
     if (existingProfile) {
       const user: User = {
@@ -355,7 +397,7 @@ class StoreService {
         fullName: existingProfile.fullName,
         email: existingProfile.email,
         mobileNumber: existingProfile.mobileNumber,
-        role: 'APPLICANT',
+        role: 'MEMBER',
         createdAt: existingProfile.submittedAt,
       };
       this.currentUser = user;
@@ -363,14 +405,14 @@ class StoreService {
       return { success: true, user };
     }
 
-    // 3. Brand new CNIC defaults to Youth Member (Applicant)
+    // 3. Registering base Member if not found
     const newUser: User = {
       id: `usr-${Date.now()}`,
-      cnicNumber: cleanCnic,
-      fullName: 'Youth Applicant',
+      cnicNumber: normalizeCnic(rawInput),
+      fullName: 'Youth Member',
       email: '',
       mobileNumber: '',
-      role: 'APPLICANT',
+      role: 'MEMBER',
       createdAt: new Date().toISOString(),
     };
     this.currentUser = newUser;
@@ -400,7 +442,7 @@ class StoreService {
     return this.profiles.find((p) => p.id === id);
   }
 
-  public async submitMemberProfile(data: Omit<MemberProfile, 'id' | 'status' | 'submittedAt'>): Promise<MemberProfile> {
+  public async submitMemberProfile(data: Omit<MemberProfile, 'id' | 'status' | 'submittedAt'>, password?: string): Promise<MemberProfile> {
     const cleanCnic = normalizeCnic(data.cnicNumber);
     const profileData = {
       ...data,
@@ -411,78 +453,81 @@ class StoreService {
     let newProfile: MemberProfile;
 
     if (existingIndex >= 0) {
+      const existing = this.profiles[existingIndex];
       newProfile = {
-        ...this.profiles[existingIndex],
+        ...existing,
         ...profileData,
-        status: 'PENDING_VERIFICATION',
+        status: existing.status === 'APPROVED' ? 'APPROVED' : 'PENDING_VERIFICATION',
+        assignedDesignation: existing.assignedDesignation || 'Member',
       };
       this.profiles[existingIndex] = newProfile;
     } else {
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
       newProfile = {
         ...profileData,
         id: `mem-${Date.now()}`,
         status: 'PENDING_VERIFICATION',
+        assignedDesignation: 'Member',
+        membershipIdNumber: `NYPS-2026-${randomNum}`,
         submittedAt: new Date().toISOString(),
       };
       this.profiles.unshift(newProfile);
     }
     this.saveProfiles();
 
-    // Auto-login / update current user state so dashboard immediately recognizes the applicant
     const currentUserState: User = {
       id: newProfile.userId || `usr-${Date.now()}`,
       cnicNumber: cleanCnic,
       fullName: newProfile.fullName,
       email: newProfile.email,
       mobileNumber: newProfile.mobileNumber,
-      role: 'APPLICANT',
+      role: 'MEMBER',
+      password: password || 'pass123',
       createdAt: newProfile.submittedAt,
     };
     this.currentUser = currentUserState;
     this.saveCurrentUser();
 
-    // Push to real Supabase database if configured
     if (isSupabaseConfigured()) {
       try {
-        await supabase.from('member_profiles').insert([{
-          full_name: profileData.fullName,
-          father_guardian_name: profileData.fatherGuardianName,
-          dob: profileData.dob,
-          gender: profileData.gender,
-          cnic_number: cleanCnic,
-          blood_group: profileData.bloodGroup,
-          mobile_number: profileData.mobileNumber,
-          email: profileData.email,
-          passport_photo_url: profileData.passportPhotoUrl,
-          residential_address: profileData.residentialAddress,
-          city_town: profileData.cityTown,
-          province: profileData.province,
-          division_id: profileData.divisionId,
-          district_id: profileData.districtId,
-          taluka_id: (profileData.talukaId && profileData.talukaId.trim() !== '') ? profileData.talukaId : null,
-          qualification: profileData.qualification,
-          institution_name: profileData.institutionName,
-          profession: profileData.profession,
-          organization_name: profileData.organizationName,
-          level_applied: profileData.levelApplied,
-          preferred_department: profileData.preferredDepartment,
-          statement_of_purpose: profileData.statementOfPurpose,
-          skills: profileData.skills,
-          areas_of_interest: profileData.areasOfInterest,
-          previous_experience: profileData.previousExperience,
-          prior_affiliations: profileData.priorAffiliations,
-          social_links: profileData.socialLinks,
-          declaration_accepted: profileData.declarationAccepted,
-          status: 'PENDING_VERIFICATION',
-        }]).then(({ error }) => {
-          if (error) {
-            console.error('🔴 Supabase Profile Insert Error:', error);
-          } else {
-            console.log('🟢 Supabase Profile Insert Successful');
-          }
+        await supabase.from('member_profiles').upsert({
+          id: newProfile.id,
+          user_id: newProfile.userId,
+          full_name: newProfile.fullName,
+          father_guardian_name: newProfile.fatherGuardianName,
+          dob: newProfile.dob,
+          gender: newProfile.gender,
+          cnic_number: newProfile.cnicNumber,
+          blood_group: newProfile.bloodGroup,
+          mobile_number: newProfile.mobileNumber,
+          email: newProfile.email,
+          passport_photo_url: newProfile.passportPhotoUrl,
+          residential_address: newProfile.residentialAddress,
+          city_town: newProfile.cityTown,
+          province: newProfile.province,
+          division_id: newProfile.divisionId,
+          district_id: newProfile.districtId,
+          taluka_id: newProfile.talukaId,
+          qualification: newProfile.qualification,
+          institution_name: newProfile.institutionName,
+          profession: newProfile.profession,
+          organization_name: newProfile.organizationName,
+          preferred_department: newProfile.preferredDepartment,
+          statement_of_purpose: newProfile.statementOfPurpose,
+          skills: newProfile.skills,
+          areas_of_interest: newProfile.areasOfInterest,
+          previous_experience: newProfile.previousExperience,
+          prior_affiliations: newProfile.priorAffiliations,
+          social_links: newProfile.socialLinks,
+          declaration_accepted: newProfile.declarationAccepted,
+          status: newProfile.status,
+          membership_id_number: newProfile.membershipIdNumber,
+          assigned_designation: newProfile.assignedDesignation,
+          approval_date: newProfile.approvalDate,
+          submitted_at: newProfile.submittedAt,
         });
       } catch (e) {
-        console.warn('Supabase insert notice:', e);
+        console.warn('Supabase submit profile notice:', e);
       }
     }
 
@@ -500,9 +545,9 @@ class StoreService {
     profile.status = status;
 
     if (status === 'VERIFIED') {
-      profile.verifiedByUserId = this.currentUser?.id || 'admin-verifier';
+      profile.verifiedByUserId = this.currentUser?.id || 'usr-verifier';
     } else if (status === 'APPROVED') {
-      profile.authorizedByUserId = this.currentUser?.id || 'admin-authorizer';
+      profile.authorizedByUserId = this.currentUser?.id || 'usr-authoriser';
       profile.approvalDate = new Date().toISOString().split('T')[0];
       if (details?.designation) {
         profile.assignedDesignation = details.designation;
@@ -510,9 +555,8 @@ class StoreService {
       if (details?.membershipIdNumber) {
         profile.membershipIdNumber = details.membershipIdNumber;
       } else if (!profile.membershipIdNumber) {
-        const divCode = SINDH_DIVISIONS.find((d) => d.id === profile.divisionId)?.code || 'SND';
         const randomNum = Math.floor(1000 + Math.random() * 9000);
-        profile.membershipIdNumber = `NYP-SINDH-2026-${divCode}-${randomNum}`;
+        profile.membershipIdNumber = `NYPS-2026-${randomNum}`;
       }
     } else if (status === 'REJECTED' && details?.rejectionReason) {
       profile.rejectionReason = details.rejectionReason;
@@ -520,24 +564,152 @@ class StoreService {
 
     this.saveProfiles();
 
-    // Sync status update with Supabase DB
     if (isSupabaseConfigured()) {
       try {
         await supabase.from('member_profiles').update({
           status: profile.status,
-          rejection_reason: profile.rejectionReason,
+          approval_date: profile.approvalDate,
           assigned_designation: profile.assignedDesignation,
           membership_id_number: profile.membershipIdNumber,
-          approval_date: profile.approvalDate,
-        }).eq('cnic_number', profile.cnicNumber);
+          rejection_reason: profile.rejectionReason,
+          verified_by_id: profile.verifiedByUserId,
+          authorized_by_id: profile.authorizedByUserId,
+        }).eq('id', profile.id);
       } catch (e) {
-        console.warn('Supabase status update notice:', e);
+        console.warn('Supabase update status notice:', e);
       }
     }
 
     return profile;
   }
 
+  public async deleteMemberProfile(profileId: string): Promise<boolean> {
+    const profile = this.profiles.find((p) => p.id === profileId);
+    this.profiles = this.profiles.filter((p) => p.id !== profileId);
+    this.saveProfiles();
+
+    if (isSupabaseConfigured() && profile) {
+      try {
+        await supabase.from('member_profiles').delete().eq('id', profile.id);
+      } catch (e) {
+        console.warn('Supabase delete profile notice:', e);
+      }
+    }
+    return true;
+  }
+
+  public async clearAllMemberProfiles(): Promise<boolean> {
+    this.profiles = [];
+    localStorage.removeItem(KEY_PROFILES);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      } catch (e) {
+        console.warn('Supabase clear all profiles notice:', e);
+      }
+    }
+    return true;
+  }
+
+  // --- Role Tier Applications Workflow ---
+  public getRoleApplications(): RoleApplicationRequest[] {
+    return this.roleApplications;
+  }
+
+  public getRoleApplicationsByUserId(userId: string): RoleApplicationRequest[] {
+    return this.roleApplications.filter((r) => r.userId === userId);
+  }
+
+  public createRoleApplication(data: {
+    userId: string;
+    cnicNumber: string;
+    profileId: string;
+    roleTier: RoleTier;
+    targetRoleTitle: string;
+    reason: string;
+    feeAmount: number;
+  }): RoleApplicationRequest {
+    const newApp: RoleApplicationRequest = {
+      id: `role-app-${Date.now()}`,
+      userId: data.userId,
+      cnicNumber: data.cnicNumber,
+      profileId: data.profileId,
+      roleTier: data.roleTier,
+      targetRoleTitle: data.targetRoleTitle,
+      reason: data.reason,
+      feeAmount: data.feeAmount,
+      status: 'PENDING_VERIFICATION',
+      submittedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.roleApplications.unshift(newApp);
+    this.saveRoleApplications();
+    return newApp;
+  }
+
+  public verifyRoleApplication(requestId: string): RoleApplicationRequest | null {
+    const app = this.roleApplications.find((r) => r.id === requestId);
+    if (app) {
+      app.status = 'VERIFIED_PENDING_PAYMENT';
+      app.verifiedByUserId = this.currentUser?.id || 'usr-verifier';
+      app.updatedAt = new Date().toISOString();
+      this.saveRoleApplications();
+      return app;
+    }
+    return null;
+  }
+
+  public submitRoleApplicationPayment(requestId: string, paymentMethod: string, transactionId: string): RoleApplicationRequest | null {
+    const app = this.roleApplications.find((r) => r.id === requestId);
+    if (app) {
+      app.status = 'PAYMENT_SUBMITTED_PENDING_AUTHORISATION';
+      app.paymentDetails = {
+        paymentMethod,
+        transactionId,
+        submittedAt: new Date().toISOString(),
+      };
+      app.updatedAt = new Date().toISOString();
+      this.saveRoleApplications();
+      return app;
+    }
+    return null;
+  }
+
+  public authorizeRoleApplication(requestId: string): RoleApplicationRequest | null {
+    const app = this.roleApplications.find((r) => r.id === requestId);
+    if (app) {
+      app.status = 'AUTHORISED';
+      app.authorizedByUserId = this.currentUser?.id || 'usr-authoriser';
+      app.updatedAt = new Date().toISOString();
+      this.saveRoleApplications();
+
+      // Update Member Profile Designation
+      const profile = this.profiles.find((p) => p.id === app.profileId || isSameCnic(p.cnicNumber, app.cnicNumber));
+      if (profile) {
+        profile.assignedDesignation = app.targetRoleTitle;
+        this.saveProfiles();
+      }
+
+      return app;
+    }
+    return null;
+  }
+
+  public rejectRoleApplication(requestId: string, reason: string): RoleApplicationRequest | null {
+    const app = this.roleApplications.find((r) => r.id === requestId);
+    if (app) {
+      app.status = 'REJECTED';
+      app.rejectionReason = reason;
+      app.updatedAt = new Date().toISOString();
+      this.saveRoleApplications();
+      return app;
+    }
+    return null;
+  }
+
+  // --- CMS Content Management ---
   public getCabinetMembers(level?: 'PROVINCIAL' | 'DIVISIONAL', divisionId?: string): CabinetMember[] {
     let list = this.cabinetMembers.filter((m) => m.isActive);
     if (level) {
@@ -556,41 +728,22 @@ class StoreService {
     };
     this.cabinetMembers.unshift(newMember);
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
-
-    if (isSupabaseConfigured()) {
-      supabase.from('cabinet_members').insert([{
-        full_name: data.fullName,
-        designation: data.designation,
-        cabinet_level: data.cabinetLevel,
-        division_id: data.divisionId,
-        photo_url: data.photoUrl,
-        bio: data.bio,
-        display_order: data.displayOrder || 1,
-        is_active: data.isActive ?? true,
-      }]).then(({ error }) => {
-        if (error) console.warn('Supabase cabinet insert notice:', error);
-      });
-    }
-
     return newMember;
   }
 
+  public updateCabinetMember(id: string, data: Partial<CabinetMember>): CabinetMember | null {
+    const member = this.cabinetMembers.find((m) => m.id === id);
+    if (member) {
+      Object.assign(member, data);
+      localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+      return member;
+    }
+    return null;
+  }
+
   public deleteCabinetMember(id: string) {
-    const itemToDelete = this.cabinetMembers.find((m) => m.id === id);
     this.cabinetMembers = this.cabinetMembers.filter((m) => m.id !== id);
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
-
-    if (isSupabaseConfigured()) {
-      if (itemToDelete?.fullName) {
-        supabase.from('cabinet_members').delete().eq('full_name', itemToDelete.fullName).then(({ error }) => {
-          if (error) console.warn('Supabase cabinet delete notice:', error);
-        });
-      } else {
-        supabase.from('cabinet_members').delete().eq('id', id).then(({ error }) => {
-          if (error) console.warn('Supabase cabinet delete notice:', error);
-        });
-      }
-    }
   }
 
   public getAnnouncements(): Announcement[] {
@@ -607,13 +760,14 @@ class StoreService {
 
     if (isSupabaseConfigured()) {
       supabase.from('announcements').insert([{
-        title: data.title,
-        content: data.content,
-        published_at: data.publishedAt || new Date().toISOString().split('T')[0],
-        banner_url: data.bannerUrl,
-        is_active: data.isActive ?? true,
+        id: newAnn.id,
+        title: newAnn.title,
+        content: newAnn.content,
+        published_at: newAnn.publishedAt,
+        banner_url: newAnn.bannerUrl,
+        is_active: newAnn.isActive
       }]).then(({ error }) => {
-        if (error) console.warn('Supabase announcement insert notice:', error);
+        if (error) console.warn('Supabase addAnnouncement notice:', error.message);
       });
     }
 
@@ -621,20 +775,13 @@ class StoreService {
   }
 
   public deleteAnnouncement(id: string) {
-    const itemToDelete = this.announcements.find((a) => a.id === id);
     this.announcements = this.announcements.filter((a) => a.id !== id);
     localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
 
     if (isSupabaseConfigured()) {
-      if (itemToDelete?.title) {
-        supabase.from('announcements').delete().eq('title', itemToDelete.title).then(({ error }) => {
-          if (error) console.warn('Supabase announcement delete notice:', error);
-        });
-      } else {
-        supabase.from('announcements').delete().eq('id', id).then(({ error }) => {
-          if (error) console.warn('Supabase announcement delete notice:', error);
-        });
-      }
+      supabase.from('announcements').delete().eq('id', id).then(({ error }) => {
+        if (error) console.warn('Supabase deleteAnnouncement notice:', error.message);
+      });
     }
   }
 
@@ -649,38 +796,12 @@ class StoreService {
     };
     this.leadershipMessages.unshift(newMsg);
     localStorage.setItem(KEY_LEADERSHIP, JSON.stringify(this.leadershipMessages));
-
-    if (isSupabaseConfigured()) {
-      supabase.from('leadership_messages').insert([{
-        title: data.title,
-        leader_name: data.leaderName,
-        leader_title: data.leaderTitle,
-        message_text: data.messageText,
-        photo_url: data.photoUrl,
-      }]).then(({ error }) => {
-        if (error) console.warn('Supabase leadership insert notice:', error);
-      });
-    }
-
     return newMsg;
   }
 
   public deleteLeadershipMessage(id: string) {
-    const itemToDelete = this.leadershipMessages.find((m) => m.id === id);
     this.leadershipMessages = this.leadershipMessages.filter((m) => m.id !== id);
     localStorage.setItem(KEY_LEADERSHIP, JSON.stringify(this.leadershipMessages));
-
-    if (isSupabaseConfigured()) {
-      if (itemToDelete?.leaderName) {
-        supabase.from('leadership_messages').delete().eq('leader_name', itemToDelete.leaderName).then(({ error }) => {
-          if (error) console.warn('Supabase leadership delete notice:', error);
-        });
-      } else {
-        supabase.from('leadership_messages').delete().eq('id', id).then(({ error }) => {
-          if (error) console.warn('Supabase leadership delete notice:', error);
-        });
-      }
-    }
   }
 
   public getWorkingGoals(): WorkingGoal[] {
@@ -694,38 +815,13 @@ class StoreService {
     };
     this.workingGoals.push(newGoal);
     localStorage.setItem(KEY_WORKING_GOALS, JSON.stringify(this.workingGoals));
-
-    if (isSupabaseConfigured()) {
-      supabase.from('working_goals').insert([{
-        title: data.title,
-        category: data.category,
-        description: data.description,
-      }]).then(({ error }) => {
-        if (error) console.warn('Supabase working goal insert notice:', error);
-      });
-    }
-
     return newGoal;
   }
 
   public deleteWorkingGoal(id: string) {
-    const itemToDelete = this.workingGoals.find((g) => g.id === id);
     this.workingGoals = this.workingGoals.filter((g) => g.id !== id);
     localStorage.setItem(KEY_WORKING_GOALS, JSON.stringify(this.workingGoals));
-
-    if (isSupabaseConfigured()) {
-      if (itemToDelete?.title) {
-        supabase.from('working_goals').delete().eq('title', itemToDelete.title).then(({ error }) => {
-          if (error) console.warn('Supabase working goal delete notice:', error);
-        });
-      } else {
-        supabase.from('working_goals').delete().eq('id', id).then(({ error }) => {
-          if (error) console.warn('Supabase working goal delete notice:', error);
-        });
-      }
-    }
   }
-
 
   public getDivisionName(divisionId: string): string {
     return SINDH_DIVISIONS.find((d) => d.id === divisionId)?.name || 'Sindh';

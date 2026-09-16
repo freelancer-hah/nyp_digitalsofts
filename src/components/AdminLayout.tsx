@@ -14,8 +14,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const currentUser = store.getCurrentUser();
   const { theme, toggleTheme } = useTheme();
 
-  // Protect Admin Routes: If not logged in or role is APPLICANT, redirect to Admin Login
-  if (!currentUser || currentUser.role === 'APPLICANT') {
+  // Protect Admin Routes
+  if (!currentUser || currentUser.role === 'APPLICANT' || currentUser.role === 'MEMBER') {
     return <Navigate to="/admin/login" replace />;
   }
 
@@ -28,12 +28,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const getRoleBadge = (role: string) => {
     switch (role) {
+      case 'PRESIDENT':
       case 'SUPER_ADMIN':
-        return <span className="bg-purple-950 text-purple-300 border border-purple-800 text-[10px] font-bold px-2 py-0.5 rounded">Super Admin</span>;
+        return <span className="bg-purple-950 text-purple-300 border border-purple-800 text-[10px] font-bold px-2 py-0.5 rounded">PRESIDENT</span>;
+      case 'AUTHORISATION_DESK':
       case 'APPROVAL_AUTHORITY':
-        return <span className="bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">President Desk</span>;
+        return <span className="bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">Authorisation Desk</span>;
+      case 'VERIFICATION_DESK':
       case 'VERIFYING_OFFICER':
-        return <span className="bg-amber-950 text-amber-300 border border-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">Scrutiny Desk</span>;
+        return <span className="bg-amber-950 text-amber-300 border border-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">Verification Desk</span>;
       case 'DIVISIONAL_ADMIN':
         return <span className="bg-blue-950 text-blue-300 border border-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">Regional Admin</span>;
       default:
@@ -51,30 +54,30 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             
             {/* Left: Admin Brand */}
             <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-500/50 bg-white p-0.5 shadow-lg shrink-0">
+              <div className="w-10 h-10 rounded-xl overflow-hidden border border-amber-400 bg-white p-0.5 shadow-lg shrink-0">
                 <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain rounded-lg" />
               </div>
               <div className="text-left">
                 <div className="text-sm sm:text-base font-black tracking-tight text-slate-900 dark:text-white flex items-center space-x-2 font-heading">
                   <span className="admin-brand-title text-slate-900 dark:text-white">NYP SINDH</span>
                   <span className="text-[10px] uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/90 dark:text-emerald-300 dark:border-emerald-600/60 px-2 py-0.5 rounded-full font-extrabold shadow-sm">
-                    ADMIN PORTAL
+                    EXECUTIVE DESK
                   </span>
                 </div>
                 <div className="admin-brand-sub text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-                  {currentUser.role === 'SUPER_ADMIN' && 'Super Admin Master Control'}
-                  {currentUser.role === 'VERIFYING_OFFICER' && 'Verification & Scrutiny Portal'}
-                  {currentUser.role === 'APPROVAL_AUTHORITY' && 'President Approval Desk'}
-                  {currentUser.role === 'DIVISIONAL_ADMIN' && 'Divisional & Regional Portal'}
+                  {(currentUser.role === 'PRESIDENT' || currentUser.role === 'SUPER_ADMIN') && 'PRESIDENT EXECUTIVE PORTAL'}
+                  {(currentUser.role === 'VERIFICATION_DESK' || currentUser.role === 'VERIFYING_OFFICER') && 'Verification Desk Portal'}
+                  {(currentUser.role === 'AUTHORISATION_DESK' || currentUser.role === 'APPROVAL_AUTHORITY') && 'Authorisation Desk Portal'}
+                  {currentUser.role === 'DIVISIONAL_ADMIN' && 'Divisional Admin Desk'}
                 </div>
               </div>
             </div>
 
-            {/* Middle: Role-Specific Navigation Links ONLY */}
+            {/* Middle: Navigation Links */}
             <nav className="hidden md:flex items-center space-x-1 bg-slate-100 border border-slate-200 dark:bg-[#030914] dark:border-slate-800 p-1.5 rounded-2xl">
               
-              {/* VERIFYING_OFFICER ONLY LINKS */}
-              {currentUser.role === 'VERIFYING_OFFICER' && (
+              {/* VERIFICATION DESK LINKS */}
+              {(currentUser.role === 'VERIFICATION_DESK' || currentUser.role === 'VERIFYING_OFFICER') && (
                 <Link
                   to="/admin/verification"
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
@@ -84,42 +87,41 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   }`}
                 >
                   <CheckSquare className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  <span>Verification & Scrutiny Desk</span>
+                  <span>Verification Desk</span>
                 </Link>
               )}
 
-              {/* APPROVAL_AUTHORITY ONLY LINKS */}
-              {currentUser.role === 'APPROVAL_AUTHORITY' && (
-                <Link
-                  to="/admin/approval"
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-                    isActive('/admin/approval')
-                      ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/50 shadow-md'
-                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/80'
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>President Approval Desk</span>
-                </Link>
+              {/* AUTHORISATION DESK LINKS (HAS CMS PRIVILEGES) */}
+              {(currentUser.role === 'AUTHORISATION_DESK' || currentUser.role === 'APPROVAL_AUTHORITY') && (
+                <>
+                  <Link
+                    to="/admin/approval"
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                      isActive('/admin/approval')
+                        ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/50 shadow-md'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Authorisation Desk</span>
+                  </Link>
+
+                  <Link
+                    to="/admin/cms"
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                      isActive('/admin/cms')
+                        ? 'bg-teal-500/20 text-teal-800 dark:text-teal-300 border border-teal-500/50 shadow-md'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <Layout className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    <span>CMS Content Manager</span>
+                  </Link>
+                </>
               )}
 
-              {/* DIVISIONAL_ADMIN ONLY LINKS */}
-              {currentUser.role === 'DIVISIONAL_ADMIN' && (
-                <Link
-                  to="/admin/regional"
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-                    isActive('/admin/regional') || isActive('/admin/master')
-                      ? 'bg-blue-500/20 text-blue-800 dark:text-blue-300 border border-blue-500/50 shadow-md'
-                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/80'
-                  }`}
-                >
-                  <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span>Regional Admin Desk</span>
-                </Link>
-              )}
-
-              {/* SUPER_ADMIN ONLY LINKS */}
-              {currentUser.role === 'SUPER_ADMIN' && (
+              {/* PRESIDENT (SUPER_ADMIN) LINKS */}
+              {(currentUser.role === 'PRESIDENT' || currentUser.role === 'SUPER_ADMIN') && (
                 <>
                   <Link
                     to="/admin/master"
@@ -130,7 +132,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     }`}
                   >
                     <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                    <span>Master Control Desk</span>
+                    <span>PRESIDENT Executive Portal</span>
                   </Link>
 
                   <Link
@@ -154,7 +156,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 onClick={toggleTheme}
                 className="p-2 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 hover:border-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-amber-400 transition-all shadow-sm flex items-center justify-center cursor-pointer"
                 title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                aria-label="Toggle Theme Mode"
               >
                 {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-emerald-600" />}
               </button>
@@ -178,7 +179,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <button
                 onClick={handleLogout}
                 className="admin-btn-logout px-3 py-2 text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl border border-rose-200 dark:text-rose-300 dark:bg-slate-950 dark:hover:bg-rose-950/60 dark:border-slate-800 hover:border-rose-700 transition-all flex items-center space-x-1.5 text-xs font-bold cursor-pointer shadow-sm"
-                title="Sign Out of Admin Portal"
+                title="Sign Out"
               >
                 <LogOut className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                 <span className="hidden sm:inline">Logout</span>
@@ -186,45 +187,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </div>
 
           </div>
-
-          {/* Mobile Role-Specific Nav Strip */}
-          <div className="flex md:hidden items-center justify-around py-2.5 border-t border-slate-200 dark:border-slate-800/80 text-[11px] font-bold">
-            {currentUser.role === 'VERIFYING_OFFICER' && (
-              <span className="text-amber-600 dark:text-amber-400 font-extrabold flex items-center space-x-1">
-                <CheckSquare className="w-3.5 h-3.5" />
-                <span>Verification Desk</span>
-              </span>
-            )}
-            {currentUser.role === 'APPROVAL_AUTHORITY' && (
-              <span className="text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center space-x-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Approval Desk</span>
-              </span>
-            )}
-            {currentUser.role === 'DIVISIONAL_ADMIN' && (
-              <span className="text-blue-600 dark:text-blue-400 font-extrabold flex items-center space-x-1">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Regional Desk</span>
-              </span>
-            )}
-            {currentUser.role === 'SUPER_ADMIN' && (
-              <>
-                <Link
-                  to="/admin/master"
-                  className={`px-2 py-1 rounded-lg ${isActive('/admin/master') ? 'text-purple-600 dark:text-purple-400 font-extrabold' : 'text-slate-600 dark:text-slate-400'}`}
-                >
-                  Master Desk
-                </Link>
-                <Link
-                  to="/admin/cms"
-                  className={`px-2 py-1 rounded-lg ${isActive('/admin/cms') ? 'text-teal-600 dark:text-teal-400 font-extrabold' : 'text-slate-600 dark:text-slate-400'}`}
-                >
-                  CMS Manager
-                </Link>
-              </>
-            )}
-          </div>
-
         </div>
       </header>
 
@@ -235,7 +197,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Admin Footer */}
       <footer className="border-t border-slate-200 bg-white text-slate-600 dark:border-slate-900 dark:bg-[#090e17] dark:text-slate-500 py-4 px-4 text-center text-xs transition-colors duration-300">
-        NYP Sindh Executive Portal • Logged in as <span className="text-slate-900 dark:text-slate-300 font-bold">{currentUser.fullName}</span> ({currentUser.role})
+        National Youth Parliament Sindh • Logged in as <span className="text-slate-900 dark:text-slate-300 font-bold">{currentUser.fullName}</span> ({currentUser.role})
       </footer>
 
     </div>

@@ -347,6 +347,40 @@ export const CmsManagerPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Select from Registered Member Profiles */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Select from Registered Profiles (Auto-Fill)</label>
+                <select
+                  onChange={(e) => {
+                    const profId = e.target.value;
+                    if (!profId) return;
+                    const prof = store.getAllProfiles().find((p) => p.id === profId);
+                    if (prof) {
+                      setCabFullName(prof.fullName);
+                      setCabPhotoUrl(prof.passportPhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300');
+                      if (prof.divisionId) {
+                        setCabDivisionId(prof.divisionId);
+                        setCabLevel('DIVISIONAL');
+                      }
+                      if (prof.assignedDesignation && prof.assignedDesignation !== 'Member') {
+                        setCabDesignation(prof.assignedDesignation);
+                      }
+                      if (prof.statementOfPurpose) {
+                        setCabBio(prof.statementOfPurpose);
+                      }
+                    }
+                  }}
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl p-2.5 text-xs font-bold outline-none mb-3"
+                >
+                  <option value="">-- Select Registered Profile --</option>
+                  {store.getAllProfiles().map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.fullName} ({p.cnicNumber}) - {p.divisionId ? store.getDivisionName(p.divisionId) : 'Sindh'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
                 <input

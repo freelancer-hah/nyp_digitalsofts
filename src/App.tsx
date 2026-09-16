@@ -103,6 +103,7 @@ export function App() {
     <Router>
       <Routes>
         {/* Standalone Admin Login */}
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
 
         {/* Protected Admin Executive Desks (wrapped in AdminLayout) */}

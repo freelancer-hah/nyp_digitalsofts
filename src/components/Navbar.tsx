@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { UserCheck, LogIn, LogOut, Menu, X, Megaphone, Sparkles, Shield, Sun, Moon } from 'lucide-react';
+import { UserCheck, LogIn, LogOut, Menu, X, Sun, Moon } from 'lucide-react';
 import { store } from '../services/store';
 import { useTheme } from '../context/ThemeContext';
 
@@ -9,7 +9,6 @@ export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = store.getCurrentUser();
-  const announcements = store.getAnnouncements();
   const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => {
@@ -21,62 +20,27 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className="sticky top-0 z-50 glass-nav text-slate-900 dark:text-slate-100 shadow-xl transition-all duration-300">
-      
-      {/* Dynamic Animated News Ticker Bar */}
-      <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 dark:from-emerald-950 dark:via-emerald-900 dark:to-emerald-950 text-emerald-100 text-[11px] py-1.5 px-4 overflow-hidden border-b border-emerald-700/60 dark:border-emerald-800/60 font-medium relative">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          
-          <div className="flex items-center space-x-2 shrink-0 z-10 bg-emerald-900 dark:bg-emerald-950 pr-3 font-bold text-amber-300 uppercase tracking-wider text-[10px]">
-            <Megaphone className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            <span>LATEST BULLETIN:</span>
-          </div>
-
-          {/* Marquee Text Container */}
-          <div className="flex-1 overflow-hidden relative mx-2">
-            <div className="animate-marquee whitespace-nowrap space-x-12">
-              {announcements.map((ann, i) => (
-                <span key={i} className="inline-flex items-center space-x-2 text-emerald-50">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  <strong className="text-white font-bold">{ann.title}:</strong>
-                  <span className="text-emerald-200">{ann.content.substring(0, 90)}...</span>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="hidden lg:flex items-center space-x-4 shrink-0 z-10 bg-emerald-900 dark:bg-emerald-950 pl-3 text-[10px]">
-            <span className="text-emerald-300 font-semibold">Helpline: 0331 9226110</span>
-            <span className="text-amber-300 font-bold uppercase tracking-wider flex items-center space-x-1">
-              <Sparkles className="w-3 h-3" />
-              <span>NYP SINDH 2026</span>
-            </span>
-          </div>
-
-        </div>
-      </div>
 
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Brand Logo with Smooth Hover */}
-          <Link to="/" className="flex items-center space-x-3.5 group">
-            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-amber-400/80 bg-white p-0.5 shadow-lg group-hover:scale-105 group-hover:shadow-emerald-500/20 transition-all duration-300 shrink-0">
+          {/* Brand Logo & Title with Balanced Proportions */}
+          <Link to="/" className="flex items-center space-x-3 group shrink-0 py-2">
+            <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl overflow-hidden border-2 border-amber-400/90 bg-white p-0.5 shadow-md group-hover:scale-105 transition-all duration-300 shrink-0 flex items-center justify-center">
               <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain rounded-lg" />
             </div>
-            <div className="text-left">
-              <div className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white leading-tight group-hover:text-amber-500 transition-colors">
+            <div className="text-left flex flex-col justify-center">
+              <div className="text-xs sm:text-base font-black tracking-tight text-slate-900 dark:text-white leading-snug group-hover:text-emerald-700 dark:group-hover:text-amber-400 transition-colors uppercase font-heading">
                 NATIONAL YOUTH PARLIAMENT
               </div>
-              <div className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 tracking-wider flex items-center space-x-1.5">
-                <span>S I N D H</span>
-                <span className="text-slate-400 font-normal">|</span>
-                <span className="text-slate-500 dark:text-slate-400 font-medium text-[10px]">Official Public Website</span>
+              <div className="text-[10px] sm:text-xs font-black text-amber-600 dark:text-amber-400 tracking-[0.35em] uppercase font-heading">
+                S I N D H
               </div>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links with Active Pill Highlights */}
+          {/* Desktop Navigation Links: HOME -> Cabinets -> Youth Parliamentarians -> Announcements -> Contact Us */}
           <div className="hidden lg:flex items-center space-x-1 bg-slate-100/90 border border-slate-200 dark:bg-slate-900/90 dark:border-slate-800 p-1.5 rounded-2xl backdrop-blur-md">
             <Link 
               to="/" 
@@ -86,17 +50,27 @@ export const Navbar: React.FC = () => {
                   : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
               }`}
             >
-              Home
+              HOME
             </Link>
             <Link 
               to="/cabinets" 
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/cabinets') 
+                isActive('/cabinets') && !location.search.includes('parliamentarians')
                   ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
                   : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
               }`}
             >
-              Cabinet & MPAs
+              Cabinets
+            </Link>
+            <Link 
+              to="/cabinets?view=parliamentarians" 
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                isActive('/cabinets') && location.search.includes('parliamentarians')
+                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
+                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
+              }`}
+            >
+              Youth Parliamentarians
             </Link>
             <Link 
               to="/announcements" 
@@ -106,7 +80,7 @@ export const Navbar: React.FC = () => {
                   : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
               }`}
             >
-              News Bulletins
+              Announcements
             </Link>
             <Link 
               to="/contact" 

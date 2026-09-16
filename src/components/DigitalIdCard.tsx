@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { MemberProfile } from '../types';
-import { store } from '../services/store';
-import { Download, Printer, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
+import { Download, Printer, ShieldCheck, Loader2, Eye, RotateCw, LayoutGrid } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -10,110 +9,240 @@ interface Props {
 }
 
 export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
+  const frontCardRef = useRef<HTMLDivElement>(null);
+  const backCardRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const divisionName = store.getDivisionName(profile.divisionId);
-  const districtName = store.getDistrictName(profile.districtId);
+  const [activeTab, setActiveTab] = useState<'BOTH' | 'FRONT' | 'BACK'>('BOTH');
 
-  const handleDownloadPDF = async () => {
-    if (!cardRef.current || isGeneratingPdf) return;
-    setIsGeneratingPdf(true);
+  const issueDateStr = (() => {
+    const rawDate = profile.approvalDate || profile.submittedAt;
+    if (!rawDate) return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const dateOnly = rawDate.split('T')[0];
+    const parts = dateOnly.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return new Date(year, month, day).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    return new Date(rawDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  })();
+
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=NYP-SINDH-VERIFIED-${encodeURIComponent(profile.membershipIdNumber || profile.cnicNumber)}`;
+
+  // Helper function to safely convert external image URLs to base64 Data URLs to avoid canvas tainting
+  const getBase64ImageFromUrl = async (url: string): Promise<string> => {
+    if (!url) return '';
+    if (url.startsWith('data:')) return url;
+
     try {
-      const frontCardEl = (cardRef.current.querySelector('.print-card-front') as HTMLElement) || cardRef.current;
-      
-      // Ensure all web fonts are loaded
-      if (document.fonts) {
-        await document.fonts.ready;
+      const response = await fetch(url, { mode: 'cors' });
+      if (response.ok) {
+        const blob = await response.blob();
+        return await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
       }
+    } catch {
+      // Fall back to Image canvas technique
+    }
 
-      // Convert all images inside card to base64 Data URLs for 100% exact rendering in html2canvas
-      const imgElements = Array.from(frontCardEl.querySelectorAll('img'));
+    return new Promise<string>((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width || 300;
+          canvas.height = img.naturalHeight || img.height || 300;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = canvas.toDataURL('image/png');
+            resolve(dataUrl);
+            return;
+          }
+        } catch {
+          // Canvas tainted fallback
+        }
+        resolve(url);
+      };
+      img.onerror = () => resolve(url);
+      img.src = url;
+    });
+  };
+
+  // Capture element to canvas reliably by cloning offscreen and resolving images
+  const captureCard = async (element: HTMLElement | null): Promise<HTMLCanvasElement | null> => {
+    if (!element) return null;
+
+    const clone = element.cloneNode(true) as HTMLElement;
+    clone.classList.remove('hidden');
+    clone.style.display = 'flex';
+    clone.style.flexDirection = 'column';
+    clone.style.position = 'fixed';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+    clone.style.width = '420px';
+    clone.style.height = 'auto';
+    clone.style.minHeight = '510px';
+    clone.style.zIndex = '-9999';
+    clone.style.opacity = '1';
+    clone.style.visibility = 'visible';
+    clone.style.transform = 'none';
+
+    document.body.appendChild(clone);
+
+    try {
+      const images = Array.from(clone.querySelectorAll('img'));
       await Promise.all(
-        imgElements.map(async (img) => {
-          if (!img.src || img.src.startsWith('data:')) return;
-          try {
-            const resp = await fetch(img.src, { mode: 'cors' });
-            const blob = await resp.blob();
-            await new Promise((res) => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                if (reader.result) {
-                  img.src = reader.result as string;
-                }
-                res(null);
-              };
-              reader.readAsDataURL(blob);
-            });
-          } catch (err) {
-            console.warn('Image base64 conversion warning:', err);
+        images.map(async (img) => {
+          const originalSrc = img.getAttribute('src') || img.src;
+          if (originalSrc && !originalSrc.startsWith('data:')) {
+            const absoluteUrl = new URL(originalSrc, window.location.origin).href;
+            const base64 = await getBase64ImageFromUrl(absoluteUrl);
+            if (base64) {
+              img.src = base64;
+            }
           }
         })
       );
 
-      // Pre-wait for images to complete loading
-      await Promise.all(
-        imgElements.map((img) => {
-          if (img.complete) return Promise.resolve();
-          return new Promise((resolve) => {
-            img.onload = resolve;
-            img.onerror = resolve;
-          });
-        })
-      );
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+      await new Promise((r) => setTimeout(r, 120));
 
-      const canvas = await html2canvas(frontCardEl, {
-        scale: 4, // 4x scale for retina high-definition output
+      const canvas = await html2canvas(clone, {
+        scale: 3,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         logging: false,
-        backgroundColor: '#012b1d'
+        backgroundColor: '#ffffff'
       });
 
-      const imgData = canvas.toDataURL('image/png', 1.0);
+      return canvas;
+    } catch (err) {
+      console.error('Error capturing card canvas:', err);
+      return null;
+    } finally {
+      if (clone.parentNode) {
+        clone.parentNode.removeChild(clone);
+      }
+    }
+  };
+
+  // PDF Export for Both Sides Always
+  const handleDownloadPDF = async () => {
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    try {
+      const frontCanvas = await captureCard(frontCardRef.current);
+      const backCanvas = await captureCard(backCardRef.current);
+
+      if (!frontCanvas && !backCanvas) {
+        throw new Error('Card elements unavailable');
+      }
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const imgProps = pdf.getImageProperties(imgData);
-      const calculatedWidth = 150; // 150mm width for crisp standard ID card
-      const calculatedHeight = (imgProps.height * calculatedWidth) / imgProps.width;
-      
-      // Center card cleanly on A4 page
-      const xPos = (pdfWidth - calculatedWidth) / 2;
-      const yPos = (pdfHeight - calculatedHeight) / 2 - 10;
-      
-      pdf.addImage(imgData, 'PNG', xPos, yPos, calculatedWidth, calculatedHeight, undefined, 'FAST');
-      
-      const safeId = (profile.membershipIdNumber || profile.cnicNumber).replace(/[^a-zA-Z0-9-]/g, '_');
-      pdf.save(`NYP_Sindh_Card_${safeId}.pdf`);
+
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const cardWidth = 86; // 86mm width per card on A4
+
+      // Draw Top Header Banner
+      pdf.setFillColor(15, 23, 42); // #0f172a slate-900
+      pdf.rect(0, 0, pageWidth, 18, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('NATIONAL YOUTH PARLIAMENT SINDH', pageWidth / 2, 8, { align: 'center' });
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(251, 191, 36); // #fbbf24 amber-400
+      pdf.text('OFFICIAL MEMBERSHIP IDENTIFICATION CARD', pageWidth / 2, 13, { align: 'center' });
+
+      const yPosition = 28;
+      let maxCardHeight = 108;
+
+      if (frontCanvas) {
+        const frontHeight = (cardWidth * frontCanvas.height) / frontCanvas.width;
+        maxCardHeight = Math.max(maxCardHeight, frontHeight);
+        const frontImgData = frontCanvas.toDataURL('image/png', 1.0);
+        const frontX = 14;
+        pdf.addImage(frontImgData, 'PNG', frontX, yPosition, cardWidth, frontHeight, undefined, 'FAST');
+        
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 116, 139);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('FRONT SIDE', frontX + (cardWidth / 2), yPosition + frontHeight + 5, { align: 'center' });
+      }
+
+      if (backCanvas) {
+        const backHeight = (cardWidth * backCanvas.height) / backCanvas.width;
+        maxCardHeight = Math.max(maxCardHeight, backHeight);
+        const backImgData = backCanvas.toDataURL('image/png', 1.0);
+        const backX = 110;
+        pdf.addImage(backImgData, 'PNG', backX, yPosition, cardWidth, backHeight, undefined, 'FAST');
+        
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 116, 139);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('BACK SIDE', backX + (cardWidth / 2), yPosition + backHeight + 5, { align: 'center' });
+      }
+
+      // Footer divider line and member details
+      const footerY = yPosition + maxCardHeight + 14;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.setLineWidth(0.5);
+      pdf.line(14, footerY, pageWidth - 14, footerY);
+
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Member Name: ${profile.fullName || 'N/A'}`, 14, footerY + 7);
+      pdf.text(`Membership ID: ${profile.membershipIdNumber || profile.cnicNumber || 'N/A'}`, 14, footerY + 13);
+      pdf.text(`CNIC Number: ${profile.cnicNumber || 'N/A'}`, 14, footerY + 19);
+
+      pdf.setFontSize(7.5);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(`Official Verified Digital Certificate & Membership ID Pass — NYP Sindh`, 14, footerY + 26);
+      pdf.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - 14, footerY + 26, { align: 'right' });
+
+      const safeId = (profile.membershipIdNumber || profile.cnicNumber || 'card').replace(/[^a-zA-Z0-9-]/g, '_');
+      pdf.save(`NYP_Sindh_Membership_Card_${safeId}.pdf`);
     } catch (e) {
       console.error('PDF generation error:', e);
-      alert('Generating PDF failed. Please click "Print Card" and select "Save as PDF".');
+      alert('Generating PDF encountered an issue. Opening print dialog to Save as PDF...');
+      handlePrint();
     } finally {
       setIsGeneratingPdf(false);
     }
   };
 
   const handlePrint = () => {
-    if (!cardRef.current) {
+    if (!containerRef.current) {
       window.print();
       return;
     }
 
     try {
-      const printWindow = window.open('', '_blank', 'width=800,height=900');
+      const printWindow = window.open('', '_blank', 'width=950,height=1000');
       if (!printWindow) {
         window.print();
         return;
       }
 
-      const frontCardEl = cardRef.current.querySelector('.print-card-front');
-      const cardHtml = frontCardEl ? frontCardEl.outerHTML : cardRef.current.innerHTML;
+      const frontHtml = frontCardRef.current ? frontCardRef.current.outerHTML : '';
+      const backHtml = backCardRef.current ? backCardRef.current.outerHTML : '';
       const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
         .map((el) => el.outerHTML)
         .join('\n');
@@ -134,18 +263,19 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
                 display: flex !important;
                 justify-content: center !important;
                 align-items: flex-start !important;
-                padding: 40px 20px !important;
+                padding: 20px !important;
                 margin: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
               }
-              .print-wrapper {
-                width: 460px !important;
-                margin: 0 auto !important;
-              }
-              .no-print, .print-card-back {
-                display: none !important;
+              .print-container {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 20px !important;
+                justify-content: center !important;
+                align-items: center !important;
+                flex-wrap: wrap !important;
               }
               @page {
                 size: A4 portrait;
@@ -154,8 +284,9 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
             </style>
           </head>
           <body>
-            <div class="print-wrapper">
-              ${cardHtml}
+            <div class="print-container">
+              ${frontHtml}
+              ${backHtml}
             </div>
             <script>
               window.onload = () => {
@@ -163,7 +294,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
                   window.focus();
                   window.print();
                   window.close();
-                }, 350);
+                }, 400);
               };
             </script>
           </body>
@@ -176,333 +307,569 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
     }
   };
 
+  // Reusable Sindh Map Silhouette SVG
+  const SindhMapSvg = () => (
+    <svg viewBox="0 0 100 120" style={{ width: '100%', height: '100%', fill: '#cfc6bb' }}>
+      <path d="M45,5 C55,8 65,15 70,25 C75,35 85,45 88,60 C90,75 80,88 72,100 C65,110 50,115 35,110 C25,105 18,92 15,80 C12,65 18,50 25,35 C30,22 38,10 45,5 Z" />
+    </svg>
+  );
+
+  // Reusable Background Architectural Monument Watermark SVG
+  const MonumentWatermarkSvg = () => (
+    <svg viewBox="0 0 400 200" style={{ width: '100%', height: '100%', opacity: 0.07, fill: '#b45309' }}>
+      <path d="M20,200 L20,140 L35,140 L35,110 L45,110 L45,80 L55,70 L65,80 L65,110 L75,110 L75,140 L90,140 L90,200 Z" />
+      <path d="M120,200 L120,120 L135,120 L135,90 L160,60 L185,90 L185,120 L200,120 L200,200 Z" />
+      <path d="M230,200 L230,130 L245,130 L245,95 L260,75 L275,95 L275,130 L290,130 L290,200 Z" />
+      <path d="M310,200 L310,140 L325,140 L325,110 L335,110 L335,80 L345,70 L355,80 L355,110 L365,110 L365,140 L380,140 L380,200 Z" />
+      {/* Dome Arches */}
+      <circle cx="160" cy="65" r="18" />
+      <circle cx="260" cy="80" r="14" />
+    </svg>
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Actions */}
-      <div className="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl no-print">
-        <div className="flex items-center space-x-2 text-emerald-400 font-semibold text-sm">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-          <span>Official Membership Card Unlocked</span>
+    <div className="w-full space-y-6">
+      
+      {/* Top Action & View Toolbar */}
+      <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl no-print shadow-xl space-y-4">
+        
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-2 text-emerald-400 font-bold text-xs sm:text-sm">
+            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span>Official Membership ID Card (Exact Vendor Design Match)</span>
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            <button
+              onClick={handlePrint}
+              className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
+            >
+              <Printer className="w-4 h-4 text-amber-400" />
+              <span>Print Both Sides</span>
+            </button>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPdf}
+              className="flex items-center space-x-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-black shadow-lg transition-transform hover:scale-105 cursor-pointer uppercase tracking-wider"
+            >
+              {isGeneratingPdf ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                  <span>Generating PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  <span>Download Card PDF</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center space-x-3">
+
+        {/* View Mode Switcher Tabs */}
+        <div className="flex items-center justify-center space-x-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-800 w-fit mx-auto">
           <button
-            onClick={handlePrint}
-            className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-700 transition-colors"
+            onClick={() => setActiveTab('BOTH')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              activeTab === 'BOTH'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
           >
-            <Printer className="w-4 h-4 text-emerald-400" />
-            <span>Print Card</span>
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Both Sides</span>
           </button>
+
           <button
-            onClick={handleDownloadPDF}
-            disabled={isGeneratingPdf}
-            className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-emerald-900/40 transition-colors cursor-pointer"
+            onClick={() => setActiveTab('FRONT')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              activeTab === 'FRONT'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
           >
-            {isGeneratingPdf ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
-                <span>Generating PDF...</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                <span>Download Card PDF</span>
-              </>
-            )}
+            <Eye className="w-3.5 h-3.5" />
+            <span>Front Side Only</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('BACK')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              activeTab === 'BACK'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <RotateCw className="w-3.5 h-3.5" />
+            <span>Back Side Only</span>
           </button>
         </div>
+
       </div>
 
-      {/* Physical Card Container (Front & Back) - Printable */}
-      <div ref={cardRef} className="id-card-printable-container max-w-md mx-auto space-y-4 p-0 bg-transparent">
+      {/* Fully Responsive Unclipped Card Container */}
+      <div 
+        ref={containerRef} 
+        className="w-full py-4 flex flex-wrap items-center justify-center gap-6 sm:gap-8 min-h-[580px] max-w-full overflow-visible px-1"
+      >
         
-        {/* FRONT CARD */}
-        <div 
-          className="print-card-side print-card-front"
+        {/* ======================================================== */}
+        {/* FRONT SIDE OF ID CARD (EXACT MATCH TO REFERENCE IMAGE)    */}
+        {/* ======================================================== */}
+        <div
+          ref={frontCardRef}
+          className={`print-card-front transition-all duration-300 shrink-0 ${activeTab === 'BACK' ? 'hidden' : 'block'}`}
           style={{
-            width: '460px',
-            height: '295px',
-            minWidth: '460px',
-            minHeight: '295px',
-            background: 'linear-gradient(135deg, #012b1d 0%, #0f172a 55%, #022c22 100%)',
-            color: '#ffffff',
-            border: '2px solid #f59e0b',
-            borderRadius: '16px',
+            width: '420px',
+            maxWidth: '100%',
+            minHeight: '510px',
+            background: '#ffffff',
+            color: '#0f172a',
+            border: '2px solid #cbd5e1',
+            borderRadius: '24px',
             boxSizing: 'border-box',
             position: 'relative',
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            margin: '0 auto',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
+            boxShadow: '0 25px 35px -5px rgba(0, 0, 0, 0.2), 0 10px 15px -5px rgba(0, 0, 0, 0.1)',
             fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
           }}
         >
-          
-          {/* Watermark Logo (Circular centered watermark) */}
-          <div 
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '210px',
-              height: '210px',
-              opacity: 0.05,
-              pointerEvents: 'none',
-              zIndex: 1,
-              borderRadius: '50%',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <img 
-              src="/nyp-logo.jpg" 
-              alt="" 
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                borderRadius: '50%'
-              }} 
-            />
+          {/* Background Watermark Architecture Layer */}
+          <div style={{ position: 'absolute', bottom: '40px', left: 0, right: 0, height: '160px', pointerEvents: 'none', zIndex: 1 }}>
+            <MonumentWatermarkSvg />
           </div>
 
-          {/* Header Banner */}
-          <div 
-            style={{
-              height: '52px',
-              padding: '0 16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'linear-gradient(90deg, #065f46 0%, #047857 50%, #022c22 100%)',
-              borderBottom: '2px solid #f59e0b',
-              position: 'relative',
-              zIndex: 10,
-              flexShrink: 0
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* TOP SECTION: WHITE HEADER WITH EMBLEM, TITLE & SINDH MAP */}
+          <div style={{ position: 'relative', zIndex: 10, padding: '14px 16px 4px 16px', background: '#ffffff' }}>
+            
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
+              
+              {/* NYP Emblem Logo Left + Ribbon Badge */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '70px', flexShrink: 0 }}>
+                <div style={{ width: '56px', height: '56px', position: 'relative' }}>
+                  <img src="/nyp-logo.jpg" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                </div>
+                {/* Black Ribbon Badge under logo */}
+                <div style={{ 
+                  background: '#0f172a', 
+                  color: '#ffffff', 
+                  fontSize: '5.5px', 
+                  fontWeight: 900, 
+                  letterSpacing: '0.4px', 
+                  padding: '2px 4px', 
+                  borderRadius: '2px', 
+                  marginTop: '2px',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  textTransform: 'uppercase'
+                }}>
+                  YOUTH LEADING FUTURE
+                </div>
+              </div>
+
+              {/* Center Title & S I N D H */}
+              <div style={{ flex: 1, textAlign: 'center', overflow: 'hidden' }}>
+                <h1 style={{ color: '#0f172a', fontSize: '15px', fontWeight: 900, letterSpacing: '0.2px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
+                  NATIONAL YOUTH PARLIAMENT
+                </h1>
+                
+                {/* Gold Lines with S I N D H */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: '3px 0' }}>
+                  <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+                  <span style={{ color: '#d97706', fontSize: '13px', fontWeight: 900, letterSpacing: '4px', whiteSpace: 'nowrap' }}>
+                    S I N D H
+                  </span>
+                  <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+                </div>
+
+                <div style={{ color: '#334155', fontSize: '6.8px', fontWeight: 800, letterSpacing: '0.7px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  YOUTH TODAY &nbsp;|&nbsp; A STRONGER PAKISTAN TOMORROW
+                </div>
+              </div>
+
+              {/* Sindh Map Silhouette Right */}
+              <div style={{ width: '60px', textAlign: 'center', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: '38px', height: '44px' }}>
+                  <SindhMapSvg />
+                </div>
+                <div style={{ fontSize: '8px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', lineHeight: 1, marginTop: '1px' }}>
+                  SINDH
+                </div>
+                <div style={{ fontSize: '6px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', lineHeight: 1.1 }}>
+                  OUR IDENTITY<br />OUR PRIDE
+                </div>
+              </div>
+
+            </div>
+
+            {/* MEMBERSHIP CARD Gold Flanked Banner Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '10px', marginBottom: '8px' }}>
+              <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+              <span style={{ color: '#0f172a', fontSize: '11px', fontWeight: 900, letterSpacing: '3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                MEMBERSHIP CARD
+              </span>
+              <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+            </div>
+
+          </div>
+
+          {/* MAIN BODY: PHOTO LEFT, MEMBER DETAILS RIGHT */}
+          <div style={{ padding: '0 18px', display: 'flex', gap: '14px', alignItems: 'flex-start', position: 'relative', zIndex: 10 }}>
+            
+            {/* Member Photo Frame (Gold Double Border) */}
+            <div style={{ width: '130px', flexShrink: 0 }}>
               <div 
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
+                  width: '126px',
+                  height: '162px',
+                  borderRadius: '16px',
+                  border: '3.5px solid #d97706',
+                  padding: '2px',
                   background: '#ffffff',
-                  border: '2px solid #f59e0b',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  flexShrink: 0
+                  boxShadow: '0 8px 16px -2px rgba(0, 0, 0, 0.12)',
+                  boxSizing: 'border-box'
                 }}
               >
-                <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div style={{ textTransform: 'uppercase' }}>
-                <h3 style={{ color: '#ffffff', fontSize: '11px', fontWeight: 900, letterSpacing: '0.5px', margin: 0, padding: 0, lineHeight: 1.4 }}>
-                  NATIONAL YOUTH PARLIAMENT
-                </h3>
-                <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: 800, letterSpacing: '2px', marginTop: '2px', display: 'block', lineHeight: 1.4 }}>
-                  S I N D H
-                </span>
+                {profile.passportPhotoUrl ? (
+                  <img
+                    src={profile.passportPhotoUrl}
+                    alt={profile.fullName}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '11px'
+                    }}
+                  />
+                ) : (
+                  /* Clean Male Suit Silhouette fallback matching reference graphic */
+                  <div style={{ width: '100%', height: '100%', background: '#e2e8f0', borderRadius: '11px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' }}>
+                    <svg viewBox="0 0 100 120" style={{ width: '85%', height: '85%', fill: '#1e293b' }}>
+                      {/* Head */}
+                      <circle cx="50" cy="38" r="22" />
+                      {/* Suit Shoulders */}
+                      <path d="M10,120 C10,80 30,70 50,70 C70,70 90,80 90,120 Z" />
+                      {/* White Shirt Collar & Tie */}
+                      <polygon points="50,70 42,90 58,90" fill="#ffffff" />
+                      <polygon points="50,75 46,120 54,120" fill="#0f172a" />
+                    </svg>
+                  </div>
+                )}
               </div>
             </div>
-            <div>
-              <span 
-                style={{
-                  background: 'rgba(245, 158, 11, 0.2)',
-                  color: '#fde68a',
-                  border: '1px solid rgba(245, 158, 11, 0.5)',
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  fontSize: '8px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                Official Member
-              </span>
+
+            {/* Member Information Details */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', textAlign: 'left', gap: '2px', overflow: 'hidden' }}>
+              
+              <h2 style={{ color: '#0f172a', fontSize: '19px', fontWeight: 900, margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, letterSpacing: '-0.2px', wordBreak: 'break-word', fontFamily: "'Outfit', sans-serif" }}>
+                {profile.fullName || 'YOUR NAME'}
+              </h2>
+              
+              <div style={{ color: '#1e293b', fontSize: '13px', fontWeight: 800, marginTop: '2px', lineHeight: 1.2 }}>
+                {profile.assignedDesignation || 'Member'}
+              </div>
+              
+              <div style={{ color: '#334155', fontSize: '11px', fontWeight: 700, lineHeight: 1.25 }}>
+                National Youth Parliament<br />Sindh
+              </div>
+
+              {/* Gold Horizontal Accent Line */}
+              <div style={{ width: '42px', height: '2px', background: '#d97706', margin: '6px 0 7px 0' }}></div>
+
+              {/* Aligned Field Table with Colons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '10px' }}>
+                
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Member ID</span>
+                  <span style={{ color: '#0f172a', fontWeight: 900, fontFamily: 'monospace', fontSize: '10.5px', whiteSpace: 'nowrap' }}>: &nbsp;{profile.membershipIdNumber || 'NYPS-2026-0001'}</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Department</span>
+                  <span style={{ color: '#0f172a', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>: &nbsp;{profile.preferredDepartment || 'General Member'}</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Date of Issue</span>
+                  <span style={{ color: '#0f172a', fontWeight: 800, whiteSpace: 'nowrap' }}>: &nbsp;{issueDateStr}</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Valid Till</span>
+                  <span style={{ color: '#0f172a', fontWeight: 800, whiteSpace: 'nowrap' }}>: &nbsp;31 Dec 2026</span>
+                </div>
+
+              </div>
+
             </div>
+
           </div>
 
-          {/* Body Content */}
-          <div 
-            style={{
-              padding: '12px 18px',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: '16px',
-              flex: 1,
-              position: 'relative',
-              zIndex: 10
-            }}
-          >
+          {/* LOWER BODY: QR CODE LEFT, PRESIDENT SIGNATURE RIGHT */}
+          <div style={{ padding: '0 18px 10px 18px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', width: '100%', boxSizing: 'border-box', position: 'relative', zIndex: 10 }}>
             
-            {/* Photo Column */}
-            <div style={{ width: '96px', display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-              <img
-                src={profile.passportPhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'}
-                alt={profile.fullName}
-                style={{
-                  width: '94px',
-                  height: '114px',
-                  objectFit: 'cover',
-                  borderRadius: '10px',
-                  border: '2px solid #f59e0b',
-                  background: '#1e293b',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
-                }}
-              />
-              <span style={{ color: '#34d399', fontSize: '9px', fontWeight: 800, marginTop: '5px', letterSpacing: '0.5px', lineHeight: 1.4 }}>
-                VERIFIED
+            {/* QR Code Left */}
+            <div style={{ textAlign: 'center', flexShrink: 0 }}>
+              <div style={{ padding: '3px', background: '#ffffff', borderRadius: '8px', border: '1.5px solid #0f172a', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}>
+                <img src={qrCodeUrl} alt="Verification QR" style={{ width: '66px', height: '66px', display: 'block', borderRadius: '4px' }} />
+              </div>
+              <span style={{ fontSize: '7.5px', fontWeight: 800, color: '#1e293b', display: 'block', marginTop: '3px', whiteSpace: 'nowrap' }}>
+                Scan for Verification
               </span>
             </div>
 
-            {/* Member Details Column */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'center', minWidth: 0 }}>
-              <div>
-                <span style={{ color: '#fde68a', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', lineHeight: 1.4 }}>
-                  Full Name
-                </span>
-                <h4 style={{ color: '#ffffff', fontSize: '15px', fontWeight: 800, margin: 0, padding: '0 0 2px 0', lineHeight: 1.4 }}>
-                  {profile.fullName}
-                </h4>
+            {/* President Signature Right */}
+            <div style={{ textAlign: 'center', flex: 1, paddingLeft: '20px' }}>
+              <div style={{ fontFamily: "'Brush Script MT', 'Great Vibes', Georgia, serif", fontStyle: 'italic', color: '#032e1e', fontWeight: 900, fontSize: '24px', height: '28px', lineHeight: 1.1 }}>
+                Halepoto
               </div>
-
-              <div>
-                <span style={{ color: '#94a3b8', fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', lineHeight: 1.4 }}>
-                  CNIC Number
-                </span>
-                <span style={{ color: '#e2e8f0', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.5px', display: 'block', lineHeight: 1.4, paddingBottom: '2px' }}>
-                  {profile.cnicNumber}
-                </span>
+              <div style={{ borderTop: '1.5px solid #0f172a', paddingTop: '3px', fontSize: '8.5px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                ABDUL REHMAN HALEPOTO
               </div>
-
-              <div>
-                <span style={{ color: '#fbbf24', fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', lineHeight: 1.4 }}>
-                  Designation / Role
-                </span>
-                <span style={{ color: '#6ee7b7', fontSize: '11px', fontWeight: 700, display: 'block', lineHeight: 1.4, paddingBottom: '2px' }}>
-                  {profile.assignedDesignation || 'Executive Member'}
-                </span>
+              <div style={{ fontSize: '7.5px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginTop: '1px', whiteSpace: 'nowrap' }}>
+                PRESIDENT, NYP SINDH
               </div>
+            </div>
 
-              <div style={{ display: 'flex', gap: '12px', paddingTop: '2px' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ color: '#94a3b8', fontSize: '8px', textTransform: 'uppercase', display: 'block', lineHeight: 1.4 }}>
-                    Division
-                  </span>
-                  <span style={{ color: '#e2e8f0', fontSize: '10px', fontWeight: 600, display: 'block', lineHeight: 1.4, paddingBottom: '2px' }}>
-                    {divisionName}
-                  </span>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ color: '#94a3b8', fontSize: '8px', textTransform: 'uppercase', display: 'block', lineHeight: 1.4 }}>
-                    District
-                  </span>
-                  <span style={{ color: '#e2e8f0', fontSize: '10px', fontWeight: 600, display: 'block', lineHeight: 1.4, paddingBottom: '2px' }}>
-                    {districtName}
-                  </span>
-                </div>
+          </div>
+
+          {/* CURVED WAVE DARK GREEN FOOTER BANNER WITH GOLD BORDER */}
+          <div style={{ position: 'relative', width: '100%', marginTop: 'auto', zIndex: 10 }}>
+            {/* Curved SVG Wave Top with Gold Border Stroke */}
+            <svg viewBox="0 0 420 28" style={{ display: 'block', width: '100%', height: '22px' }}>
+              <path d="M 0,28 Q 210,-10 420,28 Z" fill="#032e1e" />
+              <path d="M 0,28 Q 210,-10 420,28" fill="none" stroke="#d97706" strokeWidth="3" />
+            </svg>
+
+            {/* Dark Green Banner Body */}
+            <div style={{ background: 'linear-gradient(135deg, #022c1e 0%, #064e3b 100%)', color: '#ffffff', padding: '6px 14px 10px 14px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '2.5px', color: '#fbbf24', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                — Y O U T H &nbsp; L E A D I N G &nbsp; F U T U R E —
+              </div>
+              <div style={{ fontSize: '6.8px', fontWeight: 700, color: '#e2e8f0', letterSpacing: '0.5px', marginTop: '3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                EMPOWERING YOUTH &nbsp;|&nbsp; STRENGTHENING SINDH &nbsp;|&nbsp; BUILDING A BRIGHTER TOMORROW
               </div>
             </div>
           </div>
 
-          {/* Footer Bar */}
-          <div 
-            style={{
-              height: '42px',
-              padding: '0 16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: '#020617',
-              borderTop: '1px solid #1e293b',
-              position: 'relative',
-              zIndex: 10,
-              flexShrink: 0
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <span style={{ color: '#94a3b8', fontSize: '8px', display: 'block', lineHeight: 1.3 }}>
-                Membership ID
-              </span>
-              <span style={{ color: '#fbbf24', fontSize: '11px', fontWeight: 800, fontFamily: 'monospace', letterSpacing: '0.5px', lineHeight: 1.3, paddingBottom: '1px' }}>
-                {profile.membershipIdNumber || 'NYP-SINDH-2026-XXXX'}
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <ShieldCheck style={{ width: '16px', height: '16px', color: '#34d399' }} />
-              <span style={{ color: '#34d399', fontSize: '9px', fontWeight: 800, letterSpacing: '0.5px', lineHeight: 1.4 }}>
-                OFFICIAL PASS
-              </span>
-            </div>
-          </div>
         </div>
 
-        {/* BACK CARD */}
-        <div 
-          className="print-card-side print-card-back no-print"
+        {/* ======================================================== */}
+        {/* BACK SIDE OF ID CARD (EXACT MATCH TO REFERENCE IMAGE)     */}
+        {/* ======================================================== */}
+        <div
+          ref={backCardRef}
+          className={`print-card-back transition-all duration-300 shrink-0 ${activeTab === 'FRONT' ? 'hidden' : 'block'}`}
           style={{
-            width: '460px',
-            height: '295px',
-            minWidth: '460px',
-            minHeight: '295px',
-            background: '#0f172a',
-            color: '#cbd5e1',
-            border: '1px solid #334155',
-            borderRadius: '16px',
-            padding: '16px',
+            width: '420px',
+            maxWidth: '100%',
+            minHeight: '510px',
+            background: '#ffffff',
+            color: '#0f172a',
+            border: '2px solid #cbd5e1',
+            borderRadius: '24px',
             boxSizing: 'border-box',
-            margin: '16px auto 0 auto',
+            position: 'relative',
+            overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            boxShadow: '0 25px 35px -5px rgba(0, 0, 0, 0.2), 0 10px 15px -5px rgba(0, 0, 0, 0.1)',
             fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', paddingBottom: '8px' }}>
-            <span style={{ color: '#fbbf24', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '9px', lineHeight: 1.4 }}>
-              TERMS & AUTHORIZATION • NYP SINDH
-            </span>
-            <span style={{ color: '#64748b', fontFamily: 'monospace', fontSize: '10px', lineHeight: 1.4 }}>nypsindh.org.pk</span>
+          {/* Background Watermark Architecture Layer */}
+          <div style={{ position: 'absolute', top: '120px', left: 0, right: 0, height: '180px', pointerEvents: 'none', zIndex: 1 }}>
+            <MonumentWatermarkSvg />
           </div>
 
-          <p style={{ fontSize: '9px', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
-            This identity card is the official property of the National Youth Parliament Sindh. The holder is bound to respect the constitution, policies, and code of conduct of NYP Sindh.
-          </p>
+          {/* TOP SECTION: DARK GREEN HEADER WITH DOWNWARD CURVED WAVE */}
+          <div style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(135deg, #022c1e 0%, #064e3b 100%)', color: '#ffffff', padding: '12px 16px 0 16px' }}>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              
+              {/* Emblem Logo Left */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '60px', flexShrink: 0 }}>
+                <div style={{ width: '48px', height: '48px' }}>
+                  <img src="/nyp-logo.jpg" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                </div>
+                <div style={{ 
+                  background: '#0f172a', 
+                  color: '#ffffff', 
+                  fontSize: '5px', 
+                  fontWeight: 900, 
+                  padding: '1.5px 3px', 
+                  borderRadius: '2px', 
+                  marginTop: '1px',
+                  whiteSpace: 'nowrap',
+                  textTransform: 'uppercase'
+                }}>
+                  YOUTH LEADING FUTURE
+                </div>
+              </div>
 
-          {/* Signatures */}
-          <div style={{ paddingTop: '8px', borderTop: '1px solid #1e293b', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'serif', fontStyle: 'italic', color: '#34d399', fontWeight: 700, fontSize: '12px', height: '20px', lineHeight: 1.4 }}>
-                Abdul Rehman Halepoto
+              {/* Title Center */}
+              <div style={{ flex: 1, textAlign: 'center', overflow: 'hidden' }}>
+                <h2 style={{ color: '#ffffff', fontSize: '14.5px', fontWeight: 900, letterSpacing: '0.2px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
+                  NATIONAL YOUTH PARLIAMENT
+                </h2>
+                
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: '2px 0' }}>
+                  <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+                  <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: 900, letterSpacing: '4px', whiteSpace: 'nowrap' }}>
+                    S I N D H
+                  </span>
+                  <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+                </div>
+
+                <div style={{ color: '#a7f3d0', fontSize: '6.8px', fontWeight: 800, letterSpacing: '0.6px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  YOUTH TODAY &nbsp;|&nbsp; A STRONGER PAKISTAN TOMORROW
+                </div>
               </div>
-              <span style={{ fontSize: '8px', color: '#94a3b8', display: 'block', borderTop: '1px solid #334155', paddingTop: '2px', lineHeight: 1.4 }}>
-                Abdul Rehman Halepoto<br /><strong style={{ color: '#e2e8f0' }}>President NYP Sindh</strong>
-              </span>
+
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'serif', fontStyle: 'italic', color: '#fbbf24', fontWeight: 700, fontSize: '12px', height: '20px', lineHeight: 1.4 }}>
-                Shakir Chandio
-              </div>
-              <span style={{ fontSize: '8px', color: '#94a3b8', display: 'block', borderTop: '1px solid #334155', paddingTop: '2px', lineHeight: 1.4 }}>
-                Shakir Chandio<br /><strong style={{ color: '#e2e8f0' }}>Management Focal Person</strong>
+
+            {/* Downward Curved Wave SVG at Header Bottom */}
+            <svg viewBox="0 0 420 20" style={{ display: 'block', width: '100%', height: '16px', marginTop: '8px' }}>
+              <path d="M 0,0 Q 210,25 420,0 L 420,0 L 0,0 Z" fill="#ffffff" />
+              <path d="M 0,0 Q 210,25 420,0" fill="none" stroke="#d97706" strokeWidth="2.5" />
+            </svg>
+
+          </div>
+
+          {/* BACK CARD MIDDLE CONTENT */}
+          <div style={{ padding: '4px 20px 10px 20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '8px', textAlign: 'left', position: 'relative', zIndex: 10 }}>
+            
+            {/* OUR VISION */}
+            <div style={{ textAlign: 'center', padding: '2px 0' }}>
+              <span style={{ fontSize: '11px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '2px', display: 'block' }}>
+                O U R &nbsp; V I S I O N
               </span>
+              <p style={{ fontSize: '11px', fontWeight: 800, color: '#1e293b', fontStyle: 'italic', margin: '4px 0 0 0', fontFamily: 'Georgia, serif', lineHeight: 1.35 }}>
+                “A Progressive, Inclusive and Empowered Sindh Led by its Youth”
+              </p>
+            </div>
+
+            {/* TERMS & CONDITIONS */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+                <span style={{ fontSize: '10.5px', fontWeight: 900, color: '#d97706', textTransform: 'uppercase', letterSpacing: '2px', whiteSpace: 'nowrap' }}>
+                  TERMS &amp; CONDITIONS
+                </span>
+                <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+              </div>
+
+              <ol style={{ fontSize: '9px', color: '#1e293b', fontWeight: 700, lineHeight: 1.45, margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <li>This card is non-transferable and remains the property of National Youth Parliament Sindh.</li>
+                <li>The holder must abide by the constitution, policies and code of conduct of NYP.</li>
+                <li>This card must be produced when required for official purposes.</li>
+                <li>In case of loss, immediately inform the NYP Sindh Secretariat.</li>
+              </ol>
+
+              {/* Bottom Gold Line under Terms */}
+              <div style={{ height: '1px', background: '#d97706', marginTop: '8px' }}></div>
+            </div>
+
+            {/* MOTTO BANNER */}
+            <div style={{ textAlign: 'center', padding: '2px 0' }}>
+              <div style={{ fontSize: '11px', fontWeight: 900, color: '#0f172a', letterSpacing: '2px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                D I S C U S S &nbsp;<span style={{ color: '#d97706' }}>|</span>&nbsp; D E B A T E &nbsp;<span style={{ color: '#d97706' }}>|</span>&nbsp; D E L I V E R
+              </div>
+              <div style={{ fontSize: '9.5px', fontWeight: 900, color: '#b45309', letterSpacing: '1.5px', textTransform: 'uppercase', marginTop: '2px', whiteSpace: 'nowrap' }}>
+                F O R &nbsp; A &nbsp; B E T T E R &nbsp; S I N D H
+              </div>
+            </div>
+
+            {/* CONTACT & SOCIAL MEDIA ROW WITH SINDH MAP BADGE */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', paddingTop: '4px' }}>
+              
+              {/* Social Media Links Left */}
+              <div style={{ fontSize: '8.5px', color: '#1e293b', fontWeight: 800, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                
+                {/* Website */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '15px', height: '15px', borderRadius: '3px', background: '#0f172a', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 900 }}>
+                    🌐
+                  </div>
+                  <span>www.nypsindh.org.pk</span>
+                </div>
+
+                {/* Instagram */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '15px', height: '15px', borderRadius: '3px', background: '#0f172a', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 900 }}>
+                    📷
+                  </div>
+                  <span>@nypsindh</span>
+                </div>
+
+                {/* Facebook */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '15px', height: '15px', borderRadius: '3px', background: '#0f172a', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 900 }}>
+                    f
+                  </div>
+                  <span>National Youth Parliament Sindh</span>
+                </div>
+
+                {/* LinkedIn */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '15px', height: '15px', borderRadius: '3px', background: '#0f172a', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 900 }}>
+                    in
+                  </div>
+                  <span>NYPSindh</span>
+                </div>
+
+              </div>
+
+              {/* Sindh Map Badge Right */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                
+                <div style={{ width: '44px', height: '52px' }}>
+                  <SindhMapSvg />
+                </div>
+
+                <div style={{ borderLeft: '3px solid #d97706', paddingLeft: '6px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', lineHeight: 1 }}>
+                    SINDH
+                  </div>
+                  <div style={{ fontSize: '7px', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', lineHeight: 1.1, marginTop: '2px' }}>
+                    OUR IDENTITY<br />OUR PRIDE
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* CURVED WAVE DARK GREEN FOOTER BANNER WITH GOLD BORDER */}
+          <div style={{ position: 'relative', width: '100%', marginTop: 'auto', zIndex: 10 }}>
+            {/* Curved SVG Wave Top with Gold Border Stroke */}
+            <svg viewBox="0 0 420 28" style={{ display: 'block', width: '100%', height: '22px' }}>
+              <path d="M 0,28 Q 210,-10 420,28 Z" fill="#032e1e" />
+              <path d="M 0,28 Q 210,-10 420,28" fill="none" stroke="#d97706" strokeWidth="3" />
+            </svg>
+
+            {/* Dark Green Banner Body */}
+            <div style={{ background: 'linear-gradient(135deg, #022c1e 0%, #064e3b 100%)', color: '#ffffff', padding: '6px 14px 10px 14px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '2.5px', color: '#fbbf24', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                — Y O U T H &nbsp; L E A D I N G &nbsp; F U T U R E —
+              </div>
+              <div style={{ fontSize: '6.8px', fontWeight: 700, color: '#e2e8f0', letterSpacing: '0.5px', marginTop: '3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                EMPOWERING YOUTH &nbsp;|&nbsp; STRENGTHENING SINDH &nbsp;|&nbsp; BUILDING A BRIGHTER TOMORROW
+              </div>
             </div>
           </div>
+
         </div>
 
       </div>
+
     </div>
   );
 };
-
-

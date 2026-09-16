@@ -2,23 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { store } from '../services/store';
 import { 
-  Award, 
   Phone, 
   Mail, 
   MapPin, 
-  Lock, 
-  Heart, 
-  Shield, 
   ArrowUp, 
-  ChevronRight, 
-  Sparkles, 
-  CheckCircle2, 
-  FileText, 
-  Users, 
-  ExternalLink,
-  Globe,
-  Clock,
-  UserCheck
+  ChevronRight 
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -31,240 +19,193 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="relative bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300 text-sm overflow-hidden border-t border-slate-200 dark:border-slate-800 transition-colors duration-300">
-      {/* Top Ambient Glow & Decorative Gradient Bar */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-emerald-500/80 to-transparent" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-emerald-500/5 blur-[120px] pointer-events-none rounded-full" />
+    <footer className="relative bg-slate-50 text-slate-700 dark:bg-[#070d17] dark:text-slate-300 text-xs overflow-hidden border-t border-slate-200 dark:border-slate-800 transition-colors duration-300 font-sans">
       
-      {/* Pre-Footer Action Banner (Hidden for members who have already submitted an application) */}
-      {!hasApplied && (
-        <div className="relative border-b border-slate-200 dark:border-slate-800 bg-slate-200/50 dark:bg-[#070d17]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/90 dark:border-emerald-500/30 dark:text-white rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group backdrop-blur-xl">
-              {/* Ambient inner shine */}
-              <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none transition-all duration-700" />
-              
-              <div className="space-y-2 text-center md:text-left z-10">
-                <div className="inline-flex items-center space-x-2 bg-emerald-100 border border-emerald-300 dark:bg-emerald-950/80 dark:border-emerald-600/50 px-3 py-1 rounded-full text-xs text-emerald-800 dark:text-emerald-300 font-extrabold tracking-wide">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 animate-pulse" />
-                  <span>Empowering Youth Governance in Sindh</span>
-                </div>
-                <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight font-heading">
-                  Ready to Join National Youth Parliament Sindh?
-                </h3>
-                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
-                  Be a part of 6 Divisional Cabinets representing Karachi, Hyderabad, Sukkur, Larkana, Shaheed Benazirabad, & Mirpurkhas.
-                </p>
-              </div>
+      {/* Top Accent Line */}
+      <div className="h-1 w-full bg-gradient-to-r from-emerald-600 via-amber-400 to-emerald-600" />
 
-              <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 z-10 w-full md:w-auto">
-                <Link
-                  to="/signup"
-                  className="w-full sm:w-auto text-center ui-btn-gold font-black px-6 py-3.5 rounded-xl text-xs transition-all shadow-xl flex items-center justify-center space-x-2"
-                >
-                  <FileText className="w-4 h-4 text-slate-950" />
-                  <span>Apply For Membership</span>
-                </Link>
-                <Link
-                  to="/cabinets"
-                  className="w-full sm:w-auto text-center ui-btn-secondary font-bold px-5 py-3 rounded-xl text-xs transition-all flex items-center justify-center space-x-2"
-                >
-                  <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>View Cabinets</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Footer Links & Information */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+      {/* Main Compact Footer Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           
-          {/* Col 1: About & Branding */}
-          <div className="space-y-5">
-            <div className="flex items-center space-x-3.5">
-              <div className="w-14 h-14 rounded-2xl bg-white p-1 border-2 border-amber-400/80 flex items-center justify-center shadow-lg shadow-emerald-950 overflow-hidden shrink-0">
-                <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-xl" />
+          {/* Col 1: Branding & Social Links */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-white p-0.5 border border-slate-200 shadow-md overflow-hidden shrink-0">
+                <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-lg" />
               </div>
               <div>
-                <span className="font-black text-slate-900 dark:text-white text-xl tracking-tight block font-heading">
+                <span className="font-black text-slate-900 dark:text-white text-base tracking-tight block font-heading">
                   NYP SINDH
                 </span>
-                <span className="text-[10px] gold-gradient-text font-black uppercase tracking-widest block -mt-1">
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold uppercase tracking-widest block font-heading">
                   nypsindh.org.pk
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Official Membership & Legislative Portal for the National Youth Parliament Sindh. Empowering next-generation provincial leaders through structured parliamentary training and civic advocacy.
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
+              Official Membership &amp; Legislative Portal for National Youth Parliament Sindh. Empowering youth leaders through civic advocacy and parliamentary education.
             </p>
 
-            {/* Badges / Values */}
-            <div className="pt-1 flex flex-wrap gap-2">
-              <span className="inline-flex items-center space-x-1.5 bg-emerald-100 border border-emerald-300 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-500/20 dark:text-emerald-300 px-2.5 py-1 rounded-lg text-[11px] font-medium">
-                <Shield className="w-3 h-3 text-amber-500 dark:text-amber-400" />
-                <span>Verified Portal</span>
+            {/* Social Links */}
+            <div>
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1.5 uppercase tracking-wider">
+                Connect With Us
               </span>
-              <span className="inline-flex items-center space-x-1.5 bg-emerald-100 border border-emerald-300 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-500/20 dark:text-amber-300 px-2.5 py-1 rounded-lg text-[11px] font-medium">
-                <Globe className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                <span>Sindh Province</span>
-              </span>
-            </div>
-
-            <div className="text-[11px] gold-gradient-text font-black tracking-wider uppercase pt-1">
-              Sindh • Our Identity • Our Pride
+              <div className="flex items-center space-x-2">
+                <a 
+                  href="https://facebook.com/nypsindh" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  aria-label="Facebook"
+                  className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-[#1877F2] hover:text-white transition-all shadow-xs"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://instagram.com/nypsindh" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  aria-label="Instagram"
+                  className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-rose-600 hover:text-white transition-all shadow-xs"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://x.com/nypsindh" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  aria-label="X (Twitter)"
+                  className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-950 hover:text-white transition-all shadow-xs"
+                >
+                  <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://youtube.com/@nypsindh" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  aria-label="YouTube"
+                  className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-[#FF0000] hover:text-white transition-all shadow-xs"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://linkedin.com/company/nypsindh" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  aria-label="LinkedIn"
+                  className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-[#0A66C2] hover:text-white transition-all shadow-xs"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://wa.me/923319226110" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  aria-label="WhatsApp"
+                  className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-[#25D366] hover:text-white transition-all shadow-xs"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                  </svg>
+                </a>
+              </div>
             </div>
           </div>
 
           {/* Col 2: Quick Links */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-black text-emerald-800 dark:text-amber-400 uppercase tracking-widest border-b border-slate-200 dark:border-emerald-900/60 pb-3 font-heading flex items-center justify-between">
-              <span>Quick Links</span>
-              <span className="w-2 h-2 rounded-full bg-amber-400/60"></span>
+          <div className="space-y-2.5">
+            <h3 className="text-xs font-black text-emerald-800 dark:text-amber-400 uppercase tracking-widest font-heading border-b border-slate-200 dark:border-slate-800 pb-2">
+              Quick Links
             </h3>
-            <ul className="space-y-2.5 text-xs">
-              {[
-                { to: '/', label: 'Home Page' },
-                hasApplied 
-                  ? { to: '/member/dashboard', label: 'My Account Dashboard' }
-                  : { to: '/signup', label: 'Membership Application Form' },
-                { to: '/cabinets', label: 'Sindh Provincial Cabinet Roster' },
-                { to: '/cabinets?div=div-karachi', label: 'Divisional Cabinets (6 Divisions)' },
-                { to: '/announcements', label: 'Official Announcements' },
-                { to: '/contact', label: 'Secretariat Contact' }
-              ].map((item, idx) => (
-                <li key={idx}>
-                  <Link 
-                    to={item.to} 
-                    className="group inline-flex items-center space-x-2 text-slate-600 hover:text-emerald-800 dark:text-slate-300 dark:hover:text-emerald-300 transition-colors py-0.5"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5 text-emerald-600 dark:text-amber-400/70 group-hover:text-emerald-800 dark:group-hover:text-amber-400 group-hover:translate-x-1 transition-transform" />
-                    <span>{item.label}</span>
-                  </Link>
-                </li>
-              ))}
+            <ul className="grid grid-cols-2 gap-1.5 text-[11px]">
+              <li>
+                <Link to="/" className="hover:text-emerald-700 dark:hover:text-amber-300 flex items-center space-x-1">
+                  <ChevronRight className="w-3 h-3 text-emerald-600 dark:text-amber-400" />
+                  <span>Home</span>
+                </Link>
+              </li>
+              <li>
+                <Link to={hasApplied ? "/member/dashboard" : "/signup"} className="hover:text-emerald-700 dark:hover:text-amber-300 flex items-center space-x-1">
+                  <ChevronRight className="w-3 h-3 text-emerald-600 dark:text-amber-400" />
+                  <span>{hasApplied ? "Dashboard" : "Apply Membership"}</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/cabinets" className="hover:text-emerald-700 dark:hover:text-amber-300 flex items-center space-x-1">
+                  <ChevronRight className="w-3 h-3 text-emerald-600 dark:text-amber-400" />
+                  <span>Cabinets</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/announcements" className="hover:text-emerald-700 dark:hover:text-amber-300 flex items-center space-x-1">
+                  <ChevronRight className="w-3 h-3 text-emerald-600 dark:text-amber-400" />
+                  <span>Announcements</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/cabinets?view=parliamentarians" className="hover:text-emerald-700 dark:hover:text-amber-300 flex items-center space-x-1">
+                  <ChevronRight className="w-3 h-3 text-emerald-600 dark:text-amber-400" />
+                  <span>Parliamentarians</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-emerald-700 dark:hover:text-amber-300 flex items-center space-x-1">
+                  <ChevronRight className="w-3 h-3 text-emerald-600 dark:text-amber-400" />
+                  <span>Contact Us</span>
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Col 3: Official Helpline Contacts */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-black text-emerald-800 dark:text-amber-400 uppercase tracking-widest border-b border-slate-200 dark:border-emerald-900/60 pb-3 font-heading flex items-center justify-between">
-              <span>Secretariat & Helpline</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400/60"></span>
+          {/* Col 3: Contact & Info */}
+          <div className="space-y-2.5">
+            <h3 className="text-xs font-black text-emerald-800 dark:text-amber-400 uppercase tracking-widest font-heading border-b border-slate-200 dark:border-slate-800 pb-2">
+              Secretariat Contact
             </h3>
-            
-            <div className="space-y-3 text-xs">
-              <a 
-                href="tel:03319226110" 
-                className="group flex items-start space-x-3 p-2.5 rounded-xl bg-white hover:bg-emerald-50/80 border border-slate-200 hover:border-emerald-300 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/80 dark:border-emerald-900/40 dark:hover:border-emerald-500/30 transition-all shadow-xs"
-              >
-                <div className="p-2 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                  <Phone className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-slate-900 dark:text-white font-bold block text-xs">Shakir Chandio</span>
-                  <span className="text-emerald-800 dark:text-amber-300/90 font-mono text-[11px]">NYP Sindh: 0331 9226110</span>
-                </div>
-              </a>
-
-              <a 
-                href="tel:+923337612564" 
-                className="group flex items-start space-x-3 p-2.5 rounded-xl bg-white hover:bg-emerald-50/80 border border-slate-200 hover:border-emerald-300 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/80 dark:border-emerald-900/40 dark:hover:border-emerald-500/30 transition-all shadow-xs"
-              >
-                <div className="p-2 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                  <Phone className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-slate-900 dark:text-white font-bold block text-xs">President Office</span>
-                  <span className="text-emerald-800 dark:text-amber-300/90 font-mono text-[11px]">+92 333 7612564</span>
-                </div>
-              </a>
-
-              <a 
-                href="mailto:abdulrehman_h4@live.com" 
-                className="group flex items-center space-x-3 p-2.5 rounded-xl bg-white hover:bg-emerald-50/80 border border-slate-200 hover:border-emerald-300 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/80 dark:border-emerald-900/40 dark:hover:border-emerald-500/30 transition-all shadow-xs"
-              >
-                <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                  <Mail className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-slate-700 dark:text-slate-300 truncate text-[11px]">abdulrehman_h4@live.com</span>
-              </a>
-
-              <div className="flex items-start space-x-3 p-2.5 rounded-xl bg-white border border-slate-200 dark:bg-emerald-950/30 dark:border-emerald-900/30 shadow-xs">
-                <MapPin className="w-4 h-4 text-emerald-700 dark:text-amber-400 shrink-0 mt-0.5" />
-                <span className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
-                  Provincial Secretariat, Karachi / Hyderabad, Sindh, Pakistan
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Col 4: Administrative Portal Access */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-black text-emerald-800 dark:text-amber-400 uppercase tracking-widest border-b border-slate-200 dark:border-emerald-900/60 pb-3 font-heading flex items-center justify-between">
-              <span>Admin Access</span>
-              <Lock className="w-3.5 h-3.5 text-emerald-700 dark:text-amber-400/80" />
-            </h3>
-            
-            <div className="bg-gradient-to-b from-emerald-50 via-white to-slate-50 border border-emerald-200 dark:from-emerald-950/60 dark:to-[#02140c] dark:border-emerald-500/25 rounded-2xl p-4 space-y-3.5 shadow-md relative">
+            <div className="space-y-1.5 text-[11px]">
               <div className="flex items-center space-x-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Staff Verification Portal</span>
+                <Phone className="w-3.5 h-3.5 text-emerald-600 dark:text-amber-400 shrink-0" />
+                <span>Helpline: <strong className="font-semibold text-slate-900 dark:text-white">0331 9226110</strong></span>
               </div>
-
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Authorized verification officers, approval authorities, and divisional admins login here to manage applications.
-              </p>
-
-              <Link
-                to="/admin/login"
-                className="w-full inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white dark:from-emerald-900 dark:to-emerald-950 dark:hover:from-emerald-800 dark:hover:to-emerald-900 dark:text-slate-100 hover:text-amber-300 border border-emerald-600 dark:border-amber-400/40 hover:border-amber-400 px-4 py-3 rounded-xl text-xs font-bold transition-all shadow-md group"
-              >
-                <Lock className="w-4 h-4 text-amber-300 dark:text-amber-400 group-hover:rotate-12 transition-transform" />
-                <span>Official / Staff Portal Login</span>
-              </Link>
-
-              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-emerald-900/50">
-                <span className="flex items-center space-x-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 inline" />
-                  <span>Role-Based Access</span>
-                </span>
-                <span className="text-emerald-800 dark:text-amber-400/80 font-mono">v2.4 Live</span>
+              <div className="flex items-center space-x-2">
+                <Mail className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>Email: <strong className="font-semibold text-slate-900 dark:text-white">info@nypsindh.org.pk</strong></span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <MapPin className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                <span>HQ: <strong className="font-semibold text-slate-900 dark:text-white">Karachi, Sindh, Pakistan</strong></span>
               </div>
             </div>
           </div>
 
         </div>
 
-        {/* Bottom copyright & back to top bar */}
-        <div className="mt-12 pt-6 border-t border-slate-200 dark:border-emerald-900/40 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
-          <div className="flex flex-col sm:flex-row items-center gap-2 text-center md:text-left">
-            <span>© 2026 National Youth Parliament (NYP) Sindh (<strong className="text-slate-700 dark:text-slate-300">nypsindh.org.pk</strong>).</span>
-            <span className="hidden sm:inline text-slate-400 dark:text-slate-600">•</span>
-            <span>All rights reserved.</span>
+        {/* Bottom Bar */}
+        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+          <div>
+            © {new Date().getFullYear()} National Youth Parliament Sindh (nypsindh.org.pk). All Rights Reserved.
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1 text-slate-500 dark:text-slate-400">
-              <span>Built for Sindh Youth Empowerment</span>
-              <Heart className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 fill-emerald-500 inline ml-1 animate-pulse" />
-            </div>
-
-            <button
-              onClick={scrollToTop}
-              className="p-2 rounded-xl bg-white border border-slate-300 hover:border-emerald-600 text-slate-700 hover:text-emerald-700 dark:bg-emerald-950/80 dark:border-emerald-500/30 dark:text-slate-300 dark:hover:text-amber-400 transition-all shadow-md group"
-              title="Back to Top"
-              aria-label="Scroll to top"
-            >
-              <ArrowUp className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-            </button>
-          </div>
+          <button
+            onClick={scrollToTop}
+            className="p-2 rounded-lg bg-white border border-slate-300 hover:border-emerald-600 text-slate-700 hover:text-emerald-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:text-amber-400 transition-all cursor-pointer shadow-xs"
+            title="Back to Top"
+            aria-label="Scroll to top"
+          >
+            <ArrowUp className="w-3.5 h-3.5" />
+          </button>
         </div>
 
       </div>
