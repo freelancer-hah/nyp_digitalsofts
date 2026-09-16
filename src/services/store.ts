@@ -140,6 +140,15 @@ class StoreService {
       this.saveOfficerUsers();
     }
 
+    // Force one-time cleanup of legacy local storage sample records
+    if (localStorage.getItem('nyp_store_v5_clean') !== 'true') {
+      localStorage.removeItem(KEY_PROFILES);
+      localStorage.removeItem(KEY_CABINET);
+      localStorage.removeItem(KEY_ANNOUNCEMENTS);
+      localStorage.removeItem(KEY_ROLE_APPLICATIONS);
+      localStorage.setItem('nyp_store_v5_clean', 'true');
+    }
+
     const storedProfiles = localStorage.getItem(KEY_PROFILES);
     if (storedProfiles) {
       try {
@@ -175,8 +184,7 @@ class StoreService {
     this.cabinetMembers = storedCabinet ? JSON.parse(storedCabinet) : [];
 
     const storedAnn = localStorage.getItem(KEY_ANNOUNCEMENTS);
-    const parsedAnn = storedAnn ? JSON.parse(storedAnn) : [];
-    this.announcements = parsedAnn.length > 0 ? parsedAnn : INITIAL_ANNOUNCEMENTS;
+    this.announcements = storedAnn ? JSON.parse(storedAnn) : [];
     localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
 
     this.leadershipMessages = INITIAL_LEADERSHIP_MESSAGES;
@@ -199,7 +207,7 @@ class StoreService {
 
     this.profiles = [];
     this.cabinetMembers = [];
-    this.announcements = INITIAL_ANNOUNCEMENTS;
+    this.announcements = [];
     localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
     this.roleApplications = [];
 
@@ -231,7 +239,7 @@ class StoreService {
     if (!isSupabaseConfigured()) return;
     try {
       const { data: profData, error: profErr } = await supabase.from('member_profiles').select('*');
-      if (!profErr && profData && profData.length > 0) {
+      if (!profErr && profData) {
         const fetchedProfiles: MemberProfile[] = profData.map((d: any) => ({
           id: d.id,
           userId: d.user_id || d.id,
@@ -270,18 +278,7 @@ class StoreService {
           submittedAt: d.submitted_at || new Date().toISOString(),
         }));
 
-        const profileMap = new Map<string, MemberProfile>();
-        this.profiles.forEach((p) => {
-          const key = p.cnicNumber.replace(/\D/g, '') || p.id;
-          profileMap.set(key, p);
-        });
-        fetchedProfiles.forEach((p) => {
-          const key = p.cnicNumber.replace(/\D/g, '') || p.id;
-          const local = profileMap.get(key);
-          profileMap.set(key, local ? { ...local, ...p } : p);
-        });
-
-        this.profiles = Array.from(profileMap.values());
+        this.profiles = fetchedProfiles;
         this.saveProfiles();
       }
     } catch (e) {

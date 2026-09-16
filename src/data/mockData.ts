@@ -12,32 +12,7 @@ export const INITIAL_LEADERSHIP_MESSAGES: LeadershipMessage[] = [
   }
 ];
 
-export const INITIAL_ANNOUNCEMENTS: Announcement[] = [
-  {
-    id: 'ann-101',
-    title: 'Registration Open: Sindh Youth Assembly Summit 2026 at Karachi',
-    content: 'The National Youth Parliament Sindh announces the grand opening of delegate registrations for the annual Sindh Youth Assembly Summit 2026. Young leaders, students, and advocates across all 30 districts of Sindh are invited to submit their parliamentary policy papers and register for provincial caucuses.',
-    publishedAt: '2026-09-15',
-    bannerUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&q=80&w=1200',
-    isActive: true
-  },
-  {
-    id: 'ann-102',
-    title: 'Hyderabad Divisional Executive Body Convened for Youth Development Drive',
-    content: 'A high-level divisional cabinet meeting was successfully chaired in Hyderabad to review grassroots civic advocacy projects, district secretariat appointments, and youth leadership training sessions across Hyderabad, Jamshoro, Thatta, and Badin.',
-    publishedAt: '2026-09-10',
-    bannerUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=1200',
-    isActive: true
-  },
-  {
-    id: 'ann-103',
-    title: 'NYP Sindh Launches Provincial Climate & SDG Action Program in Sukkur',
-    content: 'Youth parliamentarians in Sukkur Division initiated a landmark environmental sustainability and climate adaptation initiative. The program brings together youth ambassadors from Sukkur, Ghotki, and Khairpur to address Indus basin climate challenges.',
-    publishedAt: '2026-09-02',
-    bannerUrl: 'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?auto=format&fit=crop&q=80&w=1200',
-    isActive: true
-  }
-];
+export const INITIAL_ANNOUNCEMENTS: Announcement[] = [];
 
 export const INITIAL_CABINET_MEMBERS: CabinetMember[] = [];
 

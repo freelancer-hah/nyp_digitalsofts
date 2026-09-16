@@ -9,6 +9,7 @@ export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = store.getCurrentUser();
+  const profile = currentUser ? store.getProfileByUserId(currentUser.id) : undefined;
   const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => {
@@ -17,6 +18,7 @@ export const Navbar: React.FC = () => {
   };
 
   const isActive = (path: string) => location.pathname === path;
+  const displayName = profile?.fullName || currentUser?.fullName || 'Member';
 
   return (
     <nav className="sticky top-0 z-50 glass-nav text-slate-900 dark:text-slate-100 shadow-xl transition-all duration-300">
@@ -107,19 +109,27 @@ export const Navbar: React.FC = () => {
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-emerald-600" />}
             </button>
 
-            {currentUser && currentUser.role === 'APPLICANT' ? (
+            {currentUser ? (
               <div className="flex items-center space-x-2">
                 <Link
-                  to="/member/dashboard"
+                  to={
+                    currentUser.role === 'APPLICANT' || currentUser.role === 'MEMBER'
+                      ? "/member/dashboard"
+                      : currentUser.role === 'VERIFYING_OFFICER'
+                      ? "/admin/verification"
+                      : currentUser.role === 'APPROVAL_AUTHORITY'
+                      ? "/admin/approval"
+                      : "/admin/master"
+                  }
                   className="flex items-center space-x-2 bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-700/60 dark:hover:bg-emerald-900 px-4 py-2 rounded-xl font-bold text-xs transition-all duration-200 shadow-md"
                 >
-                  <UserCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-                  <span>Dashboard ({currentUser.fullName.split(' ')[0]})</span>
+                  <UserCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
+                  <span className="max-w-[150px] truncate">{displayName}</span>
                 </Link>
 
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -192,14 +202,22 @@ export const Navbar: React.FC = () => {
           </Link>
 
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col space-y-2.5">
-            {currentUser && currentUser.role === 'APPLICANT' ? (
+            {currentUser ? (
               <div className="space-y-2">
                 <Link
-                  to="/member/dashboard"
+                  to={
+                    currentUser.role === 'APPLICANT' || currentUser.role === 'MEMBER'
+                      ? "/member/dashboard"
+                      : currentUser.role === 'VERIFYING_OFFICER'
+                      ? "/admin/verification"
+                      : currentUser.role === 'APPROVAL_AUTHORITY'
+                      ? "/admin/approval"
+                      : "/admin/master"
+                  }
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full block text-center bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 py-3 rounded-xl font-bold text-xs"
                 >
-                  My Member Dashboard
+                  Dashboard ({displayName})
                 </Link>
                 <button
                   onClick={() => {

@@ -654,204 +654,122 @@ export const HomePage: React.FC = () => {
 
       {/* ================= 7. LATEST NEWS & UPCOMING EVENTS ================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
-          
-          {/* Left Column: LATEST NEWS */}
-          <div className="lg:col-span-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase font-heading tracking-wider">
-                LATEST NEWS
-              </h2>
-              <Link to="/announcements" className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center space-x-1">
-                <span>View All</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {announcements.length > 0 ? (
-                announcements.slice(0, 3).map((ann, idx) => (
-                  <Link 
-                    key={ann.id || idx}
-                    to="/announcements" 
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col justify-between hover:shadow-xl hover:border-emerald-600/50 transition-all group text-left"
-                  >
-                    <div className="relative h-36 bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                      <img 
-                        src={ann.bannerUrl || "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800"} 
-                        alt={ann.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          // Fallback image if custom image URL fails to load
-                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800";
-                        }}
-                      />
-                      <div className="absolute top-2 left-2 bg-emerald-800/90 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md backdrop-blur-xs">
-                        Official Release
-                      </div>
-                    </div>
-                    <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
-                          {ann.publishedAt}
-                        </span>
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug font-heading group-hover:text-emerald-700 dark:group-hover:text-amber-300 transition-colors">
-                          {ann.title}
-                        </h4>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed mt-1">
-                          {ann.content}
-                        </p>
-                      </div>
-                      <div className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 pt-2 flex items-center space-x-1">
-                        <span>Read full release</span>
-                        <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <>
-                  {/* Default News Card 1 */}
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
-                    <div className="relative h-36">
-                      <img 
-                        src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800" 
-                        alt="Hyderabad Meeting" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">05 Sep 2026</span>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug font-heading">
-                        Hyderabad Divisional Meeting Held at Royal Taj
-                      </h4>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                        Young leaders came together to strengthen NYP Sindh and advance youth engagement.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Default News Card 2 */}
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
-                    <div className="relative h-36">
-                      <img 
-                        src="https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?auto=format&fit=crop&q=80&w=800" 
-                        alt="Defence Day Tribute" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">06 Sep 2026</span>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug font-heading">
-                        NYP Sindh Pays Tribute on Defence Day
-                      </h4>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                        Remembering the courage and sacrifices of our heroes.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Default News Card 3 */}
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
-                    <div className="relative h-36">
-                      <img 
-                        src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=800" 
-                        alt="Cabinet Meeting" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">30 Aug 2026</span>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug font-heading">
-                        NYP Sindh Cabinet Meeting Concludes Successfully
-                      </h4>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                        Productive discussions on upcoming initiatives and divisional bodies.
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+        {/* LATEST NEWS & ANNOUNCEMENTS SECTION */}
+        <div className="space-y-6 text-left">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase font-heading tracking-wider">
+              LATEST NEWS & ANNOUNCEMENTS
+            </h2>
+            <Link to="/announcements" className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center space-x-1">
+              <span>View All</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
-          {/* Right Column: UPCOMING EVENTS */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase font-heading tracking-wider">
-                UPCOMING EVENTS
-              </h2>
-              <Link to="/announcements" className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center space-x-1">
-                <span>View All</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            <div className="space-y-3">
-              
-              {/* Event 1 */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-300 text-center px-3 py-2 rounded-lg shrink-0">
-                    <span className="block text-base font-black leading-none">21</span>
-                    <span className="block text-[9px] font-bold uppercase">SEP</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {announcements.length > 0 ? (
+              announcements.slice(0, 3).map((ann, idx) => (
+                <Link 
+                  key={ann.id || idx}
+                  to="/announcements" 
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col justify-between hover:shadow-xl hover:border-emerald-600/50 transition-all group text-left"
+                >
+                  <div className="relative h-44 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <img 
+                      src={ann.bannerUrl || "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800"} 
+                      alt={ann.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800";
+                      }}
+                    />
+                    <div className="absolute top-2 left-2 bg-emerald-800/90 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md backdrop-blur-xs">
+                      Official Release
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white font-heading">Youth Leadership Workshop</h4>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Karachi</span>
+                  <div className="p-5 space-y-2 flex-1 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                        {ann.publishedAt}
+                      </span>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug font-heading group-hover:text-emerald-700 dark:group-hover:text-amber-300 transition-colors">
+                        {ann.title}
+                      </h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed mt-1">
+                        {ann.content}
+                      </p>
+                    </div>
+                    <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pt-3 flex items-center space-x-1 border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                      <span>Read full release</span>
+                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-              </div>
-
-              {/* Event 2 */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-300 text-center px-3 py-2 rounded-lg shrink-0">
-                    <span className="block text-base font-black leading-none">05</span>
-                    <span className="block text-[9px] font-bold uppercase">OCT</span>
+                </Link>
+              ))
+            ) : (
+              <>
+                {/* Default News Card 1 */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
+                  <div className="relative h-44">
+                    <img 
+                      src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800" 
+                      alt="Hyderabad Meeting" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white font-heading">Divisional Coordination Meeting</h4>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Sukkur</span>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-              </div>
-
-              {/* Event 3 */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-300 text-center px-3 py-2 rounded-lg shrink-0">
-                    <span className="block text-base font-black leading-none">16</span>
-                    <span className="block text-[9px] font-bold uppercase">OCT</span>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white font-heading">SDGs Youth Engagement Session</h4>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Hyderabad</span>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-              </div>
-
-              {/* Event 4 */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-300 text-center px-3 py-2 rounded-lg shrink-0">
-                    <span className="block text-base font-black leading-none">27</span>
-                    <span className="block text-[9px] font-bold uppercase">OCT</span>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white font-heading">Youth Parliament Simulation</h4>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Karachi</span>
+                  <div className="p-5 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">05 Sep 2026</span>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug font-heading">
+                      Hyderabad Divisional Meeting Held at Royal Taj
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      Young leaders came together to strengthen NYP Sindh and advance youth engagement.
+                    </p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-              </div>
 
-            </div>
+                {/* Default News Card 2 */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
+                  <div className="relative h-44">
+                    <img 
+                      src="https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?auto=format&fit=crop&q=80&w=800" 
+                      alt="Defence Day Tribute" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-5 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">06 Sep 2026</span>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug font-heading">
+                      NYP Sindh Pays Tribute on Defence Day
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      Remembering the courage and sacrifices of our heroes.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Default News Card 3 */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
+                  <div className="relative h-44">
+                    <img 
+                      src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=800" 
+                      alt="Cabinet Meeting" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-5 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">30 Aug 2026</span>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug font-heading">
+                      NYP Sindh Cabinet Meeting Concludes Successfully
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      Productive discussions on upcoming initiatives and divisional bodies.
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-
         </div>
       </section>
 

@@ -55,8 +55,8 @@ export const ApplicationPage: React.FC = () => {
   const [statementOfPurpose, setStatementOfPurpose] = useState('');
 
   // Checkboxes
-  const [selectedSkills, setSelectedSkills] = useState<string[]>(['Leadership', 'Public Speaking']);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(['Youth Affairs & Governance', 'SDGs']);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   // Experience & Socials
   const [previousExperience, setPreviousExperience] = useState('');

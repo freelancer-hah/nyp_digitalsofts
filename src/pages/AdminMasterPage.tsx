@@ -382,7 +382,7 @@ export const AdminMasterPage: React.FC = () => {
               {filteredMembers.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-12 text-slate-400 font-medium">
-                    ✨ No member records found. Database is completely fresh and clean!
+                    No member records found.
                   </td>
                 </tr>
               ) : (
