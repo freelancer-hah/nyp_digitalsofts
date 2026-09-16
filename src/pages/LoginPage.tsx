@@ -53,27 +53,27 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16 text-left space-y-6">
+    <div className="max-w-md mx-auto px-4 py-6 text-left">
       
-      <div className="ui-card p-8 space-y-6 shadow-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl">
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-2xl bg-white border-2 border-amber-400 p-1 flex items-center justify-center mx-auto shadow-md overflow-hidden">
-            <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-xl" />
+      <div className="ui-card p-6 space-y-4 shadow-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl">
+        <div className="text-center space-y-1.5">
+          <div className="w-12 h-12 rounded-xl bg-white border-2 border-amber-400 p-0.5 flex items-center justify-center mx-auto shadow-md overflow-hidden">
+            <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-lg" />
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white font-heading">Member Sign In</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Enter your CNIC (Username) and Password to secure your identity and access your dashboard.</p>
+          <h1 className="text-xl font-black text-slate-900 dark:text-white font-heading">Member Sign In</h1>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Enter your CNIC (Username) and Password to access your dashboard.</p>
         </div>
 
         {error && (
-          <div className="bg-rose-50 border border-rose-200 p-3 rounded-xl text-rose-800 text-xs flex items-center space-x-2 font-semibold">
+          <div className="bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-rose-800 text-xs flex items-center space-x-2 font-semibold">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4 text-xs">
+        <form onSubmit={handleLogin} className="space-y-3 text-xs">
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
               CNIC Number (Username) *
             </label>
             <input
@@ -81,14 +81,14 @@ export const LoginPage: React.FC = () => {
               required
               value={cnicNumber}
               onChange={(e) => handleCnicChange(e.target.value)}
-              placeholder="33105-7853093-7"
+              placeholder="41101-1234567-1"
               maxLength={15}
-              className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white font-mono text-sm font-bold focus:border-emerald-600 outline-none"
+              className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white font-mono text-xs font-bold focus:border-emerald-600 outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
               Password *
             </label>
             <div className="relative">
@@ -97,38 +97,23 @@ export const LoginPage: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-10 pr-4 py-3 text-slate-900 dark:text-white text-sm font-medium focus:border-emerald-600 outline-none"
+                placeholder="Enter password"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-900 dark:text-white text-xs font-medium focus:border-emerald-600 outline-none"
               />
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+              <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full ui-btn-gold text-slate-950 font-black text-xs py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider"
+            className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider mt-1"
           >
             <LogIn className="w-4 h-4 text-slate-950" />
             <span>LOG IN TO MEMBER DASHBOARD</span>
           </button>
         </form>
 
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block text-center">
-            Demo Access Shortcut:
-          </span>
-
-          <div>
-            <button
-              onClick={() => handleQuickDemoLogin('33105-7853093-7')}
-              className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-center transition-all flex items-center justify-center space-x-2 cursor-pointer"
-            >
-              <span>👤 Click for Demo Member Account</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="text-center text-xs text-slate-500 pt-2 space-y-3">
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center text-xs space-y-2">
           <div>
             Don't have an account?{' '}
             <Link to="/signup" className="text-emerald-700 dark:text-emerald-400 font-bold hover:underline">
@@ -136,7 +121,7 @@ export const LoginPage: React.FC = () => {
             </Link>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <Link
               to="/admin/login"
               className="inline-flex items-center space-x-1.5 text-[11px] font-semibold text-slate-500 hover:text-emerald-800 dark:hover:text-emerald-400 transition-colors"
