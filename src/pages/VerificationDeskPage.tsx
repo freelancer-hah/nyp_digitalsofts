@@ -95,8 +95,8 @@ export const VerificationDeskPage: React.FC = () => {
       {/* Top Banner */}
       <div className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-6 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md backdrop-blur-md">
         <div className="flex items-center space-x-3">
-          <div className="w-14 h-14 rounded-2xl bg-white p-0.5 border-2 border-amber-400 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
-            <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-xl" />
+          <div className="w-14 h-14 shrink-0 flex items-center justify-center overflow-hidden">
+            <img src="/nyp-logo.png" alt="NYP Sindh Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-slate-900 dark:text-white font-heading">Verification Desk</h1>

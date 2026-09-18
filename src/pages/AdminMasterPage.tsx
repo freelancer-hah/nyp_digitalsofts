@@ -213,8 +213,8 @@ export const AdminMasterPage: React.FC = () => {
       {/* Master Top Header */}
       <div className="bg-gradient-to-r from-purple-950 via-slate-950 to-emerald-950 border-2 border-purple-500/50 text-white p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-2xl rounded-3xl">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 rounded-2xl border-2 border-amber-400 bg-white p-1 shadow-md shrink-0 overflow-hidden">
-            <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain rounded-xl" />
+          <div className="w-16 h-16 shrink-0 flex items-center justify-center overflow-hidden">
+            <img src="/nyp-logo.png" alt="NYP Sindh Emblem" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <div>
             <span className="text-[10px] font-black uppercase text-amber-300 tracking-widest block">EXECUTIVE CONTROL</span>

@@ -68,8 +68,8 @@ export const AdminLoginPage: React.FC = () => {
             <span>EXECUTIVE ADMIN ACCESS PORTAL</span>
           </div>
 
-          <div className="w-16 h-16 rounded-2xl bg-white border-2 border-amber-400 p-1 flex items-center justify-center mx-auto shadow-lg overflow-hidden my-1">
-            <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-xl" />
+          <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center mx-auto overflow-hidden my-1">
+            <img src="/nyp-logo.png" alt="NYP Sindh Logo" className="w-full h-full object-contain drop-shadow-lg" />
           </div>
 
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight font-heading">

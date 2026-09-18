@@ -87,8 +87,8 @@ export const ApprovalDeskPage: React.FC = () => {
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-950 text-white rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xl border border-amber-400/50">
         <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 rounded-2xl bg-white p-0.5 border-2 border-amber-400 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
-            <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-xl" />
+          <div className="w-14 h-14 shrink-0 flex items-center justify-center overflow-hidden">
+            <img src="/nyp-logo.png" alt="NYP Sindh Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <div>
             <h1 className="text-2xl font-black font-heading">Authorisation Desk</h1>

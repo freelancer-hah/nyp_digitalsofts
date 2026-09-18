@@ -54,8 +54,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             
             {/* Left: Admin Brand */}
             <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-xl overflow-hidden border border-amber-400 bg-white p-0.5 shadow-lg shrink-0">
-                <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain rounded-lg" />
+              <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
+                <img src="/nyp-logo.png" alt="NYP Sindh Emblem" className="w-full h-full object-contain drop-shadow-sm" />
               </div>
               <div className="text-left">
                 <div className="text-sm sm:text-base font-black tracking-tight text-slate-900 dark:text-white flex items-center space-x-2 font-heading">

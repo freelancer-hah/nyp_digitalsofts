@@ -278,8 +278,8 @@ export const CmsManagerPage: React.FC = () => {
           
           {/* Logo & Title Block */}
           <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 rounded-2xl bg-white p-1 border-2 border-emerald-600/40 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
-              <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-xl" />
+            <div className="w-14 h-14 shrink-0 flex items-center justify-center overflow-hidden">
+              <img src="/nyp-logo.png" alt="NYP Sindh Logo" className="w-full h-full object-contain drop-shadow-md" />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading tracking-tight leading-tight">

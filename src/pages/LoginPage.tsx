@@ -54,14 +54,13 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="max-w-md mx-auto px-4 py-6 text-left">
-      
-      <div className="ui-card p-6 space-y-4 shadow-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl">
-        <div className="text-center space-y-1.5">
-          <div className="w-12 h-12 rounded-xl bg-white border-2 border-amber-400 p-0.5 flex items-center justify-center mx-auto shadow-md overflow-hidden">
-            <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-lg" />
+      <div className="ui-card p-6 sm:p-8 space-y-5 shadow-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl">
+        <div className="text-center space-y-2">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center mx-auto overflow-hidden">
+            <img src="/nyp-logo.png" alt="NYP Sindh Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
-          <h1 className="text-xl font-black text-slate-900 dark:text-white font-heading">Member Sign In</h1>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Enter your CNIC (Username) and Password to access your dashboard.</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading">Member Sign In</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Enter your CNIC (Username) and Password to access your dashboard.</p>
         </div>
 
         {error && (
