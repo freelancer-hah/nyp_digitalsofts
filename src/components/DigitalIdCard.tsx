@@ -454,26 +454,10 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
             
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
               
-              {/* NYP Emblem Logo Left + Ribbon Badge */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '70px', flexShrink: 0 }}>
-                <div style={{ width: '56px', height: '56px', position: 'relative' }}>
-                  <img src="/nyp-logo.jpg" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                </div>
-                {/* Black Ribbon Badge under logo */}
-                <div style={{ 
-                  background: '#0f172a', 
-                  color: '#ffffff', 
-                  fontSize: '5.5px', 
-                  fontWeight: 900, 
-                  letterSpacing: '0.4px', 
-                  padding: '2px 4px', 
-                  borderRadius: '2px', 
-                  marginTop: '2px',
-                  whiteSpace: 'nowrap',
-                  textAlign: 'center',
-                  textTransform: 'uppercase'
-                }}>
-                  YOUTH LEADING FUTURE
+              {/* NYP Emblem Logo Left */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '64px', flexShrink: 0 }}>
+                <div style={{ width: '60px', height: '60px', position: 'relative' }}>
+                  <img src="/nyp-logo.png" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 </div>
               </div>
 
@@ -706,22 +690,9 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               
               {/* Emblem Logo Left */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '60px', flexShrink: 0 }}>
-                <div style={{ width: '48px', height: '48px' }}>
-                  <img src="/nyp-logo.jpg" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                </div>
-                <div style={{ 
-                  background: '#0f172a', 
-                  color: '#ffffff', 
-                  fontSize: '5px', 
-                  fontWeight: 900, 
-                  padding: '1.5px 3px', 
-                  borderRadius: '2px', 
-                  marginTop: '1px',
-                  whiteSpace: 'nowrap',
-                  textTransform: 'uppercase'
-                }}>
-                  YOUTH LEADING FUTURE
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '56px', flexShrink: 0 }}>
+                <div style={{ width: '52px', height: '52px' }}>
+                  <img src="/nyp-logo.png" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 </div>
               </div>
 
