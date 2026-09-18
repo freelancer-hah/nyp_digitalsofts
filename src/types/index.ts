@@ -89,7 +89,7 @@ export interface RoleApplicationRequest {
 
 export interface MemberProfile {
   id: string;
-  userId: string;
+  userId?: string;
   fullName: string;
   fatherGuardianName: string;
   dob: string;

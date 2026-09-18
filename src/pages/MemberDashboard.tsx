@@ -103,7 +103,7 @@ export const MemberDashboard: React.FC = () => {
     if (!selectedRoleModal || !roleReason) return;
 
     store.createRoleApplication({
-      userId: profile.userId,
+      userId: profile.userId || profile.id,
       cnicNumber: profile.cnicNumber,
       profileId: profile.id,
       roleTier: selectedRoleModal.tier,

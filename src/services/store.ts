@@ -673,7 +673,7 @@ class StoreService {
     this.saveProfiles();
 
     const currentUserState: User = {
-      id: newProfile.userId,
+      id: newProfile.userId || newProfile.id,
       cnicNumber: cleanCnic,
       fullName: newProfile.fullName,
       email: newProfile.email,

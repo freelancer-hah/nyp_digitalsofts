@@ -262,7 +262,7 @@ export const ApplicationPage: React.FC = () => {
 
     await store.submitMemberProfile(
       {
-        userId: currentUser?.id || undefined,
+        userId: currentUser?.id || '',
         fullName,
         fatherGuardianName,
         dob: cleanDob,
