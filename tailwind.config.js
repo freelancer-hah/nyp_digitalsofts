@@ -10,17 +10,27 @@ export default {
       fontFamily: {
         sans: ['"Outfit"', '"Plus Jakarta Sans"', 'sans-serif'],
         heading: ['"Outfit"', 'sans-serif'],
+        serif: ['"Playfair Display"', '"Cinzel"', 'Georgia', 'serif'],
+        cursive: ['"Alex Brush"', 'cursive', 'serif'],
       },
       colors: {
         nyp: {
-          bg: "#030e09",
-          card: "#081d14",
+          bg: "#041a10",
+          card: "#062316",
+          dark: "#03140e",
+          forest: "#052818",
           border: "rgba(16, 185, 129, 0.2)",
           emerald: "#059669",
           bright: "#10b981",
-          gold: "#f59e0b",
-          goldlight: "#fbbf24",
-          accent: "#047857"
+          gold: "#c59b27",
+          goldHover: "#b48b1e",
+          amber: "#d97706",
+          goldlight: "#fef9c3",
+          accent: "#047857",
+          cream: "#f6f4ee",
+          creamCard: "#faf8f3",
+          creamBorder: "#e6e1d5",
+          sand: "#f0ece1"
         }
       },
       boxShadow: {

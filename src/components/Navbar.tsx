@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { UserCheck, LogIn, LogOut, Menu, X, Sun, Moon } from 'lucide-react';
+import { UserCheck, LogIn, LogOut, Menu, X, Sun, Moon, Search } from 'lucide-react';
 import { store } from '../services/store';
 import { useTheme } from '../context/ThemeContext';
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = store.getCurrentUser();
@@ -17,96 +19,92 @@ export const Navbar: React.FC = () => {
     navigate('/');
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/announcements?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+    }
+  };
+
   const isActive = (path: string) => location.pathname === path;
   const displayName = profile?.fullName || currentUser?.fullName || 'Member';
 
   return (
-    <nav className="sticky top-0 z-50 glass-nav text-slate-900 dark:text-slate-100 shadow-xl transition-all duration-300">
-
-      {/* Main Navbar */}
+    <header className="sticky top-0 z-50 bg-white dark:bg-[#0b1320] text-slate-900 dark:text-white border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs transition-colors duration-300 font-sans navbar-header">
+      
+      {/* Main Top Header Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Brand Logo & Title with Balanced Proportions */}
-          <Link to="/" className="flex items-center space-x-3 group shrink-0 py-2">
-            <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl overflow-hidden border-2 border-amber-400/90 bg-white p-0.5 shadow-md group-hover:scale-105 transition-all duration-300 shrink-0 flex items-center justify-center">
-              <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain rounded-lg" />
-            </div>
-            <div className="text-left flex flex-col justify-center">
-              <div className="text-xs sm:text-base font-black tracking-tight text-slate-900 dark:text-white leading-snug group-hover:text-emerald-700 dark:group-hover:text-amber-400 transition-colors uppercase font-heading">
-                NATIONAL YOUTH PARLIAMENT
+          {/* Left Side: Brand Logo & Desktop Navigation Links grouped together */}
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center space-x-3.5 group shrink-0 py-1">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-all duration-300">
+                <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain" />
               </div>
-              <div className="text-[10px] sm:text-xs font-black text-amber-600 dark:text-amber-400 tracking-[0.35em] uppercase font-heading">
-                S I N D H
+              <div className="text-center flex flex-col justify-center">
+                <div className="text-xs sm:text-base font-extrabold tracking-tight text-[#052818] dark:text-emerald-400 leading-tight font-heading group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors uppercase">
+                  NATIONAL YOUTH PARLIAMENT
+                </div>
+                <div className="text-[10px] sm:text-xs font-black text-[#c59b27] dark:text-amber-400 tracking-[0.35em] uppercase font-heading text-center w-full">
+                  — S I N D H —
+                </div>
               </div>
-            </div>
-          </Link>
+            </Link>
 
-          {/* Desktop Navigation Links: HOME -> Cabinets -> Youth Parliamentarians -> Announcements -> Contact Us */}
-          <div className="hidden lg:flex items-center space-x-1 bg-slate-100/90 border border-slate-200 dark:bg-slate-900/90 dark:border-slate-800 p-1.5 rounded-2xl backdrop-blur-md">
-            <Link 
-              to="/" 
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/') 
-                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
-                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
-              }`}
-            >
-              HOME
-            </Link>
-            <Link 
-              to="/cabinets" 
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/cabinets') && !location.search.includes('parliamentarians')
-                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
-                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
-              }`}
-            >
-              Cabinets
-            </Link>
-            <Link 
-              to="/cabinets?view=parliamentarians" 
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/cabinets') && location.search.includes('parliamentarians')
-                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
-                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
-              }`}
-            >
-              Youth Parliamentarians
-            </Link>
-            <Link 
-              to="/announcements" 
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/announcements') 
-                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
-                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
-              }`}
-            >
-              Announcements
-            </Link>
-            <Link 
-              to="/contact" 
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                isActive('/contact') 
-                  ? 'bg-emerald-600 text-white shadow-md border border-emerald-400/30' 
-                  : 'text-slate-700 hover:text-emerald-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
-              }`}
-            >
-              Contact Us
-            </Link>
+            {/* Desktop Navigation Links - Shifted right */}
+            <nav className="hidden lg:flex items-center space-x-6 lg:space-x-7 text-sm font-bold text-slate-700 dark:text-slate-200 font-heading ml-12 lg:ml-16 xl:ml-24">
+              <Link 
+                to="/" 
+                className={`hover:text-[#059669] dark:hover:text-emerald-400 transition-colors py-1 ${isActive('/') ? 'text-[#059669] dark:text-emerald-400 border-b-2 border-[#059669] dark:border-emerald-400' : ''}`}
+              >
+                Home
+              </Link>
+
+              <Link 
+                to="/cabinets" 
+                className={`hover:text-[#059669] dark:hover:text-emerald-400 transition-colors py-1 ${isActive('/cabinets') && !location.search.includes('parliamentarians') ? 'text-[#059669] dark:text-emerald-400 border-b-2 border-[#059669] dark:border-emerald-400' : ''}`}
+              >
+                Cabinets
+              </Link>
+
+              <Link 
+                to="/cabinets?view=parliamentarians" 
+                className={`hover:text-[#059669] dark:hover:text-emerald-400 transition-colors py-1 ${isActive('/cabinets') && location.search.includes('parliamentarians') ? 'text-[#059669] dark:text-emerald-400 border-b-2 border-[#059669] dark:border-emerald-400' : ''}`}
+              >
+                Youth Parliamentarians
+              </Link>
+
+              <Link 
+                to="/contact" 
+                className={`hover:text-[#059669] dark:hover:text-emerald-400 transition-colors py-1 ${isActive('/contact') ? 'text-[#059669] dark:text-emerald-400 border-b-2 border-[#059669] dark:border-emerald-400' : ''}`}
+              >
+                Contact
+              </Link>
+            </nav>
           </div>
 
-          {/* Action Buttons & Auth State */}
-          <div className="hidden md:flex items-center space-x-3.5">
+          {/* Right Action Buttons & CTA */}
+          <div className="hidden md:flex items-center space-x-3">
             
-            {/* Dark / Light Mode Toggle Button */}
+            {/* Search Icon */}
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="p-2 text-slate-600 dark:text-slate-300 hover:text-[#059669] dark:hover:text-emerald-400 transition-colors cursor-pointer rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              title="Search"
+              aria-label="Search website"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
+            {/* Dark/Light Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:border-emerald-500 dark:bg-slate-900/90 dark:border-slate-700 dark:text-amber-400 transition-all shadow-md flex items-center justify-center cursor-pointer"
+              className="p-2 text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              aria-label="Toggle Theme Mode"
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-emerald-600" />}
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
 
             {currentUser ? (
@@ -121,28 +119,34 @@ export const Navbar: React.FC = () => {
                       ? "/admin/approval"
                       : "/admin/master"
                   }
-                  className="flex items-center space-x-2 bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-700/60 dark:hover:bg-emerald-900 px-4 py-2 rounded-xl font-bold text-xs transition-all duration-200 shadow-md"
+                  className="flex items-center space-x-2 bg-[#052818] text-amber-300 border border-amber-400/40 hover:bg-[#073822] px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs"
                 >
-                  <UserCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
-                  <span className="max-w-[150px] truncate">{displayName}</span>
+                  <UserCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="max-w-[130px] truncate">{displayName}</span>
                 </Link>
 
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="p-2 text-slate-400 hover:text-rose-600 transition-colors rounded-lg cursor-pointer"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
-                  className="ui-btn-primary text-xs font-black px-6 py-2.5 rounded-xl flex items-center space-x-2 shadow-lg"
+                  className="bg-[#052818] dark:bg-emerald-950 hover:bg-[#083a24] dark:hover:bg-emerald-900 text-white dark:text-emerald-300 text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-sm transition-all duration-200 border border-emerald-800 dark:border-emerald-700 flex items-center space-x-1.5"
                 >
-                  <LogIn className="w-4 h-4 text-white" />
+                  <LogIn className="w-3.5 h-3.5 text-amber-400" />
                   <span>Member Login</span>
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black px-4 py-2.5 rounded-xl shadow-sm transition-all duration-200"
+                >
+                  Join NYP
                 </Link>
               </div>
             )}
@@ -151,16 +155,15 @@ export const Navbar: React.FC = () => {
           {/* Mobile Menu Toggle */}
           <div className="flex lg:hidden items-center space-x-2">
             <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-white border border-slate-300 text-slate-700 dark:bg-slate-800 dark:text-amber-400 dark:border-slate-700"
-              title="Toggle Theme"
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="p-2 text-slate-700 dark:text-slate-200 hover:text-[#059669] dark:hover:text-emerald-400"
             >
-              {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-emerald-600" />}
+              <Search className="w-5 h-5" />
             </button>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
+              className="p-2 text-slate-700 dark:text-slate-200 hover:text-[#059669] dark:hover:text-emerald-400 rounded-lg"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -169,36 +172,58 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
+      {/* Search Bar Slide Out */}
+      {searchOpen && (
+        <div className="bg-slate-50 dark:bg-slate-900 border-t border-b border-slate-200 dark:border-slate-800 py-3 px-4 animate-fade-in">
+          <form onSubmit={handleSearchSubmit} className="max-w-3xl mx-auto flex items-center space-x-2">
+            <input
+              type="text"
+              placeholder="Search NYP Sindh news, cabinets, initiatives..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg px-4 py-2 text-xs focus:outline-none focus:border-emerald-600"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="bg-[#052818] text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-900 transition-colors"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+      )}
+
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-5 pt-3 pb-6 space-y-3 text-left animate-fade-in">
+        <div className="lg:hidden bg-white dark:bg-[#0b1320] border-b border-slate-200 dark:border-slate-800 px-5 pt-3 pb-6 space-y-3 text-left animate-fade-in font-sans">
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-400"
+            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-[#059669] dark:hover:text-emerald-400"
           >
             Home
           </Link>
           <Link
             to="/cabinets"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-400"
+            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-[#059669] dark:hover:text-emerald-400"
           >
-            Cabinet & MPAs
+            Cabinets
           </Link>
           <Link
-            to="/announcements"
+            to="/cabinets?view=parliamentarians"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-400"
+            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-[#059669] dark:hover:text-emerald-400"
           >
-            News Bulletins
+            Youth Parliamentarians
           </Link>
           <Link
             to="/contact"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-400"
+            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-[#059669] dark:hover:text-emerald-400"
           >
-            Contact Us
+            Contact
           </Link>
 
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col space-y-2.5">
@@ -215,7 +240,7 @@ export const Navbar: React.FC = () => {
                       : "/admin/master"
                   }
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full block text-center bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 py-3 rounded-xl font-bold text-xs"
+                  className="w-full block text-center bg-[#052818] text-amber-300 py-3 rounded-lg font-bold text-xs"
                 >
                   Dashboard ({displayName})
                 </Link>
@@ -224,23 +249,32 @@ export const Navbar: React.FC = () => {
                     setMobileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="w-full text-center text-rose-600 dark:text-rose-400 py-2 text-xs font-bold"
+                  className="w-full text-center text-rose-600 py-2 text-xs font-bold"
                 >
                   Log Out
                 </button>
               </div>
             ) : (
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center ui-btn-primary text-white py-3 rounded-xl font-bold text-xs tracking-wider"
-              >
-                Member Login
-              </Link>
+              <div className="flex flex-col space-y-2">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center bg-[#052818] dark:bg-emerald-950 text-white dark:text-emerald-300 py-3 rounded-lg font-bold text-xs tracking-wider border border-emerald-800 dark:border-emerald-700"
+                >
+                  Member Login
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center bg-amber-500 text-slate-950 py-3 rounded-lg font-bold text-xs tracking-wider"
+                >
+                  Join NYP
+                </Link>
+              </div>
             )}
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 };

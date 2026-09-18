@@ -10,7 +10,9 @@ import { MemberProfile, RoleApplicationRequest, RoleTier } from '../types';
 
 export const MemberDashboard: React.FC = () => {
   const currentUser = store.getCurrentUser();
-  const [profile, setProfile] = useState<MemberProfile | undefined>(store.getProfileByUserId(currentUser?.id || ''));
+  const [profile, setProfile] = useState<MemberProfile | undefined>(
+    store.getProfileByUserId(currentUser?.id || currentUser?.cnicNumber || '')
+  );
   const [roleApplications, setRoleApplications] = useState<RoleApplicationRequest[]>([]);
 
   // Modal State for Role Application
@@ -28,11 +30,27 @@ export const MemberDashboard: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('JazzCash');
   const [transactionId, setTransactionId] = useState('');
 
+  // Membership Fee Payment Modal State
+  const [membershipFeeModalOpen, setMembershipFeeModalOpen] = useState(false);
+  const [memPaymentMethod, setMemPaymentMethod] = useState('JazzCash');
+  const [memTransactionId, setMemTransactionId] = useState('');
+
   const refreshData = () => {
-    if (currentUser?.id) {
-      setProfile(store.getProfileByUserId(currentUser.id));
-      setRoleApplications(store.getRoleApplicationsByUserId(currentUser.id));
+    const user = store.getCurrentUser();
+    if (user) {
+      setProfile(store.getProfileByUserId(user.id || user.cnicNumber));
+      setRoleApplications(store.getRoleApplicationsByUserId(user.id || user.cnicNumber));
     }
+  };
+
+  const handleMembershipFeeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile || !memTransactionId) return;
+
+    await store.submitMembershipPayment(profile.id, memPaymentMethod, memTransactionId, 1000);
+    setMembershipFeeModalOpen(false);
+    setMemTransactionId('');
+    refreshData();
   };
 
   useEffect(() => {
@@ -40,7 +58,7 @@ export const MemberDashboard: React.FC = () => {
     store.fetchFromSupabase().then(() => {
       refreshData();
     });
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.cnicNumber]);
 
   if (!profile) {
     return (
@@ -49,14 +67,26 @@ export const MemberDashboard: React.FC = () => {
           <FileText className="w-12 h-12 text-emerald-700 dark:text-emerald-400 mx-auto" />
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">No Application Found</h2>
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            You have logged in with CNIC <strong className="text-slate-900 dark:text-white font-mono">{currentUser?.cnicNumber || 'Registered Account'}</strong>, but haven't submitted your NYP Sindh Membership Application Form yet.
+            {currentUser?.cnicNumber ? (
+              <>You have logged in with CNIC <strong className="text-slate-900 dark:text-white font-mono">{currentUser.cnicNumber}</strong>, but no NYP Sindh Membership Application was found for this CNIC.</>
+            ) : (
+              <>Please log in with your registered CNIC and password, or submit the membership application form.</>
+            )}
           </p>
-          <Link
-            to="/signup"
-            className="inline-block ui-btn-gold text-slate-950 font-black text-xs px-6 py-3 rounded-xl transition-all uppercase tracking-wider shadow-lg"
-          >
-            FILL MEMBERSHIP REGISTRATION FORM NOW
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Link
+              to="/signup"
+              className="inline-block ui-btn-gold text-slate-950 font-black text-xs px-6 py-3 rounded-xl transition-all uppercase tracking-wider shadow-lg"
+            >
+              FILL MEMBERSHIP REGISTRATION FORM NOW
+            </Link>
+            <Link
+              to="/login"
+              className="inline-block bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all uppercase tracking-wider"
+            >
+              MEMBER SIGN IN
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -127,15 +157,27 @@ export const MemberDashboard: React.FC = () => {
                 </span>
               </div>
             </div>
+          ) : profile.status === 'PAYMENT_SUBMITTED' ? (
+            <div className="bg-purple-50 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-700/60 p-4 rounded-2xl flex items-center space-x-3 text-purple-900 dark:text-purple-300">
+              <Clock className="w-8 h-8 text-purple-600 dark:text-purple-400 shrink-0 animate-pulse" />
+              <div>
+                <span className="text-[10px] uppercase font-black text-purple-800 dark:text-purple-400 block tracking-wider">
+                  Official Membership Status
+                </span>
+                <span className="text-sm font-black text-slate-900 dark:text-white">
+                  FEE PAID • PENDING FINAL AUTHORISATION
+                </span>
+              </div>
+            </div>
           ) : profile.status === 'VERIFIED' ? (
             <div className="bg-blue-50 dark:bg-blue-950/80 border border-blue-300 dark:border-blue-700/60 p-4 rounded-2xl flex items-center space-x-3 text-blue-900 dark:text-blue-300">
-              <Clock className="w-8 h-8 text-blue-600 dark:text-blue-400 shrink-0" />
+              <CreditCard className="w-8 h-8 text-blue-600 dark:text-blue-400 shrink-0" />
               <div>
                 <span className="text-[10px] uppercase font-black text-blue-800 dark:text-blue-400 block tracking-wider">
                   Official Membership Status
                 </span>
                 <span className="text-sm font-black text-slate-900 dark:text-white">
-                  VERIFIED • PENDING FINAL APPROVAL
+                  VERIFIED • MEMBERSHIP FEE REQUIRED
                 </span>
               </div>
             </div>
@@ -177,167 +219,198 @@ export const MemberDashboard: React.FC = () => {
       </div>
 
       {/* SECTION: UPGRADE YOUR ROLE / APPLY FOR ASSEMBLY ROLES (ONLY FOR APPROVED MEMBERS) */}
-      {profile.status === 'APPROVED' && (
-        <div className="ui-card p-6 sm:p-8 space-y-6 shadow-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div>
-              <div className="inline-flex items-center space-x-1 text-xs font-black text-amber-500 uppercase tracking-widest mb-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>APPLY FOR HIGHER PARLIAMENTARY & DIVISIONAL ROLES</span>
+      {profile.status === 'APPROVED' && (() => {
+        const hasActiveRoleApp = (tier: RoleTier) => roleApplications.some((r) => r.roleTier === tier && r.status !== 'REJECTED');
+        const showYouthMpa = !hasActiveRoleApp('YOUTH_MPA');
+        const showYouthMna = !hasActiveRoleApp('YOUTH_MNA');
+        const showDivisional = !hasActiveRoleApp('DIVISIONAL_ROLE');
+        const showDistrict = !hasActiveRoleApp('DISTRICT_ROLE');
+        const showTaluka = !hasActiveRoleApp('TALUKA_ROLE');
+        const showPhysicalCard = !hasActiveRoleApp('PHYSICAL_CARD');
+
+        const availableCardsCount = [showYouthMpa, showYouthMna, showDivisional, showDistrict, showTaluka, showPhysicalCard].filter(Boolean).length;
+
+        return (
+          <div className="ui-card p-6 sm:p-8 space-y-6 shadow-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div>
+                <div className="inline-flex items-center space-x-1 text-xs font-black text-amber-500 uppercase tracking-widest mb-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>APPLY FOR HIGHER PARLIAMENTARY & DIVISIONAL ROLES</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading">
+                  Youth Representative Role Tier Applications
+                </h2>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading">
-                Youth Representative Role Tier Applications
-              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
+                Select a role to apply. Requests are reviewed by Verification Desk, followed by fee payment & final Authorisation.
+              </p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
-              Select a role to apply. Requests are reviewed by Verification Desk, followed by fee payment & final Authorisation.
-            </p>
+
+            {availableCardsCount === 0 ? (
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 p-6 rounded-2xl text-center text-xs text-emerald-900 dark:text-emerald-200 font-bold space-y-2">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto" />
+                <p className="text-sm font-black font-heading text-slate-900 dark:text-white">All Specialized Role Applications Submitted</p>
+                <p className="text-slate-600 dark:text-slate-400 font-normal">You have submitted application requests for all available role tiers. Track your live desk verification & fee payment statuses below.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                
+                {/* 1. APPLY FOR YOUTH MPA */}
+                {showYouthMpa && (
+                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
+                          Provincial Assembly
+                        </span>
+                        <span className="text-sm font-black text-amber-500 font-mono">PKR 4,000</span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR YOUTH MPA</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Represent your constituency in the Youth Provincial Assembly of Sindh with legislative debate privileges.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleOpenRoleModal('YOUTH_MPA', 'Youth Member of Provincial Assembly (Youth MPA)', 4000)}
+                      className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
+                    >
+                      <span>Apply for Youth MPA</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* 2. APPLY FOR YOUTH MNA */}
+                {showYouthMna && (
+                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
+                          National Assembly
+                        </span>
+                        <span className="text-sm font-black text-amber-500 font-mono">PKR 5,000</span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR YOUTH MNA</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        National Youth Parliament Representative for federal youth parliamentary caucuses and bill drafting.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleOpenRoleModal('YOUTH_MNA', 'Youth Member of National Assembly (Youth MNA)', 5000)}
+                      className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
+                    >
+                      <span>Apply for Youth MNA</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* 3. APPLY FOR DIVISIONAL ROLE */}
+                {showDivisional && (
+                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-300 border border-teal-300 dark:border-teal-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
+                          Divisional Level
+                        </span>
+                        <span className="text-sm font-black text-amber-500 font-mono">PKR 3,000</span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR DIVISIONAL ROLE</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Divisional Coordinator / Executive Member across Karachi, Sukkur, Hyderabad, Larkana, Mirpurkhas, or SBA.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleOpenRoleModal('DIVISIONAL_ROLE', 'Divisional Youth Coordinator / Executive', 3000)}
+                      className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
+                    >
+                      <span>Apply for Divisional Role</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* 4. APPLY FOR DISTRICT ROLE */}
+                {showDistrict && (
+                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
+                          District Level
+                        </span>
+                        <span className="text-sm font-black text-amber-500 font-mono">PKR 2,000</span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR DISTRICT ROLE</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        District President / Coordinator across 30 administrative districts of Sindh.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleOpenRoleModal('DISTRICT_ROLE', 'District Youth Coordinator', 2000)}
+                      className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
+                    >
+                      <span>Apply for District Role</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* 5. APPLY FOR CITY OR TALUKA ROLE */}
+                {showTaluka && (
+                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
+                          Taluka / City Level
+                        </span>
+                        <span className="text-sm font-black text-amber-500 font-mono">PKR 1,500</span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR CITY / TALUKA ROLE</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Grassroots Taluka Organiser & Youth City Representative.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleOpenRoleModal('TALUKA_ROLE', 'Taluka / City Youth Representative', 1500)}
+                      className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
+                    >
+                      <span>Apply for Taluka Role</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* 6. PHYSICAL MEMBERSHIP CARD */}
+                {showPhysicalCard && (
+                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
+                          Physical Printed Card
+                        </span>
+                        <span className="text-sm font-black text-amber-500 font-mono">PKR 1,000</span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">PHYSICAL MEMBERSHIP CARD</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Order plastic laminated official membership pass delivered to your residential address.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleOpenRoleModal('PHYSICAL_CARD', 'Physical Printed Plastic ID Card Pass', 1000)}
+                      className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
+                    >
+                      <span>Order Physical Card</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+              </div>
+            )}
           </div>
-
-          {/* 6 Role Application Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            
-            {/* 1. APPLY FOR YOUTH MPA */}
-            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
-                    Provincial Assembly
-                  </span>
-                  <span className="text-sm font-black text-amber-500 font-mono">PKR 4,000</span>
-                </div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR YOUTH MPA</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Represent your constituency in the Youth Provincial Assembly of Sindh with legislative debate privileges.
-                </p>
-              </div>
-              <button
-                onClick={() => handleOpenRoleModal('YOUTH_MPA', 'Youth Member of Provincial Assembly (Youth MPA)', 4000)}
-                className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
-              >
-                <span>Apply for Youth MPA</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* 2. APPLY FOR YOUTH MNA */}
-            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
-                    National Assembly
-                  </span>
-                  <span className="text-sm font-black text-amber-500 font-mono">PKR 5,000</span>
-                </div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR YOUTH MNA</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  National Youth Parliament Representative for federal youth parliamentary caucuses and bill drafting.
-                </p>
-              </div>
-              <button
-                onClick={() => handleOpenRoleModal('YOUTH_MNA', 'Youth Member of National Assembly (Youth MNA)', 5000)}
-                className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
-              >
-                <span>Apply for Youth MNA</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* 3. APPLY FOR DIVISIONAL ROLE */}
-            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-300 border border-teal-300 dark:border-teal-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
-                    Divisional Level
-                  </span>
-                  <span className="text-sm font-black text-amber-500 font-mono">PKR 3,000</span>
-                </div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR DIVISIONAL ROLE</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Divisional Coordinator / Executive Member across Karachi, Sukkur, Hyderabad, Larkana, Mirpurkhas, or SBA.
-                </p>
-              </div>
-              <button
-                onClick={() => handleOpenRoleModal('DIVISIONAL_ROLE', 'Divisional Youth Coordinator / Executive', 3000)}
-                className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
-              >
-                <span>Apply for Divisional Role</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* 4. APPLY FOR DISTRICT ROLE */}
-            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
-                    District Level
-                  </span>
-                  <span className="text-sm font-black text-amber-500 font-mono">PKR 2,000</span>
-                </div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR DISTRICT ROLE</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  District President / Coordinator across 30 administrative districts of Sindh.
-                </p>
-              </div>
-              <button
-                onClick={() => handleOpenRoleModal('DISTRICT_ROLE', 'District Youth Coordinator', 2000)}
-                className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
-              >
-                <span>Apply for District Role</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* 5. APPLY FOR CITY OR TALUKA ROLE */}
-            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
-                    Taluka / City Level
-                  </span>
-                  <span className="text-sm font-black text-amber-500 font-mono">PKR 1,500</span>
-                </div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR CITY / TALUKA ROLE</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Grassroots Taluka Organiser & Youth City Representative.
-                </p>
-              </div>
-              <button
-                onClick={() => handleOpenRoleModal('TALUKA_ROLE', 'Taluka / City Youth Representative', 1500)}
-                className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
-              >
-                <span>Apply for Taluka Role</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* 6. PHYSICAL MEMBERSHIP CARD */}
-            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
-                    Physical Printed Card
-                  </span>
-                  <span className="text-sm font-black text-amber-500 font-mono">PKR 1,000</span>
-                </div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">PHYSICAL MEMBERSHIP CARD</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Order plastic laminated official membership pass delivered to your residential address.
-                </p>
-              </div>
-              <button
-                onClick={() => handleOpenRoleModal('PHYSICAL_CARD', 'Physical Printed Plastic ID Card Pass', 1000)}
-                className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
-              >
-                <span>Order Physical Card</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* TRACK SUBMITTED ROLE APPLICATIONS */}
       {roleApplications.length > 0 && (
@@ -438,6 +511,48 @@ export const MemberDashboard: React.FC = () => {
 
           {profile.status === 'APPROVED' ? (
             <DigitalIdCard profile={profile} />
+          ) : profile.status === 'PAYMENT_SUBMITTED' ? (
+            <div className="bg-purple-50 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800 p-8 rounded-2xl text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-950 border border-purple-300 dark:border-purple-700 flex items-center justify-center mx-auto text-purple-600 dark:text-purple-400">
+                <Clock className="w-8 h-8 animate-pulse" />
+              </div>
+              <div className="space-y-2 max-w-lg mx-auto">
+                <h4 className="text-lg font-black text-slate-900 dark:text-white font-heading">
+                  Membership Fee Payment Submitted (Txn ID: {profile.paymentDetails?.transactionId || 'Submitted'})
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Your Membership Fee payment of PKR 1,000 via {profile.paymentDetails?.paymentMethod || 'Online'} has been received. It is currently undergoing final verification at the Authorisation Desk. Once confirmed by the Authoriser, your official Digital &amp; Printable Membership Card will be automatically conferred &amp; displayed here.
+                </p>
+              </div>
+              <div className="inline-flex items-center space-x-2 bg-purple-100 dark:bg-purple-950 px-4 py-2 rounded-xl text-xs font-mono text-purple-900 dark:text-purple-300 font-bold border border-purple-300 dark:border-purple-800">
+                <span>Payment Method: {profile.paymentDetails?.paymentMethod}</span>
+                <span>•</span>
+                <span>Txn ID: {profile.paymentDetails?.transactionId}</span>
+              </div>
+            </div>
+          ) : profile.status === 'VERIFIED' ? (
+            <div className="bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-800 p-8 rounded-2xl text-center space-y-5">
+              <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-700 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400">
+                <CreditCard className="w-8 h-8" />
+              </div>
+              <div className="space-y-2 max-w-lg mx-auto">
+                <h4 className="text-lg font-black text-slate-900 dark:text-white font-heading">
+                  Profile Verified! Membership Fee Payment Required
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Your membership profile details have passed Desk Verification! Please submit your official Membership Fee (PKR 1,000) below to send your record to the Authorisation Desk and receive your Official Digital &amp; Printable Card.
+                </p>
+              </div>
+              <div>
+                <button
+                  onClick={() => setMembershipFeeModalOpen(true)}
+                  className="ui-btn-gold text-slate-950 font-black px-8 py-3.5 rounded-2xl text-xs uppercase tracking-wider shadow-xl flex items-center justify-center space-x-2 mx-auto cursor-pointer hover:scale-105 transition-all"
+                >
+                  <CreditCard className="w-4 h-4 text-slate-950" />
+                  <span>PAY MEMBERSHIP FEE NOW (PKR 1,000)</span>
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-8 rounded-2xl text-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950 border border-amber-300 dark:border-amber-700 flex items-center justify-center mx-auto text-amber-600 dark:text-amber-400">
@@ -446,21 +561,14 @@ export const MemberDashboard: React.FC = () => {
               <div className="space-y-2 max-w-lg mx-auto">
                 <h4 className="text-lg font-black text-slate-900 dark:text-white font-heading">
                   {profile.status === 'REJECTED'
-                    ? 'Application Under Review / Rejected'
-                    : 'Membership Card Generation Pending Approval'}
+                    ? 'Application Rejected'
+                    : 'Membership Card Generation Pending Verification'}
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {profile.status === 'REJECTED'
                     ? `Your membership application was not approved. Reason: ${profile.rejectionReason || 'Please contact Secretariat for details.'}`
-                    : profile.status === 'VERIFIED'
-                    ? 'Your profile has passed desk verification! It is currently awaiting final authorization from the President / Authorisation Desk. Your official digital membership card will be generated as soon as approval is completed.'
-                    : 'Your membership application details have been submitted successfully. Your request is currently under scrutiny at the Verification Desk. Once fully verified and approved by NYP Sindh Administration, your official Digital & Printable Membership Card will be automatically issued here.'}
+                    : 'Your membership application details have been submitted successfully. Your request is currently under scrutiny at the Verification Desk. Once verified, fee payment option will be unlocked to issue your Official Membership Card.'}
                 </p>
-              </div>
-              <div className="inline-flex items-center space-x-2 bg-slate-200 dark:bg-slate-900 px-4 py-2 rounded-xl text-xs font-mono text-slate-700 dark:text-slate-300">
-                <span>Current Application Status: <strong className="uppercase text-amber-600 dark:text-amber-400 font-bold">{profile.status}</strong></span>
-                <span>•</span>
-                <span>Submitted Date: {new Date(profile.submittedAt).toLocaleDateString()}</span>
               </div>
             </div>
           )}
@@ -634,6 +742,75 @@ export const MemberDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setPaymentModalReq(null)}
+                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="ui-btn-gold text-slate-950 font-black px-6 py-2.5 rounded-xl uppercase tracking-wider cursor-pointer"
+                >
+                  SUBMIT PAYMENT PROOF
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MEMBERSHIP FEE PAYMENT MODAL */}
+      {membershipFeeModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 text-left shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div>
+                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">OFFICIAL MEMBERSHIP FEE</span>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">Pay PKR 1,000 to Unlock Card</h3>
+              </div>
+              <button onClick={() => setMembershipFeeModalOpen(false)} className="p-2 text-slate-400 hover:text-white cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleMembershipFeeSubmit} className="space-y-4 text-xs">
+              <div className="bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-950 text-white p-5 rounded-2xl space-y-2 border border-amber-400/40">
+                <span className="text-[10px] text-amber-300 block uppercase font-bold">Total Membership Fee</span>
+                <p className="text-3xl font-black font-mono text-amber-400">PKR 1,000</p>
+                <div className="pt-2 text-[11px] text-emerald-100 space-y-1 border-t border-emerald-800/80">
+                  <p>• <strong>JazzCash / EasyPaisa:</strong> 0331 9226110 (NYP Sindh Secretariat)</p>
+                  <p>• <strong>Meezan Bank:</strong> 01020304050607 (National Youth Parliament Sindh)</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Payment Method *</label>
+                <select
+                  value={memPaymentMethod}
+                  onChange={(e) => setMemPaymentMethod(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                >
+                  <option value="JazzCash">JazzCash (0331 9226110)</option>
+                  <option value="EasyPaisa">EasyPaisa (0331 9226110)</option>
+                  <option value="Bank Transfer">Bank Transfer (Meezan Bank NYP Sindh)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Transaction ID / Reference Number *</label>
+                <input
+                  type="text"
+                  required
+                  value={memTransactionId}
+                  onChange={(e) => setMemTransactionId(e.target.value)}
+                  placeholder="Enter 10-12 digit Transaction ID (e.g. 09823746152)"
+                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold font-mono"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setMembershipFeeModalOpen(false)}
                   className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-bold"
                 >
                   Cancel

@@ -412,6 +412,8 @@ export const AdminMasterPage: React.FC = () => {
                         className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
                           m.status === 'APPROVED'
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-700/60'
+                            : m.status === 'PAYMENT_SUBMITTED'
+                            ? 'bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-700/60'
                             : m.status === 'VERIFIED'
                             ? 'bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-700/60'
                             : m.status === 'REJECTED'
@@ -429,13 +431,7 @@ export const AdminMasterPage: React.FC = () => {
                             onClick={() => handleVerifyMember(m.id)}
                             className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-[10px] inline-flex items-center space-x-1 transition-colors cursor-pointer"
                           >
-                            <span>Verify</span>
-                          </button>
-                          <button
-                            onClick={() => handleApproveMember(m.id)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-[10px] inline-flex items-center space-x-1 transition-colors cursor-pointer"
-                          >
-                            <span>Approve</span>
+                            <span>Verify Profile</span>
                           </button>
                           <button
                             onClick={() => handleRejectMember(m.id)}
@@ -446,12 +442,15 @@ export const AdminMasterPage: React.FC = () => {
                         </>
                       )}
                       {m.status === 'VERIFIED' && (
+                        <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold italic px-2">Awaiting Member Fee Payment</span>
+                      )}
+                      {m.status === 'PAYMENT_SUBMITTED' && (
                         <>
                           <button
                             onClick={() => handleApproveMember(m.id)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-[10px] inline-flex items-center space-x-1 transition-colors cursor-pointer"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-[10px] inline-flex items-center space-x-1 transition-colors cursor-pointer shadow-sm"
                           >
-                            <span>Approve</span>
+                            <span>Authorize Payment &amp; Issue Card</span>
                           </button>
                           <button
                             onClick={() => handleRejectMember(m.id)}

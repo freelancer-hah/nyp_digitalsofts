@@ -12,6 +12,7 @@ export type UserRole =
 export type ApplicationStatus = 
   | 'PENDING_VERIFICATION' 
   | 'VERIFIED' 
+  | 'PAYMENT_SUBMITTED'
   | 'APPROVED' 
   | 'REJECTED';
 
@@ -141,6 +142,12 @@ export interface MemberProfile {
   verifiedByUserId?: string;
   authorizedByUserId?: string;
   approvalDate?: string;
+  paymentDetails?: {
+    paymentMethod: string;
+    transactionId: string;
+    feeAmount: number;
+    submittedAt: string;
+  };
   submittedAt: string;
 }
 
@@ -156,6 +163,11 @@ export interface CabinetMember {
   isActive: boolean;
   memberProfileId?: string;
   cnicNumber?: string;
+
+  // Parliamentary Attributes
+  category?: 'CABINET' | 'PARLIAMENTARIAN';
+  parliamentaryRole?: 'YOUTH_MPA' | 'YOUTH_MNA' | 'SPEAKER' | 'DEPUTY_SPEAKER' | 'CHIEF_MINISTER' | 'OPPOSITION_LEADER' | 'MINISTER';
+  ministryDepartment?: string;
 }
 
 export interface Announcement {
@@ -183,3 +195,16 @@ export interface WorkingGoal {
   description: string;
   category: string;
 }
+
+export interface MediaItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string; // e.g. Youth Summit, Assembly Session, Divisional Meetup, Community Outreach
+  mediaType: 'IMAGE' | 'VIDEO';
+  mediaUrl: string;
+  eventDate?: string;
+  location?: string;
+  createdAt?: string;
+}
+

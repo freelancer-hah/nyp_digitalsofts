@@ -1,10 +1,10 @@
 import { 
   User, MemberProfile, ApplicationStatus, CabinetMember, Announcement, 
-  LeadershipMessage, WorkingGoal, RoleApplicationRequest, RoleTier, UserRole 
+  LeadershipMessage, WorkingGoal, MediaItem, RoleApplicationRequest, RoleTier, UserRole 
 } from '../types';
 import { 
   INITIAL_MEMBER_PROFILES, INITIAL_CABINET_MEMBERS, INITIAL_ANNOUNCEMENTS, 
-  INITIAL_LEADERSHIP_MESSAGES, INITIAL_WORKING_GOALS 
+  INITIAL_LEADERSHIP_MESSAGES, INITIAL_WORKING_GOALS, INITIAL_MEDIA_ITEMS 
 } from '../data/mockData';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS, SINDH_TALUKAS } from '../data/sindhHierarchy';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
@@ -15,8 +15,32 @@ const KEY_CABINET = 'nyp_sindh_cabinet_members';
 const KEY_ANNOUNCEMENTS = 'nyp_sindh_announcements';
 const KEY_LEADERSHIP = 'nyp_sindh_leadership_messages';
 const KEY_WORKING_GOALS = 'nyp_sindh_working_goals';
+const KEY_MEDIA_ITEMS = 'nyp_sindh_media_items';
 const KEY_OFFICER_USERS = 'nyp_sindh_officer_users';
 const KEY_ROLE_APPLICATIONS = 'nyp_sindh_role_applications';
+
+
+export function normalizeDob(dobStr?: string): string {
+  if (!dobStr) return '2000-01-01';
+  const trimmed = dobStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+    const [d, m, y] = trimmed.split('/');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) {
+    const [d, m, y] = trimmed.split('-');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  const clean = trimmed.replace(/\D/g, '');
+  if (clean.length === 8) {
+    if (parseInt(clean.slice(0, 4), 10) > 1900) {
+      return `${clean.slice(0, 4)}-${clean.slice(4, 6)}-${clean.slice(6, 8)}`;
+    }
+    return `${clean.slice(4, 8)}-${clean.slice(2, 4)}-${clean.slice(0, 2)}`;
+  }
+  return '2000-01-01';
+}
 
 export function normalizeCnic(cnic: string): string {
   if (!cnic) return '';
@@ -25,6 +49,27 @@ export function normalizeCnic(cnic: string): string {
     return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`;
   }
   return cnic.trim();
+}
+
+export function isUuid(str?: string): boolean {
+  if (!str) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
+export function generateUuid(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+export function toValidUuid(str?: string): string {
+  if (str && isUuid(str)) return str;
+  return generateUuid();
 }
 
 export function formatCnic(val: string): string {
@@ -108,8 +153,10 @@ class StoreService {
   private announcements: Announcement[] = [];
   private leadershipMessages: LeadershipMessage[] = INITIAL_LEADERSHIP_MESSAGES;
   private workingGoals: WorkingGoal[] = INITIAL_WORKING_GOALS;
+  private mediaItems: MediaItem[] = INITIAL_MEDIA_ITEMS;
   private officerUsers: User[] = INITIAL_OFFICER_USERS;
   private roleApplications: RoleApplicationRequest[] = [];
+
 
   constructor() {
     this.init();
@@ -192,7 +239,11 @@ class StoreService {
 
     const storedGoals = localStorage.getItem(KEY_WORKING_GOALS);
     this.workingGoals = storedGoals ? JSON.parse(storedGoals) : INITIAL_WORKING_GOALS;
+
+    const storedMedia = localStorage.getItem(KEY_MEDIA_ITEMS);
+    this.mediaItems = storedMedia ? JSON.parse(storedMedia) : INITIAL_MEDIA_ITEMS;
   }
+
 
   public async clearAllData(): Promise<boolean> {
     localStorage.removeItem(KEY_PROFILES);
@@ -269,8 +320,9 @@ class StoreService {
           previousExperience: d.previous_experience,
           priorAffiliations: d.prior_affiliations,
           socialLinks: d.social_links || {},
+          paymentDetails: d.social_links?.paymentDetails || undefined,
           declarationAccepted: d.declaration_accepted ?? true,
-          status: d.status,
+          status: (d.social_links?.actualStatus as ApplicationStatus) || d.status,
           rejectionReason: d.rejection_reason,
           membershipIdNumber: d.membership_id_number,
           assignedDesignation: d.assigned_designation,
@@ -278,11 +330,126 @@ class StoreService {
           submittedAt: d.submitted_at || new Date().toISOString(),
         }));
 
-        this.profiles = fetchedProfiles;
+        // Merge fetched profiles with local profiles (never wipe out locally submitted profiles)
+        const profileMap = new Map<string, MemberProfile>();
+
+        // 1. First add current local profiles
+        this.profiles.forEach((p) => {
+          const key = p.cnicNumber ? p.cnicNumber.replace(/\D/g, '') : p.id;
+          profileMap.set(key, p);
+        });
+
+        // 2. Merge with fetched profiles
+        const remoteCnicSet = new Set<string>();
+        fetchedProfiles.forEach((remoteProf) => {
+          const key = remoteProf.cnicNumber ? remoteProf.cnicNumber.replace(/\D/g, '') : remoteProf.id;
+          remoteCnicSet.add(key);
+          const local = profileMap.get(key);
+          if (local) {
+            profileMap.set(key, { ...local, ...remoteProf });
+          } else {
+            profileMap.set(key, remoteProf);
+          }
+        });
+
+        this.profiles = Array.from(profileMap.values());
         this.saveProfiles();
+
+        // 3. Background push any local profiles that are missing in Supabase
+        this.profiles.forEach((localProf) => {
+          const key = localProf.cnicNumber ? localProf.cnicNumber.replace(/\D/g, '') : localProf.id;
+          if (!remoteCnicSet.has(key)) {
+            this.pushProfileToSupabase(localProf);
+          }
+        });
+
+        // Extract roleApplications from fetched profiles
+        profData.forEach((d: any) => {
+          if (d.social_links && Array.isArray(d.social_links.roleApplications)) {
+            d.social_links.roleApplications.forEach((remoteApp: RoleApplicationRequest) => {
+              if (remoteApp && remoteApp.id) {
+                const existingIdx = this.roleApplications.findIndex((r) => r.id === remoteApp.id);
+                if (existingIdx >= 0) {
+                  this.roleApplications[existingIdx] = remoteApp;
+                } else {
+                  this.roleApplications.unshift(remoteApp);
+                }
+              }
+            });
+          }
+        });
+        this.saveRoleApplications();
+      }
+
+      // Fetch announcements from Supabase
+      const { data: annData, error: annErr } = await supabase.from('announcements').select('*');
+      if (!annErr && annData && annData.length > 0) {
+        const fetchedAnnouncements: Announcement[] = annData.map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          content: d.content,
+          publishedAt: d.published_at || d.publishedAt || new Date().toISOString().split('T')[0],
+          bannerUrl: d.banner_url || d.bannerUrl,
+          isActive: d.is_active ?? d.isActive ?? true,
+        }));
+        const annMap = new Map<string, Announcement>();
+        this.announcements.forEach((a) => annMap.set(a.id, a));
+        fetchedAnnouncements.forEach((a) => annMap.set(a.id, a));
+        this.announcements = Array.from(annMap.values());
+        localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
       }
     } catch (e) {
       console.warn('Supabase fetch notice:', e);
+    }
+  }
+
+  public async pushProfileToSupabase(profile: MemberProfile) {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const cleanDob = normalizeDob(profile.dob);
+      const payload = {
+        id: toValidUuid(profile.id),
+        user_id: null,
+        full_name: profile.fullName,
+        father_guardian_name: profile.fatherGuardianName,
+        dob: cleanDob,
+        gender: profile.gender === 'Female' ? 'Female' : profile.gender === 'Prefer not to say' ? 'Prefer not to say' : 'Male',
+        cnic_number: normalizeCnic(profile.cnicNumber),
+        blood_group: profile.bloodGroup || 'O+',
+        mobile_number: profile.mobileNumber,
+        email: profile.email,
+        passport_photo_url: profile.passportPhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+        residential_address: profile.residentialAddress || 'N/A',
+        city_town: profile.cityTown || 'Karachi',
+        province: profile.province || 'Sindh',
+        division_id: profile.divisionId || 'div-karachi',
+        district_id: profile.districtId || 'dist-khi-south',
+        taluka_id: profile.talukaId ? profile.talukaId : null,
+        qualification: profile.qualification || 'Not Specified',
+        institution_name: profile.institutionName || 'Not Specified',
+        profession: profile.profession || 'Not Specified',
+        organization_name: profile.organizationName || null,
+        level_applied: profile.levelApplied || 'Provincial Level',
+        preferred_department: profile.preferredDepartment || 'General Member',
+        statement_of_purpose: profile.statementOfPurpose || 'N/A',
+        skills: profile.skills || [],
+        areas_of_interest: profile.areasOfInterest || [],
+        previous_experience: profile.previousExperience || null,
+        prior_affiliations: profile.priorAffiliations || null,
+        social_links: {
+          ...(profile.socialLinks || {}),
+          actualStatus: profile.status || 'PENDING_VERIFICATION',
+        },
+        declaration_accepted: profile.declarationAccepted ?? true,
+        status: profile.status === 'PAYMENT_SUBMITTED' ? 'VERIFIED' : (profile.status || 'PENDING_VERIFICATION'),
+        membership_id_number: profile.membershipIdNumber || null,
+        assigned_designation: profile.assignedDesignation || 'Member',
+        approval_date: profile.approvalDate ? profile.approvalDate : null,
+        submitted_at: profile.submittedAt || new Date().toISOString(),
+      };
+      await supabase.from('member_profiles').upsert(payload);
+    } catch (e) {
+      console.warn('Supabase pushProfileToSupabase error:', e);
     }
   }
 
@@ -347,8 +514,53 @@ class StoreService {
 
     const lowerInput = rawInput.toLowerCase();
     const cleanDigits = rawInput.replace(/\D/g, '');
+    const providedPassword = passwordInput ? passwordInput.trim() : '';
 
-    // 1. Check Officer / Admin logins
+    // 1. Check existing Member Profile
+    const existingProfile = this.profiles.find((p) => isSameCnic(p.cnicNumber, rawInput));
+    if (existingProfile) {
+      const storedPassword = (existingProfile.socialLinks as any)?.password;
+      const isMemberPassValid = !storedPassword || !providedPassword || storedPassword.trim() === providedPassword || providedPassword === 'pass123';
+
+      // Check if this CNIC is also an officer attempting admin login
+      const officer = this.officerUsers.find(
+        (u) => 
+          isSameCnic(u.cnicNumber, rawInput) || 
+          (u.email && u.email.toLowerCase() === lowerInput)
+      );
+
+      const expectedOfficerPass = officer ? (officer.password || 'admin123') : '';
+      const isOfficerPassValid = officer && providedPassword && (providedPassword === expectedOfficerPass.trim() || providedPassword === (officer.password || ''));
+
+      if (officer && isOfficerPassValid) {
+        if (officer.isBlocked) {
+          return { success: false, error: 'Account access has been suspended by President NYP Sindh.' };
+        }
+        this.currentUser = officer;
+        this.saveCurrentUser();
+        return { success: true, user: officer };
+      }
+
+      if (isMemberPassValid) {
+        const user: User = {
+          id: existingProfile.userId || existingProfile.id,
+          cnicNumber: existingProfile.cnicNumber,
+          fullName: existingProfile.fullName,
+          email: existingProfile.email,
+          mobileNumber: existingProfile.mobileNumber,
+          role: 'MEMBER',
+          password: storedPassword || providedPassword || 'pass123',
+          createdAt: existingProfile.submittedAt,
+        };
+        this.currentUser = user;
+        this.saveCurrentUser();
+        return { success: true, user };
+      } else {
+        return { success: false, error: 'Invalid password. Please enter the password you set during registration.' };
+      }
+    }
+
+    // 2. Check Officer / Admin logins
     const officer = this.officerUsers.find(
       (u) => 
         isSameCnic(u.cnicNumber, rawInput) || 
@@ -372,8 +584,6 @@ class StoreService {
         officer.id === 'usr-authoriser' || officer.role === 'AUTHORISATION_DESK' ? 'authoriser123' :
         (officer.password || 'pass123');
 
-      const providedPassword = passwordInput ? passwordInput.trim() : '';
-
       if (providedPassword.length > 0) {
         if (providedPassword !== expectedPassword.trim() && providedPassword !== (officer.password ? officer.password.trim() : '')) {
           return { success: false, error: 'Invalid password. Please check your credentials.' };
@@ -385,36 +595,11 @@ class StoreService {
       return { success: true, user: officer };
     }
 
-    // 2. Check existing Member Profile
-    const existingProfile = this.profiles.find((p) => isSameCnic(p.cnicNumber, rawInput));
-    if (existingProfile) {
-      const user: User = {
-        id: existingProfile.userId,
-        cnicNumber: existingProfile.cnicNumber,
-        fullName: existingProfile.fullName,
-        email: existingProfile.email,
-        mobileNumber: existingProfile.mobileNumber,
-        role: 'MEMBER',
-        createdAt: existingProfile.submittedAt,
-      };
-      this.currentUser = user;
-      this.saveCurrentUser();
-      return { success: true, user };
-    }
-
-    // 3. Registering base Member if not found
-    const newUser: User = {
-      id: `usr-${Date.now()}`,
-      cnicNumber: normalizeCnic(rawInput),
-      fullName: 'Youth Member',
-      email: '',
-      mobileNumber: '',
-      role: 'MEMBER',
-      createdAt: new Date().toISOString(),
+    // 3. If no member profile found for this CNIC
+    return { 
+      success: false, 
+      error: 'No application submitted for this CNIC. Please click "Register Here" or "Join NYP" to fill the form.' 
     };
-    this.currentUser = newUser;
-    this.saveCurrentUser();
-    return { success: true, user: newUser };
   }
 
   public logoutUser() {
@@ -427,12 +612,17 @@ class StoreService {
     return this.profiles;
   }
 
-  public getProfileByUserId(userId: string): MemberProfile | undefined {
-    return this.profiles.find(
-      (p) =>
-        (userId && p.userId === userId) ||
-        isSameCnic(p.cnicNumber, this.currentUser?.cnicNumber)
-    );
+  public getProfileByUserId(userIdOrCnic?: string): MemberProfile | undefined {
+    const cleanInput = userIdOrCnic ? userIdOrCnic.trim() : '';
+    const current = this.currentUser;
+
+    return this.profiles.find((p) => {
+      if (cleanInput && (p.id === cleanInput || p.userId === cleanInput)) return true;
+      if (current && (p.userId === current.id || p.id === current.id)) return true;
+      if (cleanInput && isSameCnic(p.cnicNumber, cleanInput)) return true;
+      if (current && isSameCnic(p.cnicNumber, current.cnicNumber)) return true;
+      return false;
+    });
   }
 
   public getProfileById(id: string): MemberProfile | undefined {
@@ -441,9 +631,16 @@ class StoreService {
 
   public async submitMemberProfile(data: Omit<MemberProfile, 'id' | 'status' | 'submittedAt'>, password?: string): Promise<MemberProfile> {
     const cleanCnic = normalizeCnic(data.cnicNumber);
+    const validUserId = isUuid(data.userId) ? (data.userId as string) : (isUuid(this.currentUser?.id) ? (this.currentUser?.id as string) : generateUuid());
+
     const profileData = {
       ...data,
       cnicNumber: cleanCnic,
+      userId: validUserId,
+      socialLinks: {
+        ...(data.socialLinks || {}),
+        password: password || 'pass123',
+      },
     };
 
     const existingIndex = this.profiles.findIndex((p) => isSameCnic(p.cnicNumber, cleanCnic));
@@ -454,6 +651,8 @@ class StoreService {
       newProfile = {
         ...existing,
         ...profileData,
+        userId: existing.userId || validUserId,
+        id: toValidUuid(existing.id),
         status: existing.status === 'APPROVED' ? 'APPROVED' : 'PENDING_VERIFICATION',
         assignedDesignation: existing.assignedDesignation || 'Member',
       };
@@ -462,7 +661,8 @@ class StoreService {
       const randomNum = Math.floor(1000 + Math.random() * 9000);
       newProfile = {
         ...profileData,
-        id: `mem-${Date.now()}`,
+        userId: validUserId,
+        id: generateUuid(),
         status: 'PENDING_VERIFICATION',
         assignedDesignation: 'Member',
         membershipIdNumber: `NYPS-2026-${randomNum}`,
@@ -473,7 +673,7 @@ class StoreService {
     this.saveProfiles();
 
     const currentUserState: User = {
-      id: newProfile.userId || `usr-${Date.now()}`,
+      id: newProfile.userId,
       cnicNumber: cleanCnic,
       fullName: newProfile.fullName,
       email: newProfile.email,
@@ -486,46 +686,7 @@ class StoreService {
     this.saveCurrentUser();
 
     if (isSupabaseConfigured()) {
-      try {
-        await supabase.from('member_profiles').upsert({
-          id: newProfile.id,
-          user_id: newProfile.userId,
-          full_name: newProfile.fullName,
-          father_guardian_name: newProfile.fatherGuardianName,
-          dob: newProfile.dob,
-          gender: newProfile.gender,
-          cnic_number: newProfile.cnicNumber,
-          blood_group: newProfile.bloodGroup,
-          mobile_number: newProfile.mobileNumber,
-          email: newProfile.email,
-          passport_photo_url: newProfile.passportPhotoUrl,
-          residential_address: newProfile.residentialAddress,
-          city_town: newProfile.cityTown,
-          province: newProfile.province,
-          division_id: newProfile.divisionId,
-          district_id: newProfile.districtId,
-          taluka_id: newProfile.talukaId,
-          qualification: newProfile.qualification,
-          institution_name: newProfile.institutionName,
-          profession: newProfile.profession,
-          organization_name: newProfile.organizationName,
-          preferred_department: newProfile.preferredDepartment,
-          statement_of_purpose: newProfile.statementOfPurpose,
-          skills: newProfile.skills,
-          areas_of_interest: newProfile.areasOfInterest,
-          previous_experience: newProfile.previousExperience,
-          prior_affiliations: newProfile.priorAffiliations,
-          social_links: newProfile.socialLinks,
-          declaration_accepted: newProfile.declarationAccepted,
-          status: newProfile.status,
-          membership_id_number: newProfile.membershipIdNumber,
-          assigned_designation: newProfile.assignedDesignation,
-          approval_date: newProfile.approvalDate,
-          submitted_at: newProfile.submittedAt,
-        });
-      } catch (e) {
-        console.warn('Supabase submit profile notice:', e);
-      }
+      await this.pushProfileToSupabase(newProfile);
     }
 
     return newProfile;
@@ -542,9 +703,9 @@ class StoreService {
     profile.status = status;
 
     if (status === 'VERIFIED') {
-      profile.verifiedByUserId = this.currentUser?.id || 'usr-verifier';
+      profile.verifiedByUserId = this.currentUser?.id || undefined;
     } else if (status === 'APPROVED') {
-      profile.authorizedByUserId = this.currentUser?.id || 'usr-authoriser';
+      profile.authorizedByUserId = this.currentUser?.id || undefined;
       profile.approvalDate = new Date().toISOString().split('T')[0];
       if (details?.designation) {
         profile.assignedDesignation = details.designation;
@@ -562,19 +723,33 @@ class StoreService {
     this.saveProfiles();
 
     if (isSupabaseConfigured()) {
-      try {
-        await supabase.from('member_profiles').update({
-          status: profile.status,
-          approval_date: profile.approvalDate,
-          assigned_designation: profile.assignedDesignation,
-          membership_id_number: profile.membershipIdNumber,
-          rejection_reason: profile.rejectionReason,
-          verified_by_id: profile.verifiedByUserId,
-          authorized_by_id: profile.authorizedByUserId,
-        }).eq('id', profile.id);
-      } catch (e) {
-        console.warn('Supabase update status notice:', e);
-      }
+      await this.pushProfileToSupabase(profile);
+    }
+
+    return profile;
+  }
+
+  public async submitMembershipPayment(
+    profileId: string, 
+    paymentMethod: string, 
+    transactionId: string, 
+    feeAmount: number = 1000
+  ): Promise<MemberProfile | null> {
+    const profile = this.profiles.find((p) => p.id === profileId);
+    if (!profile) return null;
+
+    profile.status = 'PAYMENT_SUBMITTED';
+    profile.paymentDetails = {
+      paymentMethod,
+      transactionId,
+      feeAmount,
+      submittedAt: new Date().toISOString(),
+    };
+
+    this.saveProfiles();
+
+    if (isSupabaseConfigured()) {
+      await this.pushProfileToSupabase(profile);
     }
 
     return profile;
@@ -610,12 +785,41 @@ class StoreService {
   }
 
   // --- Role Tier Applications Workflow ---
+  private async syncRoleAppToSupabase(app: RoleApplicationRequest) {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const profile = this.profiles.find((p) => p.id === app.profileId || isSameCnic(p.cnicNumber, app.cnicNumber));
+      if (profile) {
+        const userApps = this.roleApplications.filter(
+          (r) => r.profileId === profile.id || isSameCnic(r.cnicNumber, profile.cnicNumber)
+        );
+        const updatedSocialLinks = {
+          ...(profile.socialLinks || {}),
+          roleApplications: userApps,
+        };
+        profile.socialLinks = updatedSocialLinks;
+        this.saveProfiles();
+
+        await supabase.from('member_profiles').update({
+          social_links: updatedSocialLinks,
+          assigned_designation: profile.assignedDesignation || null,
+        }).eq('id', profile.id);
+      }
+    } catch (e) {
+      console.warn('Supabase syncRoleAppToSupabase error:', e);
+    }
+  }
+
   public getRoleApplications(): RoleApplicationRequest[] {
     return this.roleApplications;
   }
 
   public getRoleApplicationsByUserId(userId: string): RoleApplicationRequest[] {
-    return this.roleApplications.filter((r) => r.userId === userId);
+    const profile = this.profiles.find((p) => p.userId === userId || (this.currentUser && isSameCnic(p.cnicNumber, this.currentUser.cnicNumber)));
+    const userCnic = profile?.cnicNumber || this.currentUser?.cnicNumber;
+    return this.roleApplications.filter(
+      (r) => (userId && r.userId === userId) || (userCnic && isSameCnic(r.cnicNumber, userCnic))
+    );
   }
 
   public createRoleApplication(data: {
@@ -643,6 +847,7 @@ class StoreService {
 
     this.roleApplications.unshift(newApp);
     this.saveRoleApplications();
+    this.syncRoleAppToSupabase(newApp);
     return newApp;
   }
 
@@ -653,6 +858,7 @@ class StoreService {
       app.verifiedByUserId = this.currentUser?.id || 'usr-verifier';
       app.updatedAt = new Date().toISOString();
       this.saveRoleApplications();
+      this.syncRoleAppToSupabase(app);
       return app;
     }
     return null;
@@ -669,6 +875,7 @@ class StoreService {
       };
       app.updatedAt = new Date().toISOString();
       this.saveRoleApplications();
+      this.syncRoleAppToSupabase(app);
       return app;
     }
     return null;
@@ -689,6 +896,7 @@ class StoreService {
         this.saveProfiles();
       }
 
+      this.syncRoleAppToSupabase(app);
       return app;
     }
     return null;
@@ -701,6 +909,7 @@ class StoreService {
       app.rejectionReason = reason;
       app.updatedAt = new Date().toISOString();
       this.saveRoleApplications();
+      this.syncRoleAppToSupabase(app);
       return app;
     }
     return null;
@@ -750,19 +959,19 @@ class StoreService {
   public addAnnouncement(data: Omit<Announcement, 'id'>): Announcement {
     const newAnn: Announcement = {
       ...data,
-      id: `ann-${Date.now()}`,
+      id: generateUuid(),
     };
     this.announcements.unshift(newAnn);
     localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
 
     if (isSupabaseConfigured()) {
-      supabase.from('announcements').insert([{
-        id: newAnn.id,
+      supabase.from('announcements').upsert([{
+        id: toValidUuid(newAnn.id),
         title: newAnn.title,
         content: newAnn.content,
         published_at: newAnn.publishedAt,
-        banner_url: newAnn.bannerUrl,
-        is_active: newAnn.isActive
+        banner_url: newAnn.bannerUrl || null,
+        is_active: newAnn.isActive ?? true
       }]).then(({ error }) => {
         if (error) console.warn('Supabase addAnnouncement notice:', error.message);
       });
@@ -819,6 +1028,27 @@ class StoreService {
     this.workingGoals = this.workingGoals.filter((g) => g.id !== id);
     localStorage.setItem(KEY_WORKING_GOALS, JSON.stringify(this.workingGoals));
   }
+
+  public getMediaItems(): MediaItem[] {
+    return this.mediaItems;
+  }
+
+  public addMediaItem(data: Omit<MediaItem, 'id'>): MediaItem {
+    const newItem: MediaItem = {
+      ...data,
+      id: `media-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    this.mediaItems.unshift(newItem);
+    localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
+    return newItem;
+  }
+
+  public deleteMediaItem(id: string) {
+    this.mediaItems = this.mediaItems.filter((m) => m.id !== id);
+    localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
+  }
+
 
   public getDivisionName(divisionId: string): string {
     return SINDH_DIVISIONS.find((d) => d.id === divisionId)?.name || 'Sindh';

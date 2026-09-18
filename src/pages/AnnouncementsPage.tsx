@@ -1,10 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { store } from '../services/store';
-import { Megaphone, Calendar, ArrowRight } from 'lucide-react';
+import { Megaphone, Calendar, ArrowRight, BellRing } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Announcement } from '../types';
 
 export const AnnouncementsPage: React.FC = () => {
-  const announcements = store.getAnnouncements();
+  const [announcements, setAnnouncements] = useState<Announcement[]>(store.getAnnouncements());
+
+  useEffect(() => {
+    setAnnouncements(store.getAnnouncements());
+    store.fetchFromSupabase().then(() => {
+      setAnnouncements(store.getAnnouncements());
+    });
+  }, []);
+
+  const fallbackAnnouncements: Announcement[] = [
+    {
+      id: 'default-ann-1',
+      title: 'Hyderabad Divisional Meeting Held at Royal Taj',
+      content: 'Young leaders came together to strengthen NYP Sindh and advance youth engagement across all districts of Hyderabad division.',
+      publishedAt: '2026-09-05',
+      bannerUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&q=80&w=800',
+      isActive: true,
+    },
+    {
+      id: 'default-ann-2',
+      title: 'NYP Sindh Pays Tribute on Defence Day',
+      content: 'Remembering the courage and sacrifices of our national heroes with youth parliamentary caucuses and policy resolutions.',
+      publishedAt: '2026-09-06',
+      bannerUrl: 'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?auto=format&fit=crop&q=80&w=800',
+      isActive: true,
+    },
+    {
+      id: 'default-ann-3',
+      title: 'NYP Sindh Cabinet Meeting Concludes Successfully',
+      content: 'Productive discussions on upcoming provincial initiatives, divisional chapter bodies, and youth development programs across Sindh.',
+      publishedAt: '2026-08-30',
+      bannerUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=800',
+      isActive: true,
+    }
+  ];
+
+  const displayList = announcements.length > 0 ? announcements : fallbackAnnouncements;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 text-left space-y-8 bg-slate-50">
@@ -20,7 +57,7 @@ export const AnnouncementsPage: React.FC = () => {
       </div>
 
       <div className="space-y-6">
-        {announcements.map((ann) => (
+        {displayList.map((ann) => (
           <div key={ann.id} className="ui-card rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-sm border-slate-200 hover:border-slate-300 transition-all">
             {ann.bannerUrl && (
               <img

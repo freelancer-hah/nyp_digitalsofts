@@ -219,10 +219,17 @@ html.dark .glass-nav {
 
 html.dark .ui-card,
 html.dark .bg-white {
-  background-color: rgba(15, 23, 42, 0.9) !important;
+  background-color: rgba(15, 23, 42, 0.95) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
   color: #f8fafc !important;
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark .bg-slate-100,
+html.dark .bg-slate-200 {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 html.dark .text-slate-900,
@@ -234,6 +241,10 @@ html.dark .text-slate-700 {
 html.dark .text-slate-500,
 html.dark .text-slate-600 {
   color: #94a3b8 !important;
+}
+
+html.dark .text-[#052818] {
+  color: #34d399 !important;
 }
 
 html.dark .border-slate-200,
@@ -311,87 +322,12 @@ html.light .bg-teal-500\/10 {
   opacity: 0.2 !important;
 }
 
-/* Footer in Light Mode */
-html.light footer {
-  background-color: #ffffff !important;
-  color: #334155 !important;
-  border-top-color: #e2e8f0 !important;
+/* Footer Dark Forest Green Theme Consistent across Light & Dark Modes */
+footer {
+  background-color: #03140e !important;
+  color: #f8fafc !important;
 }
 
-html.light footer .bg-\[\#070d17\] {
-  background-color: #f8fafc !important;
-  border-bottom-color: #e2e8f0 !important;
-}
-
-html.light footer .bg-slate-900\/90 {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.06) !important;
-}
-
-/* Contact Helpline Cards in Light Mode */
-html.light footer .bg-emerald-950\/40,
-html.light footer .bg-emerald-950\/30,
-html.light footer .bg-emerald-950\/80 {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03) !important;
-}
-
-html.light footer .bg-emerald-950\/40:hover,
-html.light footer .bg-emerald-950\/80:hover {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-}
-
-html.light footer .bg-emerald-900\/60 {
-  background-color: #d1fae5 !important;
-  color: #047857 !important;
-}
-
-html.light footer .text-amber-300\/90,
-html.light footer .text-amber-300 {
-  color: #047857 !important; /* High contrast emerald for phone numbers in light mode */
-  font-weight: 700 !important;
-}
-
-/* Admin Access Box in Light Mode */
-html.light footer .bg-gradient-to-b.from-emerald-950\/60,
-html.light footer .bg-gradient-to-b.from-emerald-950\/60.to-\[\#02140c\] {
-  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%) !important;
-  border-color: #a7f3d0 !important;
-  box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.08) !important;
-}
-
-html.light footer .from-emerald-900.to-emerald-950,
-html.light footer .from-emerald-900 {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-  color: #ffffff !important;
-  border-color: #059669 !important;
-}
-
-html.light footer .from-emerald-900.to-emerald-950 *,
-html.light footer .from-emerald-900 * {
-  color: #ffffff !important;
-}
-
-html.light footer .from-emerald-900.to-emerald-950 svg,
-html.light footer .from-emerald-900 svg {
-  color: #fef08a !important; /* Gold lock icon */
-}
-
-/* Border lines in Footer in Light Mode */
-html.light footer .border-emerald-900\/60,
-html.light footer .border-emerald-900\/50,
-html.light footer .border-emerald-900\/40,
-html.light footer .border-emerald-900\/30 {
-  border-color: #e2e8f0 !important;
-}
-
-html.light footer .text-slate-300,
-html.light footer .text-slate-400 {
-  color: #475569 !important;
-}
 
 
 /* Animations & Keyframes */
@@ -645,4 +581,29 @@ html.light footer .text-slate-400 {
     box-shadow: none !important;
   }
 }
+
+/* Reference Image Design Utility Classes */
+.font-cursive-accent {
+  font-family: 'Alex Brush', cursive, Georgia, serif;
+}
+
+.font-serif-heading {
+  font-family: 'Playfair Display', 'Cinzel', Georgia, serif;
+}
+
+.text-gold-metallic {
+  background: linear-gradient(135deg, #fce8a6 0%, #d9a74a 35%, #c59b27 70%, #fef3c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-nyp-gold-btn {
+  background: linear-gradient(135deg, #d97706 0%, #c59b27 100%);
+  color: #ffffff;
+}
+
+.bg-nyp-gold-btn:hover {
+  background: linear-gradient(135deg, #b45309 0%, #a17d1d 100%);
+}
+
 

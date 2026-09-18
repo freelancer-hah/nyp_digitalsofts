@@ -8,6 +8,24 @@ interface Props {
   profile: MemberProfile;
 }
 
+export function formatDateDDMMYYYY(rawDate?: string): string {
+  if (!rawDate) return '';
+  const dateOnly = rawDate.split('T')[0];
+  const parts = dateOnly.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const month = parts[1].padStart(2, '0');
+    const day = parts[2].padStart(2, '0');
+    return `${day}/${month}/${year}`;
+  }
+  const d = new Date(rawDate);
+  if (isNaN(d.getTime())) return rawDate;
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
   const frontCardRef = useRef<HTMLDivElement>(null);
   const backCardRef = useRef<HTMLDivElement>(null);
@@ -16,19 +34,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [activeTab, setActiveTab] = useState<'BOTH' | 'FRONT' | 'BACK'>('BOTH');
 
-  const issueDateStr = (() => {
-    const rawDate = profile.approvalDate || profile.submittedAt;
-    if (!rawDate) return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    const dateOnly = rawDate.split('T')[0];
-    const parts = dateOnly.split('-');
-    if (parts.length === 3) {
-      const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const day = parseInt(parts[2], 10);
-      return new Date(year, month, day).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    }
-    return new Date(rawDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  })();
+  const issueDateStr = formatDateDDMMYYYY(profile.approvalDate || profile.submittedAt) || '18/09/2026';
 
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=NYP-SINDH-VERIFIED-${encodeURIComponent(profile.membershipIdNumber || profile.cnicNumber)}`;
 
@@ -215,7 +221,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(100, 116, 139);
       pdf.text(`Official Verified Digital Certificate & Membership ID Pass — NYP Sindh`, 14, footerY + 26);
-      pdf.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - 14, footerY + 26, { align: 'right' });
+      pdf.text(`Generated: ${formatDateDDMMYYYY(new Date().toISOString())}`, pageWidth - 14, footerY + 26, { align: 'right' });
 
       const safeId = (profile.membershipIdNumber || profile.cnicNumber || 'card').replace(/[^a-zA-Z0-9-]/g, '_');
       pdf.save(`NYP_Sindh_Membership_Card_${safeId}.pdf`);
@@ -472,21 +478,21 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
               </div>
 
               {/* Center Title & S I N D H */}
-              <div style={{ flex: 1, textAlign: 'center', overflow: 'hidden' }}>
-                <h1 style={{ color: '#0f172a', fontSize: '15px', fontWeight: 900, letterSpacing: '0.2px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
+              <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+                <h1 style={{ color: '#0f172a', fontSize: '13.2px', fontWeight: 900, letterSpacing: '-0.1px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
                   NATIONAL YOUTH PARLIAMENT
                 </h1>
                 
                 {/* Gold Lines with S I N D H */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: '3px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', margin: '3px 0' }}>
                   <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
-                  <span style={{ color: '#d97706', fontSize: '13px', fontWeight: 900, letterSpacing: '4px', whiteSpace: 'nowrap' }}>
+                  <span style={{ color: '#d97706', fontSize: '12px', fontWeight: 900, letterSpacing: '3px', whiteSpace: 'nowrap' }}>
                     S I N D H
                   </span>
                   <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
                 </div>
 
-                <div style={{ color: '#334155', fontSize: '6.8px', fontWeight: 800, letterSpacing: '0.7px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                <div style={{ color: '#334155', fontSize: '6.5px', fontWeight: 800, letterSpacing: '0.4px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                   YOUTH TODAY &nbsp;|&nbsp; A STRONGER PAKISTAN TOMORROW
                 </div>
               </div>
@@ -581,17 +587,24 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
               <div style={{ width: '42px', height: '2px', background: '#d97706', margin: '6px 0 7px 0' }}></div>
 
               {/* Aligned Field Table with Colons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '9.5px' }}>
                 
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Member ID</span>
-                  <span style={{ color: '#0f172a', fontWeight: 900, fontFamily: 'monospace', fontSize: '10.5px', whiteSpace: 'nowrap' }}>: &nbsp;{profile.membershipIdNumber || 'NYPS-2026-0001'}</span>
+                  <span style={{ color: '#0f172a', fontWeight: 900, fontFamily: 'monospace', fontSize: '10px', whiteSpace: 'nowrap' }}>: &nbsp;{profile.membershipIdNumber || 'NYPS-2026-0001'}</span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Department</span>
                   <span style={{ color: '#0f172a', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>: &nbsp;{profile.preferredDepartment || 'General Member'}</span>
                 </div>
+
+                {profile.dob && (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Date of Birth</span>
+                    <span style={{ color: '#0f172a', fontWeight: 800, whiteSpace: 'nowrap' }}>: &nbsp;{formatDateDDMMYYYY(profile.dob)}</span>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Date of Issue</span>
@@ -600,7 +613,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
 
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Valid Till</span>
-                  <span style={{ color: '#0f172a', fontWeight: 800, whiteSpace: 'nowrap' }}>: &nbsp;31 Dec 2026</span>
+                  <span style={{ color: '#0f172a', fontWeight: 800, whiteSpace: 'nowrap' }}>: &nbsp;31/12/2026</span>
                 </div>
 
               </div>
@@ -713,20 +726,20 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
               </div>
 
               {/* Title Center */}
-              <div style={{ flex: 1, textAlign: 'center', overflow: 'hidden' }}>
-                <h2 style={{ color: '#ffffff', fontSize: '14.5px', fontWeight: 900, letterSpacing: '0.2px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
+              <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+                <h2 style={{ color: '#ffffff', fontSize: '13.2px', fontWeight: 900, letterSpacing: '-0.1px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
                   NATIONAL YOUTH PARLIAMENT
                 </h2>
                 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: '2px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', margin: '2px 0' }}>
                   <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
-                  <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: 900, letterSpacing: '4px', whiteSpace: 'nowrap' }}>
+                  <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: 900, letterSpacing: '3px', whiteSpace: 'nowrap' }}>
                     S I N D H
                   </span>
                   <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
                 </div>
 
-                <div style={{ color: '#a7f3d0', fontSize: '6.8px', fontWeight: 800, letterSpacing: '0.6px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                <div style={{ color: '#a7f3d0', fontSize: '6.5px', fontWeight: 800, letterSpacing: '0.4px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                   YOUTH TODAY &nbsp;|&nbsp; A STRONGER PAKISTAN TOMORROW
                 </div>
               </div>

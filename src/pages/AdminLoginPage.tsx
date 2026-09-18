@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { store } from '../services/store';
-import { ShieldCheck, LogIn, AlertCircle, ArrowLeft, KeyRound, Lock, Layout } from 'lucide-react';
+import { ShieldCheck, LogIn, AlertCircle, ArrowLeft, KeyRound, Lock, Crown, Search, CheckSquare } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -54,43 +54,45 @@ export const AdminLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#090e17] dark:text-slate-100 flex flex-col justify-center items-center px-4 py-4 sm:py-6 relative overflow-hidden font-sans transition-colors duration-300">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#090e17] dark:text-slate-100 flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden font-sans transition-colors duration-300">
+      
+      {/* Background Smooth Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-md space-y-3 relative z-10">
+      <div className="w-full max-w-md space-y-5 relative z-10">
         
         {/* Header Section */}
-        <div className="text-center space-y-1.5">
-          <div className="inline-flex items-center space-x-1.5 bg-emerald-100 border border-emerald-300 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800/60 dark:text-emerald-400 text-[10px] uppercase font-bold tracking-widest px-3 py-0.5 rounded-full shadow-inner">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Restricted Access • Verification, Authorisation & President</span>
+        <div className="text-center space-y-2.5">
+          <div className="inline-flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-950/70 dark:border-emerald-800/60 dark:text-emerald-300 text-[10px] uppercase font-extrabold tracking-wider px-3.5 py-1 rounded-full shadow-xs">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>EXECUTIVE ADMIN ACCESS PORTAL</span>
           </div>
 
-          <div className="w-14 h-14 rounded-xl bg-white border-2 border-amber-400 p-0.5 flex items-center justify-center mx-auto shadow-xl overflow-hidden my-1">
-            <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-lg" />
+          <div className="w-16 h-16 rounded-2xl bg-white border-2 border-amber-400 p-1 flex items-center justify-center mx-auto shadow-lg overflow-hidden my-1">
+            <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-xl" />
           </div>
 
-          <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight font-heading">
-            NYP SINDH EXECUTIVE ADMIN PORTAL
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight font-heading">
+            NYP Sindh Executive Portal
           </h1>
-          <p className="text-[11px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-tight">
+          <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
             Verification Desk, Authorisation Desk & President Executive Controls.
           </p>
         </div>
 
-        {/* Card Form */}
-        <div className="bg-white border border-slate-200 text-slate-900 shadow-xl dark:bg-slate-900/90 dark:border-slate-800 dark:text-white rounded-2xl p-5 backdrop-blur-xl space-y-4">
+        {/* Smooth Card Form */}
+        <div className="bg-white border border-slate-200 text-slate-900 shadow-xl dark:bg-slate-900/90 dark:border-slate-800 dark:text-white rounded-3xl p-6 sm:p-7 backdrop-blur-xl space-y-5">
           
           {error && (
-            <div className="bg-rose-100 border border-rose-300 text-rose-800 dark:bg-rose-950/80 dark:border-rose-800 dark:text-rose-200 p-2.5 rounded-xl text-xs flex items-start space-x-2 font-semibold">
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/80 dark:border-rose-800 dark:text-rose-200 p-3 rounded-xl text-xs flex items-start space-x-2.5 font-semibold">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-3 text-xs">
+          <form onSubmit={handleLogin} className="space-y-4 text-xs">
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 flex items-center space-x-1.5">
+              <label className="block text-slate-800 dark:text-slate-200 font-bold mb-1.5 flex items-center space-x-1.5">
                 <KeyRound className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Admin Username or CNIC *</span>
               </label>
@@ -100,12 +102,12 @@ export const AdminLoginPage: React.FC = () => {
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
                 placeholder="e.g. president, verifier, authoriser"
-                className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl px-3 py-2 text-xs font-bold focus:border-emerald-500 outline-none"
+                className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl px-3.5 py-2.5 text-xs font-bold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 flex items-center space-x-1.5">
+              <label className="block text-slate-800 dark:text-slate-200 font-bold mb-1.5 flex items-center space-x-1.5">
                 <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Password *</span>
               </label>
@@ -115,56 +117,59 @@ export const AdminLoginPage: React.FC = () => {
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 placeholder="Enter password"
-                className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl px-3 py-2 text-xs font-medium focus:border-emerald-500 outline-none"
+                className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl px-3.5 py-2.5 text-xs font-medium focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider"
+              className="w-full bg-[#052818] hover:bg-[#073822] text-amber-300 font-black text-xs py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider hover:scale-[1.01]"
             >
-              <LogIn className="w-4 h-4 text-slate-950" />
+              <LogIn className="w-4 h-4 text-amber-300" />
               <span>ACCESS EXECUTIVE DESK</span>
             </button>
           </form>
 
-          {/* Quick Shortcuts for Testing/Demonstration */}
-          <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80 space-y-2">
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider block text-center">
+          {/* Smooth Quick Admin Desk Demo Shortcuts */}
+          <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-extrabold tracking-wider block text-center">
               Quick Admin Desk Demo Shortcuts:
             </span>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin('admin', 'admin123')}
-                className="bg-emerald-950 text-emerald-200 border border-emerald-700 p-2 rounded-lg text-[9.5px] font-black text-center transition-all cursor-pointer shadow-sm hover:scale-105"
+                className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/80 hover:scale-105 flex items-center justify-center space-x-1"
               >
-                ⚡ SUPER ADMIN
+                <span>Super Admin</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin('president', 'president123')}
-                className="bg-purple-950 text-purple-200 border border-purple-700 p-2 rounded-lg text-[9.5px] font-black text-center transition-all cursor-pointer shadow-sm hover:scale-105"
+                className="bg-purple-50 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 border border-purple-200 dark:border-purple-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-purple-100 dark:hover:bg-purple-900/80 hover:scale-105 flex items-center justify-center space-x-1"
               >
-                👑 PRESIDENT
+                <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>President</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin('verifier', 'verifier123')}
-                className="bg-blue-950 text-blue-200 border border-blue-700 p-2 rounded-lg text-[9.5px] font-black text-center transition-all cursor-pointer shadow-sm hover:scale-105"
+                className="bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-blue-100 dark:hover:bg-blue-900/80 hover:scale-105 flex items-center justify-center space-x-1"
               >
-                🔎 VERIFICATION
+                <Search className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>Verifier</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin('authoriser', 'authoriser123')}
-                className="bg-amber-950 text-amber-200 border border-amber-700 p-2 rounded-lg text-[9.5px] font-black text-center transition-all cursor-pointer shadow-sm hover:scale-105"
+                className="bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-amber-100 dark:hover:bg-amber-900/80 hover:scale-105 flex items-center justify-center space-x-1"
               >
-                ✍️ AUTHORISATION
+                <CheckSquare className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span>Authoriser</span>
               </button>
             </div>
           </div>
@@ -172,16 +177,16 @@ export const AdminLoginPage: React.FC = () => {
           <div className="text-center pt-1">
             <Link
               to="/login"
-              className="inline-flex items-center space-x-1 text-[11px] text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors font-medium"
+              className="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors font-semibold"
             >
-              <ArrowLeft className="w-3 h-3" />
+              <ArrowLeft className="w-3.5 h-3.5" />
               <span>Switch to Public Member Login</span>
             </Link>
           </div>
 
         </div>
 
-        <div className="text-center text-[10px] text-slate-500 font-medium">
+        <div className="text-center text-[11px] text-slate-500 font-medium">
           National Youth Parliament Sindh • Executive Portal
         </div>
 

@@ -106,9 +106,9 @@ export const LoginPage: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider mt-1"
+            className="w-full bg-[#052818] hover:bg-[#073822] text-amber-300 font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider mt-1 hover:scale-[1.01]"
           >
-            <LogIn className="w-4 h-4 text-slate-950" />
+            <LogIn className="w-4 h-4 text-amber-300" />
             <span>LOG IN TO MEMBER DASHBOARD</span>
           </button>
         </form>
