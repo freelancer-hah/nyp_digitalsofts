@@ -28,7 +28,7 @@ import {
 
 export const CmsManagerPage: React.FC = () => {
   const currentUser = store.getCurrentUser();
-  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN' || !currentUser?.role || currentUser?.role === 'APPROVAL_AUTHORITY';
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'PRESIDENT' || currentUser?.role === 'WEB_COORDINATOR' || currentUser?.role === 'APPROVAL_AUTHORITY' || !currentUser?.role;
   const isDivisionalAdmin = currentUser?.role === 'DIVISIONAL_ADMIN';
   const assignedDivId = currentUser?.assignedDivisionId || SINDH_DIVISIONS[0].id;
 

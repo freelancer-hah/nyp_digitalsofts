@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { store } from '../services/store';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS } from '../data/sindhHierarchy';
 import { MemberProfile, User, UserRole } from '../types';
-import { Printer, Filter, FileSpreadsheet, Layout, Users, Trash2, X, Plus, UserPlus, CheckCircle2, Lock, Unlock, ShieldAlert } from 'lucide-react';
+import { Printer, Filter, FileSpreadsheet, Layout, Users, Trash2, X, Plus, UserPlus, CheckCircle2, Lock, Unlock, ShieldAlert, Edit3, Award } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { DigitalIdCard } from '../components/DigitalIdCard';
 
@@ -13,6 +13,10 @@ export const AdminMasterPage: React.FC = () => {
   const [selectedDistrict, setSelectedDistrict] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedCardProfile, setSelectedCardProfile] = useState<MemberProfile | null>(null);
+  
+  // Fast Designation / Role Assignment Modal State
+  const [editingDesignationProfile, setEditingDesignationProfile] = useState<MemberProfile | null>(null);
+  const [customDesignation, setCustomDesignation] = useState<string>('');
 
   useEffect(() => {
     store.fetchFromSupabase().then(() => {
@@ -144,15 +148,17 @@ export const AdminMasterPage: React.FC = () => {
     switch (role) {
       case 'PRESIDENT':
       case 'SUPER_ADMIN':
-        return 'bg-purple-100 text-purple-800 border-purple-300';
+        return 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800';
+      case 'WEB_COORDINATOR':
+        return 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800';
       case 'AUTHORISATION_DESK':
       case 'APPROVAL_AUTHORITY':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        return 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800';
       case 'VERIFICATION_DESK':
       case 'VERIFYING_OFFICER':
-        return 'bg-amber-100 text-amber-900 border-amber-300';
+        return 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800';
       default:
-        return 'bg-slate-100 text-slate-800 border-slate-300';
+        return 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
     }
   };
 
@@ -160,7 +166,9 @@ export const AdminMasterPage: React.FC = () => {
     switch (role) {
       case 'PRESIDENT':
       case 'SUPER_ADMIN':
-        return 'PRESIDENT';
+        return 'PRESIDENT (FULL AUTHORITY)';
+      case 'WEB_COORDINATOR':
+        return 'Web Coordinator';
       case 'AUTHORISATION_DESK':
       case 'APPROVAL_AUTHORITY':
         return 'Authorisation Desk';
@@ -177,6 +185,20 @@ export const AdminMasterPage: React.FC = () => {
   const handleApproveMember = async (profileId: string) => {
     await store.updateProfileStatus(profileId, 'APPROVED');
     setProfiles([...store.getAllProfiles()]);
+  };
+
+  const handleOpenDesignationModal = (member: MemberProfile) => {
+    setEditingDesignationProfile(member);
+    setCustomDesignation(member.assignedDesignation || 'General Member');
+  };
+
+  const handleSaveDesignation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDesignationProfile || !customDesignation.trim()) return;
+
+    await store.updateMemberDesignation(editingDesignationProfile.id, customDesignation.trim());
+    setProfiles([...store.getAllProfiles()]);
+    setEditingDesignationProfile(null);
   };
 
   const handleVerifyMember = async (profileId: string) => {
@@ -558,10 +580,10 @@ export const AdminMasterPage: React.FC = () => {
                       onChange={(e) => setNewRole(e.target.value as UserRole)}
                       className="w-full bg-white border border-slate-300 text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white rounded-xl px-3 py-2 font-bold outline-none focus:border-purple-600"
                     >
-                      <option value="SUPER_ADMIN">SUPER ADMIN</option>
-                      <option value="PRESIDENT">PRESIDENT</option>
-                      <option value="VERIFICATION_DESK">Verification Desk</option>
-                      <option value="AUTHORISATION_DESK">Authorisation Desk</option>
+                      <option value="PRESIDENT">PRESIDENT (Full Executive Master Controls)</option>
+                      <option value="WEB_COORDINATOR">WEB COORDINATOR (CMS, Uploads & Cabinets)</option>
+                      <option value="VERIFICATION_DESK">Verification Desk Officer</option>
+                      <option value="AUTHORISATION_DESK">Authorisation Desk Authority</option>
                     </select>
                   </div>
 
@@ -680,6 +702,103 @@ export const AdminMasterPage: React.FC = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* FAST DESIGNATION / ROLE ASSIGNMENT MODAL */}
+      {editingDesignationProfile && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 text-left shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/50 flex items-center justify-center text-amber-500">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">ADMIN ROLE &amp; DESIGNATION MANAGER</span>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">{editingDesignationProfile.fullName}</h3>
+                </div>
+              </div>
+              <button onClick={() => setEditingDesignationProfile(null)} className="p-2 text-slate-400 hover:text-white cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDesignation} className="space-y-4 text-xs">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
+                <span className="text-slate-500 font-bold block uppercase text-[10px]">Current Card Role</span>
+                <p className="text-base font-black text-emerald-600 dark:text-emerald-400">
+                  {editingDesignationProfile.assignedDesignation || 'General Member'}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Saving an official designation here will automatically update their Digital ID Card &amp; PDF pass immediately.
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-2">
+                  Select Quick Role or Enter Custom Designation:
+                </label>
+
+                {/* Quick Selection Buttons */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {[
+                    'Youth MPA',
+                    'Youth MNA',
+                    'Youth Chief Minister (CM)',
+                    'Speaker Youth Assembly',
+                    'Deputy Speaker Youth Assembly',
+                    'Leader of Opposition',
+                    'Youth Provincial Minister',
+                    'President Karachi Division',
+                    'President Hyderabad Division',
+                    'Divisional Youth President',
+                    'Divisional General Secretary',
+                    'District Youth President',
+                    'General Member',
+                  ].map((role) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => setCustomDesignation(role)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
+                        customDesignation.toLowerCase() === role.toLowerCase()
+                          ? 'bg-amber-400 text-slate-950 border-amber-400 font-black shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  required
+                  value={customDesignation}
+                  onChange={(e) => setCustomDesignation(e.target.value)}
+                  placeholder="e.g. Youth MPA or President Karachi Division"
+                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                />
+              </div>
+
+              <div className="pt-3 flex items-center justify-end space-x-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingDesignationProfile(null)}
+                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="ui-btn-gold text-slate-950 font-black px-6 py-2.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-lg"
+                >
+                  SAVE &amp; UPDATE CARD
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

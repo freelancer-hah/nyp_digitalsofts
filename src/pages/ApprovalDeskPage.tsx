@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { store } from '../services/store';
 import { MemberProfile, RoleApplicationRequest } from '../types';
-import { ShieldCheck, UserCheck, Search, Layout, CreditCard } from 'lucide-react';
+import { ShieldCheck, UserCheck, Search, Layout, CreditCard, Image as ImageIcon, ZoomIn, X, ExternalLink, Truck, AlertTriangle } from 'lucide-react';
 
 export const ApprovalDeskPage: React.FC = () => {
   const [profiles, setProfiles] = useState<MemberProfile[]>(store.getAllProfiles());
   const [roleRequests, setRoleRequests] = useState<RoleApplicationRequest[]>(store.getRoleApplications());
-  const [selectedRoleReq, setSelectedRoleReq] = useState<RoleApplicationRequest | null>(null);
-  const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [zoomProofUrl, setZoomProofUrl] = useState<string | null>(null);
 
   const refreshData = () => {
     setProfiles([...store.getAllProfiles()]);
@@ -40,6 +39,8 @@ export const ApprovalDeskPage: React.FC = () => {
       feeAmount: p.paymentDetails?.feeAmount || 1000,
       paymentMethod: p.paymentDetails?.paymentMethod || 'Standard Registration',
       transactionId: p.paymentDetails?.transactionId || 'N/A',
+      paymentProofUrl: p.paymentDetails?.paymentProofUrl || null,
+      submittedAt: p.paymentDetails?.submittedAt || p.submittedAt,
       rawProfile: p,
       rawRoleReq: null,
     })),
@@ -55,6 +56,8 @@ export const ApprovalDeskPage: React.FC = () => {
         feeAmount: r.feeAmount,
         paymentMethod: r.paymentDetails?.paymentMethod || 'Online',
         transactionId: r.paymentDetails?.transactionId || 'N/A',
+        paymentProofUrl: r.paymentDetails?.paymentProofUrl || null,
+        submittedAt: r.paymentDetails?.submittedAt || r.submittedAt,
         rawProfile: prof || null,
         rawRoleReq: r,
       };
@@ -93,7 +96,7 @@ export const ApprovalDeskPage: React.FC = () => {
           <div>
             <h1 className="text-2xl font-black font-heading">Authorisation Desk</h1>
             <p className="text-xs text-amber-300 font-medium">
-              Review & Authorize Official Member Registrations & Role Passes
+              Review Payment Proof Pictures &amp; Authorize Official Registrations / Passes
             </p>
           </div>
         </div>
@@ -104,7 +107,7 @@ export const ApprovalDeskPage: React.FC = () => {
             className="bg-teal-900/80 hover:bg-teal-800 border border-teal-500 text-teal-100 text-xs font-bold px-4 py-2 rounded-xl flex items-center space-x-1.5 shadow-md transition-colors"
           >
             <Layout className="w-4 h-4 text-teal-300" />
-            <span>Manage CMS Announcements & Gallery</span>
+            <span>Manage CMS Announcements &amp; Gallery</span>
           </Link>
 
           <span className="bg-amber-400 text-slate-950 text-xs font-black px-4 py-2 rounded-xl shadow-md">
@@ -155,7 +158,14 @@ export const ApprovalDeskPage: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-black text-xs text-slate-900 dark:text-white truncate font-heading">{item.title}</h4>
                           <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 block font-semibold">{item.fullName} ({item.cnicNumber})</span>
-                          <span className="text-[9px] text-amber-500 font-bold block truncate">{item.statusLabel}</span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[9px] text-amber-500 font-bold truncate">{item.statusLabel}</span>
+                            {item.paymentProofUrl && (
+                              <span className="text-[8.5px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 px-1 py-0.2 rounded font-bold shrink-0">
+                                📷 Proof
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -182,6 +192,7 @@ export const ApprovalDeskPage: React.FC = () => {
                 </span>
               </div>
 
+              {/* Application Details Banner */}
               <div className="bg-gradient-to-r from-emerald-900 to-slate-950 text-white p-5 rounded-2xl space-y-2 border border-emerald-500/50">
                 <span className="text-[10px] text-amber-300 uppercase font-bold block">Target Application Details</span>
                 <h4 className="font-black text-white text-lg font-heading">{selectedItem.title}</h4>
@@ -193,6 +204,56 @@ export const ApprovalDeskPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* PAYMENT PROOF PICTURE SECTION */}
+              <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 font-heading">
+                    <ImageIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    Payment Proof Receipt / Slip Picture
+                  </span>
+                  {selectedItem.paymentProofUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setZoomProofUrl(selectedItem.paymentProofUrl)}
+                      className="text-emerald-600 dark:text-emerald-400 hover:underline text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <ZoomIn className="w-3.5 h-3.5" />
+                      <span>Click to Enlarge / Inspect</span>
+                    </button>
+                  )}
+                </div>
+
+                {selectedItem.paymentProofUrl ? (
+                  <div className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div 
+                      onClick={() => setZoomProofUrl(selectedItem.paymentProofUrl)}
+                      className="relative w-36 h-36 shrink-0 rounded-xl overflow-hidden border-2 border-emerald-500/60 shadow-md group cursor-pointer"
+                    >
+                      <img
+                        src={selectedItem.paymentProofUrl}
+                        alt="Payment Proof Receipt"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                        <ZoomIn className="w-6 h-6 drop-shadow-md" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                      <p><strong>Payment Method:</strong> {selectedItem.paymentMethod}</p>
+                      <p><strong>Transaction / Ref ID:</strong> <span className="font-mono font-bold text-amber-500">{selectedItem.transactionId}</span></p>
+                      <p><strong>Fee Paid:</strong> PKR {selectedItem.feeAmount}</p>
+                      <p className="text-[11px] text-slate-400">Review the sender account, timestamp, and amount in the receipt image before authorising.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 p-3.5 rounded-xl flex items-center space-x-2.5 text-amber-800 dark:text-amber-300 text-xs">
+                    <AlertTriangle className="w-5 h-5 shrink-0 text-amber-500" />
+                    <span>No image screenshot was uploaded for this submission. Verify transaction using Reference ID: <strong className="font-mono">{selectedItem.transactionId}</strong>.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Applicant Profile Preview */}
               {selectedItem.rawProfile && (
                 <div className="flex items-center space-x-4 bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-950 dark:border-slate-800 dark:text-white p-4 rounded-2xl text-xs">
                   <img
@@ -208,12 +269,20 @@ export const ApprovalDeskPage: React.FC = () => {
                 </div>
               )}
 
+              {/* 15-20 Days Delivery SLA Notice */}
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/80 p-3.5 rounded-2xl flex items-center space-x-3 text-xs text-emerald-900 dark:text-emerald-200">
+                <Truck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>
+                  <strong>Physical Card Delivery SLA:</strong> Upon approval, applicant's digital card pass activates immediately and official embossed physical smart card enters <strong>15 to 20 Working Days</strong> courier dispatch queue.
+                </span>
+              </div>
+
               <button
                 onClick={() => handleAuthorizeItem(selectedItem)}
-                className="w-full ui-btn-gold text-slate-950 font-black text-xs py-4 rounded-2xl shadow-xl flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider"
+                className="w-full ui-btn-gold text-slate-950 font-black text-xs py-4 rounded-2xl shadow-xl flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider hover:scale-[1.01] transition-transform"
               >
                 <UserCheck className="w-5 h-5 text-slate-950" />
-                <span>AUTHORIZE APPLICATION & GRANT OFFICIAL PASS / MEMBERSHIP</span>
+                <span>AUTHORIZE APPLICATION &amp; ISSUE OFFICIAL CARD (15-20 DAYS PHYSICAL DISPATCH)</span>
               </button>
 
             </div>
@@ -221,12 +290,60 @@ export const ApprovalDeskPage: React.FC = () => {
             <div className="bg-white border border-slate-200 text-slate-900 dark:bg-slate-900/80 dark:border-slate-800 dark:text-white p-16 text-center space-y-3 rounded-3xl shadow-sm">
               <ShieldCheck className="w-12 h-12 text-amber-500 mx-auto" />
               <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading">Select Application</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Click on any application from the left queue to grant final authorisation.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Click on any application from the left queue to check payment proof picture and grant final authorisation.</p>
             </div>
           )}
         </div>
 
       </div>
+
+      {/* LIGHTBOX PROOF ZOOM MODAL */}
+      {zoomProofUrl && (
+        <div 
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setZoomProofUrl(null)}
+        >
+          <div 
+            className="bg-slate-900 border border-slate-700 rounded-3xl p-4 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <ImageIcon className="w-4 h-4" />
+                Payment Proof Inspection
+              </span>
+              <button
+                type="button"
+                onClick={() => setZoomProofUrl(null)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-auto flex items-center justify-center rounded-2xl bg-slate-950 p-2 border border-slate-800">
+              <img
+                src={zoomProofUrl}
+                alt="Enlarged Payment Slip"
+                className="max-h-[65vh] w-auto object-contain rounded-xl"
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
+              <span>Inspect slip amount, account, date &amp; Transaction ID carefully.</span>
+              <a
+                href={zoomProofUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-emerald-400 hover:underline font-bold flex items-center gap-1"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Open original in new tab
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

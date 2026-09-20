@@ -36,7 +36,8 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
 
   const issueDateStr = formatDateDDMMYYYY(profile.approvalDate || profile.submittedAt) || '18/09/2026';
 
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=NYP-SINDH-VERIFIED-${encodeURIComponent(profile.membershipIdNumber || profile.cnicNumber)}`;
+  const websiteUrl = 'https://national-youth-program-sindh.vercel.app';
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(websiteUrl)}`;
 
   // Helper function to safely convert external image URLs to base64 Data URLs to avoid canvas tainting
   const getBase64ImageFromUrl = async (url: string): Promise<string> => {
@@ -313,6 +314,112 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
     }
   };
 
+  // Reusable Official President Circular Blue Stamp SVG
+  const PresidentStampSvg = () => {
+    const topText = "ABDUL REHMAN HALEPOTO";
+    const bottomText = "★ NYP SINDH ★";
+    const rTop = 53;
+    const rBottom = 54;
+
+    const topChars = topText.split('').map((char, i) => {
+      const angle = -68 + (i * (136 / (topText.length - 1)));
+      return { char, angle };
+    });
+
+    const bottomChars = bottomText.split('').map((char, i) => {
+      const angle = 138 + (i * (84 / (bottomText.length - 1)));
+      return { char, angle };
+    });
+
+    return (
+      <svg viewBox="0 0 160 160" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+        {/* Outer Circular Rings */}
+        <circle cx="80" cy="80" r="74" fill="#ffffff" fillOpacity="0.9" stroke="#1d4ed8" strokeWidth="2.8" />
+        <circle cx="80" cy="80" r="69" fill="none" stroke="#2563eb" strokeWidth="1" strokeDasharray="3 2" />
+        
+        {/* Center Inner Circle */}
+        <circle cx="80" cy="80" r="41" fill="#f8fafc" stroke="#1d4ed8" strokeWidth="1.8" />
+        <circle cx="80" cy="80" r="38" fill="none" stroke="#3b82f6" strokeWidth="0.8" />
+
+        {/* Center Badge Text: PRESIDENT */}
+        <text
+          x="80"
+          y="84.5"
+          textAnchor="middle"
+          fill="#1e40af"
+          fontSize="11.5"
+          fontWeight="900"
+          fontFamily="'Arial Black', 'Outfit', sans-serif"
+          letterSpacing="0.8"
+        >
+          PRESIDENT
+        </text>
+
+        {/* Top Arc Characters: ABDUL REHMAN HALEPOTO */}
+        {topChars.map((item, idx) => (
+          <text
+            key={`top-${idx}`}
+            x="80"
+            y={80 - rTop}
+            textAnchor="middle"
+            fill="#1d4ed8"
+            fontSize="9"
+            fontWeight="900"
+            fontFamily="'Arial Black', 'Outfit', sans-serif"
+            transform={`rotate(${item.angle}, 80, 80)`}
+          >
+            {item.char}
+          </text>
+        ))}
+
+        {/* Bottom Arc Characters: ★ NYP SINDH ★ */}
+        {bottomChars.map((item, idx) => (
+          <text
+            key={`bottom-${idx}`}
+            x="80"
+            y={80 + rBottom}
+            textAnchor="middle"
+            fill="#1d4ed8"
+            fontSize="9.5"
+            fontWeight="900"
+            fontFamily="'Arial Black', 'Outfit', sans-serif"
+            transform={`rotate(${item.angle - 180}, 80, 80)`}
+          >
+            {item.char}
+          </text>
+        ))}
+      </svg>
+    );
+  };
+
+  // Reusable General Secretary Signature SVG
+  const GeneralSecretarySignatureSvg = () => (
+    <svg viewBox="0 0 200 65" style={{ width: '100%', height: '100%' }} fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Expressive fluid blue signature of Humayun */}
+      <path
+        d="M 28,48 C 24,32 30,12 42,10 C 50,8 48,26 44,44 C 42,50 40,56 38,60 C 36,62 40,61 44,55 C 50,46 54,30 60,18 C 64,10 70,8 72,14 C 74,20 72,34 70,44"
+        stroke="#1d4ed8"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M 24,28 C 38,27 54,23 74,20"
+        stroke="#1d4ed8"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 70,44 C 73,36 78,28 82,27 C 86,25 89,32 87,38 C 89,32 94,27 98,26 C 103,24 105,30 104,36 C 107,30 112,25 117,25 C 122,24 124,30 123,36 C 125,30 130,26 135,26 C 140,25 142,30 140,38 C 143,30 148,25 153,25 C 158,25 160,32 159,38 C 158,45 154,54 148,58 C 144,60 142,58 144,52 C 148,40 156,28 165,24 C 172,20 178,25 174,32 C 172,36 166,40 160,40 C 168,39 178,34 186,28"
+        stroke="#1d4ed8"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="190" cy="20" r="2.5" fill="#1d4ed8" />
+    </svg>
+  );
+
   // Reusable Sindh Map Silhouette SVG
   const SindhMapSvg = () => (
     <svg viewBox="0 0 100 120" style={{ width: '100%', height: '100%', fill: '#cfc6bb' }}>
@@ -481,16 +588,19 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
                 </div>
               </div>
 
-              {/* Sindh Map Silhouette Right */}
-              <div style={{ width: '60px', textAlign: 'center', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: '38px', height: '44px' }}>
-                  <SindhMapSvg />
+              {/* President Official Stamp & Title Right */}
+              <div style={{ width: '80px', textAlign: 'center', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: '56px', height: '56px' }}>
+                  <PresidentStampSvg />
                 </div>
-                <div style={{ fontSize: '8px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', lineHeight: 1, marginTop: '1px' }}>
-                  SINDH
+                <div style={{ fontSize: '7.5px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', lineHeight: 1.1, marginTop: '2px', whiteSpace: 'nowrap' }}>
+                  ABDUL REHMAN HALEPOTO
                 </div>
-                <div style={{ fontSize: '6px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', lineHeight: 1.1 }}>
-                  OUR IDENTITY<br />OUR PRIDE
+                <div style={{ fontSize: '6.5px', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', lineHeight: 1, fontStyle: 'italic', whiteSpace: 'nowrap' }}>
+                  PRESIDENT
+                </div>
+                <div style={{ fontSize: '5.5px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', lineHeight: 1, whiteSpace: 'nowrap' }}>
+                  NYP SINDH
                 </div>
               </div>
 
@@ -555,23 +665,24 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
             {/* Member Information Details */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', textAlign: 'left', gap: '2px', overflow: 'hidden' }}>
               
-              <h2 style={{ color: '#0f172a', fontSize: '19px', fontWeight: 900, margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, letterSpacing: '-0.2px', wordBreak: 'break-word', fontFamily: "'Outfit', sans-serif" }}>
+              <h2 style={{ color: '#0f172a', fontSize: '18.5px', fontWeight: 900, margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, letterSpacing: '-0.2px', wordBreak: 'break-word', fontFamily: "'Outfit', sans-serif" }}>
                 {profile.fullName || 'YOUR NAME'}
               </h2>
               
-              <div style={{ color: '#1e293b', fontSize: '13px', fontWeight: 800, marginTop: '2px', lineHeight: 1.2 }}>
-                {profile.assignedDesignation || 'Member'}
+              {/* Official Role / Designation directly under Name (e.g. YOUTH MPA, PRESIDENT KARACHI DIVISION, etc.) */}
+              <div style={{ color: '#022c1e', fontSize: '12.5px', fontWeight: 900, marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1.2, fontFamily: "'Outfit', sans-serif" }}>
+                {(profile.assignedDesignation || 'GENERAL MEMBER').toUpperCase()}
               </div>
               
-              <div style={{ color: '#334155', fontSize: '11px', fontWeight: 700, lineHeight: 1.25 }}>
-                National Youth Parliament<br />Sindh
+              <div style={{ color: '#334155', fontSize: '10.5px', fontWeight: 700, lineHeight: 1.25, marginTop: '1px' }}>
+                National Youth Parliament Sindh
               </div>
 
               {/* Gold Horizontal Accent Line */}
               <div style={{ width: '42px', height: '2px', background: '#d97706', margin: '6px 0 7px 0' }}></div>
 
-              {/* Aligned Field Table with Colons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '9.5px' }}>
+              {/* Aligned Field Table with Colons (Department removed as requested) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4.5px', fontSize: '9.5px' }}>
                 
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Member ID</span>
@@ -579,8 +690,8 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>Department</span>
-                  <span style={{ color: '#0f172a', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>: &nbsp;{profile.preferredDepartment || 'General Member'}</span>
+                  <span style={{ color: '#475569', fontWeight: 800, width: '78px', flexShrink: 0 }}>CNIC</span>
+                  <span style={{ color: '#0f172a', fontWeight: 800, fontFamily: 'monospace', fontSize: '9.5px', whiteSpace: 'nowrap' }}>: &nbsp;{profile.cnicNumber || 'N/A'}</span>
                 </div>
 
                 {profile.dob && (
@@ -809,22 +920,22 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
 
               </div>
 
-              {/* Sindh Map Badge Right */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                
-                <div style={{ width: '44px', height: '52px' }}>
-                  <SindhMapSvg />
+              {/* General Secretary Signature & Stamp Block Right */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', minWidth: '140px', flexShrink: 0 }}>
+                <div style={{ width: '128px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <GeneralSecretarySignatureSvg />
                 </div>
-
-                <div style={{ borderLeft: '3px solid #d97706', paddingLeft: '6px' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', lineHeight: 1 }}>
-                    SINDH
+                <div style={{ width: '100%', borderTop: '1.5px solid #1d4ed8', paddingTop: '3px', marginTop: '1px' }}>
+                  <div style={{ fontSize: '9px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.4px', whiteSpace: 'nowrap' }}>
+                    RAO HUMAYUN
                   </div>
-                  <div style={{ fontSize: '7px', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', lineHeight: 1.1, marginTop: '2px' }}>
-                    OUR IDENTITY<br />OUR PRIDE
+                  <div style={{ fontSize: '7.8px', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', fontStyle: 'italic', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
+                    GENERAL SECRETARY
+                  </div>
+                  <div style={{ fontSize: '6.8px', fontWeight: 700, color: '#475569', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
+                    National Youth Parliament Sindh
                   </div>
                 </div>
-
               </div>
 
             </div>

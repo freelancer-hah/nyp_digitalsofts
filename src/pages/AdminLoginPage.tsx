@@ -27,6 +27,8 @@ export const AdminLoginPage: React.FC = () => {
         navigate('/admin/verification');
       } else if (res.user.role === 'AUTHORISATION_DESK' || res.user.role === 'APPROVAL_AUTHORITY') {
         navigate('/admin/approval');
+      } else if (res.user.role === 'WEB_COORDINATOR') {
+        navigate('/admin/cms');
       } else {
         navigate('/admin/master');
       }
@@ -45,6 +47,8 @@ export const AdminLoginPage: React.FC = () => {
         navigate('/admin/verification');
       } else if (res.user.role === 'AUTHORISATION_DESK' || res.user.role === 'APPROVAL_AUTHORITY') {
         navigate('/admin/approval');
+      } else if (res.user.role === 'WEB_COORDINATOR') {
+        navigate('/admin/cms');
       } else {
         navigate('/admin/master');
       }
@@ -76,7 +80,7 @@ export const AdminLoginPage: React.FC = () => {
             NYP Sindh Executive Portal
           </h1>
           <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-            Verification Desk, Authorisation Desk & President Executive Controls.
+            President Executive Controls, Web Coordinator, Verification & Authorisation.
           </p>
         </div>
 
@@ -101,7 +105,7 @@ export const AdminLoginPage: React.FC = () => {
                 required
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
-                placeholder="e.g. president, verifier, authoriser"
+                placeholder="e.g. president, coordinator, verifier, authoriser"
                 className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl px-3.5 py-2.5 text-xs font-bold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
               />
             </div>
@@ -139,19 +143,19 @@ export const AdminLoginPage: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
               <button
                 type="button"
-                onClick={() => handleQuickDemoLogin('admin', 'admin123')}
-                className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/80 hover:scale-105 flex items-center justify-center space-x-1"
-              >
-                <span>Super Admin</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => handleQuickDemoLogin('president', 'president123')}
                 className="bg-purple-50 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 border border-purple-200 dark:border-purple-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-purple-100 dark:hover:bg-purple-900/80 hover:scale-105 flex items-center justify-center space-x-1"
               >
                 <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span>President</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickDemoLogin('coordinator', 'coordinator123')}
+                className="bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 border border-teal-200 dark:border-teal-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-teal-100 dark:hover:bg-teal-900/80 hover:scale-105 flex items-center justify-center space-x-1"
+              >
+                <span>Web Coordinator</span>
               </button>
 
               <button

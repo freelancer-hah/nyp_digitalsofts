@@ -32,9 +32,7 @@ export const Footer: React.FC = () => {
           {/* Column 1: Brand & Slogan */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-full bg-white p-0.5 border-2 border-amber-400 shadow-md overflow-hidden shrink-0">
-                <img src="/nyp-logo.jpg" alt="NYP Sindh Logo" className="w-full h-full object-contain rounded-full" />
-              </div>
+              <img src="/nyp-logo.png" alt="NYP Sindh Logo" className="h-14 sm:h-16 w-auto object-contain shrink-0" />
               <div>
                 <span className="font-black text-white text-base tracking-tight block font-heading uppercase">
                   NATIONAL YOUTH PARLIAMENT
@@ -122,7 +120,7 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/#about" className="text-slate-100 hover:text-amber-400 font-semibold transition-colors flex items-center space-x-1.5">
+                <Link to="/about" className="text-slate-100 hover:text-amber-400 font-semibold transition-colors flex items-center space-x-1.5">
                   <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
                   <span>About</span>
                 </Link>
@@ -166,7 +164,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2.5">
                 <Mail className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>Email: <strong className="font-extrabold text-amber-300">info@nypsindh.org.pk</strong></span>
+                <span>Email: <a href="mailto:nypsindh@gmail.com" className="font-extrabold text-amber-300 hover:underline">nypsindh@gmail.com</a></span>
               </div>
               <div className="flex items-center space-x-2.5">
                 <MapPin className="w-4 h-4 text-amber-400 shrink-0" />

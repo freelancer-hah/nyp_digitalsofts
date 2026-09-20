@@ -11,12 +11,14 @@ import { MemberDashboard } from './pages/MemberDashboard';
 import { CabinetPage } from './pages/CabinetPage';
 import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { ContactPage } from './pages/ContactPage';
+import { AboutPage } from './pages/AboutPage';
 
 import { AdminLoginPage } from './pages/AdminLoginPage';
 import { VerificationDeskPage } from './pages/VerificationDeskPage';
 import { ApprovalDeskPage } from './pages/ApprovalDeskPage';
 import { AdminMasterPage } from './pages/AdminMasterPage';
 import { CmsManagerPage } from './pages/CmsManagerPage';
+import { MemberDirectoryPage } from './pages/MemberDirectoryPage';
 
 export function App() {
   const appMode = import.meta.env.VITE_APP_MODE || 'all'; // 'public' | 'admin' | 'all'
@@ -68,6 +70,14 @@ export function App() {
               </AdminLayout>
             }
           />
+          <Route
+            path="/admin/members"
+            element={
+              <AdminLayout>
+                <MemberDirectoryPage />
+              </AdminLayout>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
@@ -83,6 +93,7 @@ export function App() {
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/about" element={<AboutPage />} />
               <Route path="/signup" element={<ApplicationPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/member/dashboard" element={<MemberDashboard />} />
@@ -147,6 +158,14 @@ export function App() {
             </AdminLayout>
           }
         />
+        <Route
+          path="/admin/members"
+          element={
+            <AdminLayout>
+              <MemberDirectoryPage />
+            </AdminLayout>
+          }
+        />
 
         {/* Public Website & Member Routes */}
         <Route
@@ -157,6 +176,7 @@ export function App() {
               <main className="flex-1">
                 <Routes>
                   <Route path="/" element={<HomePage />} />
+                  <Route path="/about" element={<AboutPage />} />
                   <Route path="/signup" element={<ApplicationPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/member/dashboard" element={<MemberDashboard />} />

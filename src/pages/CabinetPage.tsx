@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { store } from '../services/store';
 import { SINDH_DIVISIONS } from '../data/sindhHierarchy';
@@ -19,8 +19,7 @@ import {
   Loader2,
   CheckCircle2,
   Landmark,
-  Building2,
-  Award
+  Search,
 } from 'lucide-react';
 
 export const CabinetPage: React.FC = () => {
@@ -29,18 +28,24 @@ export const CabinetPage: React.FC = () => {
   const activeDivParam = searchParams.get('div') || 'ALL';
 
   const [selectedDiv, setSelectedDiv] = useState(activeDivParam);
-  const [selectedLevel, setSelectedLevel] = useState<'ALL' | 'PROVINCIAL' | 'DIVISIONAL'>('ALL');
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<'ALL' | 'MPA' | 'MNA' | 'PROVINCIAL_LEADERS'>('ALL');
 
-  // Auth / Admin Status
+  // Auth / Admin Status (President, Web Coordinator & Executive Desks)
   const currentUser = store.getCurrentUser();
   const isSuperAdmin =
     currentUser?.role === 'SUPER_ADMIN' ||
     currentUser?.role === 'PRESIDENT' ||
+    currentUser?.role === 'WEB_COORDINATOR' ||
     currentUser?.role === 'APPROVAL_AUTHORITY';
 
   // Tick for forcing re-render when store updates
   const [, setTick] = useState(0);
+
+  useEffect(() => {
+    store.fetchFromSupabase().then(() => {
+      setTick((t) => t + 1);
+    });
+  }, []);
 
   // Modal State for Assigning / Editing Member
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,12 +53,14 @@ export const CabinetPage: React.FC = () => {
 
   // Form State
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
+  const [profileSearchQuery, setProfileSearchQuery] = useState<string>('');
   const [fullName, setFullName] = useState('');
   const [designation, setDesignation] = useState('President NYP Sindh');
   const [cabinetLevel, setCabinetLevel] = useState<'PROVINCIAL' | 'DIVISIONAL'>('PROVINCIAL');
   const [divisionId, setDivisionId] = useState(SINDH_DIVISIONS[0].id);
   const [photoUrl, setPhotoUrl] = useState('');
   const [bio, setBio] = useState('');
+  const [displayOrderInput, setDisplayOrderInput] = useState<number>(1);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Parliamentarian Form State
@@ -64,15 +71,11 @@ export const CabinetPage: React.FC = () => {
   const registeredProfiles = store.getAllProfiles();
 
   // Get raw list from store
-  const allMembers = store.getCabinetMembers(
-    selectedLevel === 'ALL' ? undefined : selectedLevel,
-    selectedDiv === 'ALL' ? undefined : selectedDiv
-  );
+  const allCabinetMembersList = store.getCabinetMembers();
 
   // Filter list depending on current View Mode (Cabinets vs Parliamentarians)
-  const displayMembers = allMembers.filter((member) => {
+  const filteredMembers = allCabinetMembersList.filter((member) => {
     if (isParliamentariansView) {
-      // Must be a parliamentarian OR have an MPA/MNA/Provincial Leadership role
       const isParl = member.category === 'PARLIAMENTARIAN' || 
         member.designation.toLowerCase().includes('mpa') || 
         member.designation.toLowerCase().includes('mna') ||
@@ -82,27 +85,98 @@ export const CabinetPage: React.FC = () => {
       
       if (!isParl) return false;
 
-      // Role filter check
+      // 1. PROVINCIAL LEADERSHIP TAB (selectedDiv === 'ALL'):
+      if (selectedDiv === 'ALL') {
+        const isProvincialLeadership = member.cabinetLevel === 'PROVINCIAL' && (
+          ['SPEAKER', 'DEPUTY_SPEAKER', 'CHIEF_MINISTER', 'OPPOSITION_LEADER', 'MINISTER'].includes(member.parliamentaryRole || '') ||
+          member.designation.toLowerCase().includes('speaker') ||
+          member.designation.toLowerCase().includes('chief minister') ||
+          member.designation.toLowerCase().includes('minister') ||
+          member.designation.toLowerCase().includes('opposition') ||
+          (!member.designation.toLowerCase().includes('mpa') && !member.designation.toLowerCase().includes('mna') && !member.divisionId)
+        );
+
+        const isDivisionalMpaMna = (member.cabinetLevel === 'DIVISIONAL' || !!member.divisionId) ||
+          member.parliamentaryRole === 'YOUTH_MPA' || member.parliamentaryRole === 'YOUTH_MNA' ||
+          member.designation.toLowerCase().includes('youth mpa') || member.designation.toLowerCase().includes('youth mna');
+
+        if (isDivisionalMpaMna && member.cabinetLevel !== 'PROVINCIAL') {
+          return false;
+        }
+
+        return isProvincialLeadership;
+      }
+
+      // 2. DIVISIONAL TABS:
+      if (member.divisionId !== selectedDiv) {
+        return false;
+      }
+
+      // Role filter check (All, Youth MPA, Youth MNA)
       if (selectedRoleFilter === 'MPA') return member.parliamentaryRole === 'YOUTH_MPA' || member.designation.toLowerCase().includes('mpa');
       if (selectedRoleFilter === 'MNA') return member.parliamentaryRole === 'YOUTH_MNA' || member.designation.toLowerCase().includes('mna');
-      if (selectedRoleFilter === 'PROVINCIAL_LEADERS') return member.cabinetLevel === 'PROVINCIAL' || member.parliamentaryRole === 'CHIEF_MINISTER' || member.parliamentaryRole === 'SPEAKER' || member.parliamentaryRole === 'MINISTER';
       
       return true;
     } else {
       // Must NOT be a pure parliamentarian (or show main executive cabinet)
-      return member.category !== 'PARLIAMENTARIAN';
+      if (member.category === 'PARLIAMENTARIAN') return false;
+
+      // 1. PROVINCIAL CABINET TAB: Only show Provincial Cabinet members
+      if (selectedDiv === 'ALL') {
+        return member.cabinetLevel === 'PROVINCIAL';
+      }
+
+      // 2. DIVISIONAL TABS: Only show Divisional members for that division
+      return member.cabinetLevel === 'DIVISIONAL' && member.divisionId === selectedDiv;
     }
+  });
+
+  // Sort strictly number-wise by displayOrder
+  const displayMembers = [...filteredMembers].sort(
+    (a, b) => (Number(a.displayOrder) || 999) - (Number(b.displayOrder) || 999)
+  );
+
+  // Filter out profiles that are ALREADY assigned to the Cabinet or Parliament
+  const assignedProfileIds = new Set(
+    allCabinetMembersList
+      .filter((cm) => !editingMember || cm.id !== editingMember.id)
+      .map((cm) => cm.memberProfileId)
+      .filter(Boolean)
+  );
+  const assignedNames = new Set(
+    allCabinetMembersList
+      .filter((cm) => !editingMember || cm.id !== editingMember.id)
+      .map((cm) => cm.fullName.trim().toLowerCase())
+  );
+
+  const availableProfiles = registeredProfiles.filter((p) => {
+    if (editingMember && (editingMember.memberProfileId === p.id || editingMember.fullName.trim().toLowerCase() === p.fullName.trim().toLowerCase())) {
+      return true;
+    }
+    return !assignedProfileIds.has(p.id) && !assignedNames.has(p.fullName.trim().toLowerCase());
+  });
+
+  const filteredSelectableProfiles = availableProfiles.filter((p) => {
+    if (!profileSearchQuery.trim()) return true;
+    const q = profileSearchQuery.toLowerCase();
+    return (
+      p.fullName.toLowerCase().includes(q) ||
+      p.cnicNumber.includes(q) ||
+      (p.divisionId && store.getDivisionName(p.divisionId).toLowerCase().includes(q))
+    );
   });
 
   const handleOpenAddModal = () => {
     setEditingMember(null);
     setSelectedProfileId('');
+    setProfileSearchQuery('');
     setFullName('');
     setDesignation(isParliamentariansView ? 'Youth MPA' : 'President NYP Sindh');
     setCabinetLevel(isParliamentariansView ? 'DIVISIONAL' : 'PROVINCIAL');
     setDivisionId(SINDH_DIVISIONS[0].id);
     setPhotoUrl(isParliamentariansView ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' : '/nyp-president.png');
     setBio('');
+    setDisplayOrderInput(displayMembers.length + 1);
     setParlType('MPA');
     setProvincialLeaderRole('CHIEF_MINISTER');
     setMinistryDepartment('');
@@ -112,12 +186,14 @@ export const CabinetPage: React.FC = () => {
   const handleOpenEditModal = (member: CabinetMember) => {
     setEditingMember(member);
     setSelectedProfileId(member.memberProfileId || '');
+    setProfileSearchQuery('');
     setFullName(member.fullName);
     setDesignation(member.designation);
     setCabinetLevel(member.cabinetLevel);
     setDivisionId(member.divisionId || SINDH_DIVISIONS[0].id);
     setPhotoUrl(member.photoUrl);
     setBio(member.bio || '');
+    setDisplayOrderInput(member.displayOrder || 1);
     setMinistryDepartment(member.ministryDepartment || '');
     
     if (member.parliamentaryRole === 'YOUTH_MNA' || member.designation.toLowerCase().includes('mna')) {
@@ -134,7 +210,7 @@ export const CabinetPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // 1. AUTO-FILL FORM WHEN SELECTING A REGISTERED MEMBER
+  // AUTO-FILL FORM WHEN SELECTING A REGISTERED MEMBER
   const handleProfileSelect = (profId: string) => {
     setSelectedProfileId(profId);
     if (!profId) return;
@@ -142,7 +218,6 @@ export const CabinetPage: React.FC = () => {
     const prof = registeredProfiles.find((p) => p.id === profId || p.userId === profId);
     if (prof) {
       setFullName(prof.fullName);
-      // Auto fill picture uploaded on membership form
       setPhotoUrl(prof.passportPhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300');
       
       if (prof.divisionId) {
@@ -152,7 +227,7 @@ export const CabinetPage: React.FC = () => {
         setCabinetLevel('PROVINCIAL');
       }
 
-      if (prof.assignedDesignation && prof.assignedDesignation !== 'Member') {
+      if (prof.assignedDesignation && prof.assignedDesignation !== 'Member' && prof.assignedDesignation !== 'General Member') {
         setDesignation(prof.assignedDesignation);
       }
       if (prof.statementOfPurpose) {
@@ -215,6 +290,7 @@ export const CabinetPage: React.FC = () => {
         divisionId: finalLevel === 'DIVISIONAL' ? divisionId : undefined,
         photoUrl: photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
         bio,
+        displayOrder: Number(displayOrderInput) || 1,
         memberProfileId: selectedProfileId || undefined,
         category: finalCategory,
         parliamentaryRole: finalParlRole,
@@ -228,7 +304,7 @@ export const CabinetPage: React.FC = () => {
         divisionId: finalLevel === 'DIVISIONAL' ? divisionId : undefined,
         photoUrl: photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
         bio,
-        displayOrder: 1,
+        displayOrder: Number(displayOrderInput) || displayMembers.length + 1,
         isActive: true,
         memberProfileId: selectedProfileId || undefined,
         category: finalCategory,
@@ -246,14 +322,6 @@ export const CabinetPage: React.FC = () => {
       store.deleteCabinetMember(id);
       setTick((t) => t + 1);
     }
-  };
-
-  const isProvincialPresident = (member: CabinetMember) => {
-    const des = (member.designation || '').toLowerCase();
-    return (
-      des.includes('president nyp sindh') ||
-      (des.includes('president') && member.cabinetLevel === 'PROVINCIAL' && !des.includes('vice') && !des.includes('divisional'))
-    );
   };
 
   const selectedProfileObj = registeredProfiles.find(
@@ -275,23 +343,25 @@ export const CabinetPage: React.FC = () => {
               </div>
               <div>
                 <span className="text-xs font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider block">
-                  SUPER ADMIN {isParliamentariansView ? 'PARLIAMENTARIAN MANAGEMENT' : 'CABINET MANAGEMENT'}
+                  {currentUser?.role === 'WEB_COORDINATOR' ? 'WEB COORDINATOR' : 'PRESIDENT & EXECUTIVE'} {isParliamentariansView ? 'PARLIAMENTARIAN MANAGEMENT' : 'CABINET MANAGEMENT'}
                 </span>
                 <p className="text-xs text-amber-800 dark:text-amber-400">
                   {isParliamentariansView 
                     ? 'Assign registered member profiles as Youth MPAs, Youth MNAs, Speaker, CM or Youth Ministers.' 
-                    : 'Select registered members to assign cabinet positions, customize designations, and choose division.'}
+                    : 'Select registered members to assign cabinet positions, set hierarchy number, and choose division.'}
                 </p>
               </div>
             </div>
 
-            <button
-              onClick={handleOpenAddModal}
-              className="px-5 py-2.5 rounded-xl bg-[#052818] hover:bg-[#073822] text-amber-300 font-bold text-xs uppercase tracking-wider shadow-md flex items-center space-x-2 shrink-0 transition-transform hover:scale-105 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{isParliamentariansView ? 'Assign Youth Parliamentarian' : 'Assign Member Profile'}</span>
-            </button>
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                onClick={handleOpenAddModal}
+                className="px-5 py-2.5 rounded-xl bg-[#052818] hover:bg-[#073822] text-amber-300 font-bold text-xs uppercase tracking-wider shadow-md flex items-center space-x-2 transition-transform hover:scale-105 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{isParliamentariansView ? 'Assign Youth Parliamentarian' : 'Assign Member Profile'}</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -326,7 +396,7 @@ export const CabinetPage: React.FC = () => {
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700'
             }`}
           >
-            PROVINCIAL LEADERSHIP
+            {isParliamentariansView ? 'PROVINCIAL LEADERSHIP' : 'PROVINCIAL CABINET'}
           </button>
 
           {SINDH_DIVISIONS.map((div) => (
@@ -344,68 +414,47 @@ export const CabinetPage: React.FC = () => {
           ))}
         </div>
 
-        {/* Level & Role Filter Toggle */}
-        <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shrink-0">
-          {isParliamentariansView ? (
-            <>
-              <button
-                onClick={() => setSelectedRoleFilter('ALL')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  selectedRoleFilter === 'ALL' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setSelectedRoleFilter('MPA')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  selectedRoleFilter === 'MPA' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                Youth MPA
-              </button>
-              <button
-                onClick={() => setSelectedRoleFilter('MNA')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  selectedRoleFilter === 'MNA' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                Youth MNA
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => setSelectedLevel('ALL')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  selectedLevel === 'ALL' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                All Levels
-              </button>
-              <button
-                onClick={() => setSelectedLevel('PROVINCIAL')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  selectedLevel === 'PROVINCIAL' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                Provincial
-              </button>
-              <button
-                onClick={() => setSelectedLevel('DIVISIONAL')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  selectedLevel === 'DIVISIONAL' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                Divisional
-              </button>
-            </>
-          )}
-        </div>
+        {/* Role Filter Toggle (ONLY IN DIVISIONAL VIEW FOR YOUTH PARLIAMENTARIANS) */}
+        {isParliamentariansView && selectedDiv !== 'ALL' && (
+          <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shrink-0">
+            <button
+              onClick={() => setSelectedRoleFilter('ALL')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                selectedRoleFilter === 'ALL' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setSelectedRoleFilter('MPA')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                selectedRoleFilter === 'MPA' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              Youth MPA
+            </button>
+            <button
+              onClick={() => setSelectedRoleFilter('MNA')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                selectedRoleFilter === 'MNA' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              Youth MNA
+            </button>
+            <button
+              onClick={() => setSelectedRoleFilter('PROVINCIAL_LEADERS')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                selectedRoleFilter === 'PROVINCIAL_LEADERS' ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs' : 'text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              Provincial Leaders
+            </button>
+          </div>
+        )}
 
       </div>
 
-      {/* Grid of Cabinet Members / Parliamentarians */}
+      {/* Grid of Cabinet Members / Parliamentarians (Strictly 3 per row on lg screens, sorted number-wise) */}
       <div className="max-w-7xl mx-auto space-y-6">
         {displayMembers.length === 0 ? (
           <div className="py-16 text-center text-slate-500 text-xs bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
@@ -419,174 +468,130 @@ export const CabinetPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayMembers.map((member) => {
-              const isPresident = !isParliamentariansView && isProvincialPresident(member);
               const isProvincialLeader = member.cabinetLevel === 'PROVINCIAL' || member.parliamentaryRole === 'CHIEF_MINISTER' || member.parliamentaryRole === 'SPEAKER';
 
               return (
                 <div
                   key={member.id}
-                  className={`relative rounded-3xl overflow-hidden transition-all duration-300 text-left flex flex-col justify-between group ${
-                    isPresident
-                      ? 'col-span-full bg-gradient-to-br from-amber-50 via-white to-emerald-50/30 dark:from-amber-950/30 dark:via-slate-900 dark:to-emerald-950/20 border-2 border-amber-400/90 shadow-2xl p-6 sm:p-10'
-                      : isProvincialLeader && isParliamentariansView
-                      ? 'bg-gradient-to-br from-emerald-900 via-slate-900 to-emerald-950 text-white border-2 border-amber-400/80 shadow-lg p-6'
-                      : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500/40 shadow-sm hover:shadow-md p-6'
+                  className={`relative rounded-3xl overflow-hidden transition-all duration-300 text-left flex flex-col justify-between group p-6 ${
+                    isProvincialLeader && isParliamentariansView
+                      ? 'bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 text-white border-2 border-amber-400/80 shadow-lg'
+                      : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500/40 shadow-sm hover:shadow-md'
                   }`}
                 >
-                  {/* Card Content */}
+                  {/* Card Header Content */}
                   <div className="space-y-4">
                     
-                    {/* Top Level Badge & Admin Actions */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${
-                          isPresident || isProvincialLeader
-                            ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-sm font-bold' 
+                    {/* Top Level Badge & Number / Admin Actions */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                          isProvincialLeader
+                            ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-xs' 
                             : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                         }`}>
                           {member.cabinetLevel} {isParliamentariansView ? 'PARLIAMENT' : 'CABINET'}
                         </span>
 
                         {member.divisionId && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                             {store.getDivisionName(member.divisionId)}
                           </span>
                         )}
                       </div>
 
-                      {isSuperAdmin && (
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => handleOpenEditModal(member)}
-                            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 text-slate-600 dark:text-slate-300 hover:text-white transition-colors cursor-pointer"
-                            title="Edit Assignment"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteMember(member.id, member.fullName)}
-                            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 text-slate-600 dark:text-slate-300 hover:text-white transition-colors cursor-pointer"
-                            title="Remove Member Slot"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex items-center space-x-1.5 shrink-0">
+                        {/* Clean Sequence Number Badge */}
+                        <span 
+                          className="text-xs font-mono font-black px-2.5 py-0.5 rounded-lg bg-amber-400/20 border border-amber-400/50 text-amber-700 dark:text-amber-300 shadow-2xs" 
+                          title={`Position #${member.displayOrder || 1}`}
+                        >
+                          #{member.displayOrder || 1}
+                        </span>
+
+                        {isSuperAdmin && (
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={() => handleOpenEditModal(member)}
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 text-slate-600 dark:text-slate-300 hover:text-white transition-colors cursor-pointer"
+                              title="Edit Member"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMember(member.id, member.fullName)}
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 text-slate-600 dark:text-slate-300 hover:text-white transition-colors cursor-pointer"
+                              title="Remove Member"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Member Details */}
-                    {isPresident ? (
-                      /* FEATURED PRESIDENT NYP SINDH CARD (LARGER SIZE) */
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center pt-2">
-                        
-                        {/* Larger Photo Profile */}
-                        <div className="md:col-span-4 flex flex-col items-center md:items-start text-center md:text-left">
-                          <div className="w-44 h-56 sm:w-52 sm:h-64 rounded-3xl overflow-hidden border-4 border-amber-400 shadow-2xl bg-slate-200 dark:bg-slate-800 shrink-0 relative group-hover:scale-105 transition-transform duration-300">
-                            <img
-                              src={member.photoUrl}
-                              alt={member.fullName}
-                              className="w-full h-full object-cover object-top"
-                            />
-                            <div className="absolute bottom-3 right-3 bg-amber-400 text-slate-950 p-2 rounded-full shadow-lg border-2 border-slate-950">
-                              <Crown className="w-5 h-5" />
-                            </div>
-                          </div>
+                    <div className="space-y-4 pt-1">
+                      <div className="flex items-start space-x-3.5">
+                        {/* Member Photo */}
+                        <div className="w-18 h-22 sm:w-20 sm:h-24 rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-sm bg-slate-100 dark:bg-slate-800 shrink-0">
+                          <img
+                            src={member.photoUrl}
+                            alt={member.fullName}
+                            className="w-full h-full object-cover object-top"
+                          />
                         </div>
 
-                        {/* Details */}
-                        <div className="md:col-span-8 space-y-4">
-                          <div>
-                            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 font-black px-4 py-1.5 rounded-xl text-xs sm:text-sm uppercase tracking-wider shadow-md border border-amber-300 font-heading mb-3">
-                              <Crown className="w-4 h-4 text-slate-950 shrink-0" />
-                              <span>{member.designation}</span>
-                            </div>
-                            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-heading tracking-tight">
-                              {member.fullName}
-                            </h2>
+                        <div className="space-y-1.5 text-left flex-1 min-w-0">
+                          {/* HIGHLIGHTED DESIGNATION BADGE */}
+                          <div className={`inline-block font-black px-2.5 py-1 rounded-lg text-xs uppercase tracking-wide shadow-xs font-heading truncate max-w-full ${
+                            isProvincialLeader && isParliamentariansView
+                              ? 'bg-amber-400 text-slate-950 border border-amber-300'
+                              : 'bg-gradient-to-r from-emerald-800 to-emerald-600 dark:from-emerald-600 dark:to-emerald-500 text-amber-300 dark:text-white border border-emerald-700 dark:border-emerald-400'
+                          }`}>
+                            {member.designation}
                           </div>
 
-                          {member.bio && (
-                            <blockquote className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 italic border-l-4 border-amber-400 pl-4 py-1.5 leading-relaxed whitespace-pre-line bg-amber-50/50 dark:bg-slate-800/40 rounded-r-xl">
-                              "{member.bio}"
-                            </blockquote>
+                          {/* MINISTRY DEPARTMENT SUB-LINE FOR PROVINCIAL MINISTERS */}
+                          {member.ministryDepartment && (
+                            <div className="text-[11px] font-bold text-amber-400 block truncate">
+                              Minister for {member.ministryDepartment}
+                            </div>
                           )}
 
-                          <div className="flex items-center space-x-2 text-xs text-slate-700 dark:text-slate-300 font-bold pt-2">
-                            <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            <span>
-                              {member.divisionId ? store.getDivisionName(member.divisionId) : 'Sindh Province (Central Leadership)'}
-                            </span>
-                            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 ml-auto" />
-                          </div>
-                        </div>
-
-                      </div>
-                    ) : (
-                      /* OTHER CABINET MEMBERS OR PARLIAMENTARIANS CARD */
-                      <div className="space-y-4 pt-1">
-                        <div className="flex items-start space-x-4">
-                          {/* Member Photo */}
-                          <div className="w-16 h-20 rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-sm bg-slate-100 dark:bg-slate-800 shrink-0">
-                            <img
-                              src={member.photoUrl}
-                              alt={member.fullName}
-                              className="w-full h-full object-cover object-top"
-                            />
-                          </div>
-
-                          <div className="space-y-1 text-left">
-                            {/* HIGHLIGHTED DESIGNATION BADGE */}
-                            <div className={`inline-block font-black px-3 py-1 rounded-lg text-xs uppercase tracking-wide shadow-xs font-heading ${
-                              isProvincialLeader && isParliamentariansView
-                                ? 'bg-amber-400 text-slate-950 border border-amber-300'
-                                : 'bg-gradient-to-r from-emerald-800 to-emerald-600 dark:from-emerald-600 dark:to-emerald-500 text-amber-300 dark:text-white border border-emerald-700 dark:border-emerald-400'
-                            }`}>
-                              {member.designation}
-                            </div>
-
-                            {/* MINISTRY DEPARTMENT SUB-LINE FOR PROVINCIAL MINISTERS */}
-                            {member.ministryDepartment && (
-                              <div className="text-[11px] font-bold text-amber-300 dark:text-amber-400 block pt-0.5">
-                                Minister for {member.ministryDepartment}
-                              </div>
-                            )}
-
-                            <h3 className={`font-black text-base leading-snug font-heading ${
-                              isProvincialLeader && isParliamentariansView ? 'text-white' : 'text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors'
-                            }`}>
-                              {member.fullName}
-                            </h3>
-                          </div>
-                        </div>
-
-                        {member.bio && (
-                          <p className={`text-xs leading-relaxed italic border-l-2 border-emerald-500 pl-3 line-clamp-3 ${
-                            isProvincialLeader && isParliamentariansView ? 'text-slate-300' : 'text-slate-600 dark:text-slate-300'
+                          <h3 className={`font-black text-base leading-snug font-heading truncate ${
+                            isProvincialLeader && isParliamentariansView ? 'text-white' : 'text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors'
                           }`}>
-                            "{member.bio}"
-                          </p>
-                        )}
+                            {member.fullName}
+                          </h3>
+                        </div>
                       </div>
-                    )}
+
+                      {member.bio && (
+                        <p className={`text-xs leading-relaxed italic border-l-2 border-emerald-500 pl-3 line-clamp-3 ${
+                          isProvincialLeader && isParliamentariansView ? 'text-slate-300' : 'text-slate-600 dark:text-slate-300'
+                        }`}>
+                          "{member.bio}"
+                        </p>
+                      )}
+                    </div>
 
                   </div>
 
-                  {/* Card Footer (Non-President) */}
-                  {!isPresident && (
-                    <div className={`pt-3 mt-4 border-t flex items-center justify-between text-[11px] font-medium ${
-                      isProvincialLeader && isParliamentariansView 
-                        ? 'border-emerald-800 text-slate-400' 
-                        : 'border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400'
-                    }`}>
-                      <div className="flex items-center space-x-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>
-                          {member.divisionId ? store.getDivisionName(member.divisionId) : 'Sindh Province'}
-                        </span>
-                      </div>
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  {/* Card Footer */}
+                  <div className={`pt-3 mt-4 border-t flex items-center justify-between text-[11px] font-medium ${
+                    isProvincialLeader && isParliamentariansView 
+                      ? 'border-emerald-900/60 text-slate-400' 
+                      : 'border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    <div className="flex items-center space-x-1.5 truncate">
+                      <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span className="truncate">
+                        {member.divisionId ? store.getDivisionName(member.divisionId) : 'Sindh Province'}
+                      </span>
                     </div>
-                  )}
+                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                  </div>
 
                 </div>
               );
@@ -597,51 +602,106 @@ export const CabinetPage: React.FC = () => {
 
       {/* SUPER ADMIN MODAL: ASSIGN / EDIT MEMBER */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl text-left relative text-slate-900 dark:text-white">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 md:p-6 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col shadow-2xl text-left relative text-slate-900 dark:text-white overflow-hidden my-auto">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-              <div className="flex items-center space-x-2.5 text-emerald-700 dark:text-emerald-400">
-                <UserCheck className="w-6 h-6" />
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white font-heading">
-                  {editingMember 
-                    ? 'Edit Assignment' 
-                    : isParliamentariansView 
-                    ? 'Assign Registered Member as Youth Parliamentarian' 
-                    : 'Assign Registered Member to Cabinet'}
-                </h3>
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-4 sm:px-6 sm:py-5 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md shrink-0 z-10">
+              <div className="flex items-center space-x-3 text-emerald-700 dark:text-emerald-400 min-w-0 pr-2">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center shrink-0">
+                  <UserCheck className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-heading leading-tight truncate">
+                    {editingMember 
+                      ? 'Edit Member' 
+                      : isParliamentariansView 
+                      ? 'Assign Youth Parliamentarian' 
+                      : 'Assign Registered Member to Cabinet'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+                    {isParliamentariansView ? 'Youth Provincial Assembly Sindh Role' : 'National Youth Parliament Sindh Cabinet'}
+                  </p>
+                </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors cursor-pointer shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveMember} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveMember} className="flex flex-col flex-1 overflow-hidden min-h-0 text-xs">
+              <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5 text-xs">
               
               {/* 1. SELECT REGISTERED PROFILE DROPDOWN */}
-              <div className="space-y-1.5">
-                <label className="font-bold text-slate-800 dark:text-slate-200 block uppercase tracking-wider">
-                  SELECT REGISTERED MEMBER PROFILE
-                </label>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-800 dark:text-slate-200 block uppercase tracking-wider">
+                    SELECT REGISTERED MEMBER PROFILE
+                  </label>
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                    {availableProfiles.length} unassigned member{availableProfiles.length === 1 ? '' : 's'} available
+                  </span>
+                </div>
+
+                {/* Quick Search Input */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    value={profileSearchQuery}
+                    onChange={(e) => setProfileSearchQuery(e.target.value)}
+                    placeholder="Search unassigned member by Name or CNIC..."
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+
                 <select
                   value={selectedProfileId}
                   onChange={(e) => handleProfileSelect(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-3 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 font-bold"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 font-bold"
                 >
-                  <option value="">-- Choose from Registered Members --</option>
-                  {registeredProfiles.map((p) => (
+                  <option value="">-- Choose from Unassigned Registered Members ({filteredSelectableProfiles.length}) --</option>
+                  {filteredSelectableProfiles.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.fullName} ({p.cnicNumber}) - {p.divisionId ? store.getDivisionName(p.divisionId) : 'Sindh'}
                     </option>
                   ))}
                 </select>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                  Selecting a profile automatically fills Name, Photo uploaded on membership form, Division, and details.
+                  Members already assigned to a cabinet/parliament role are automatically filtered out.
                 </p>
+              </div>
+
+              {/* HIERARCHY POSITION NUMBER */}
+              <div className="space-y-1.5 p-3.5 bg-amber-50/60 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-amber-900 dark:text-amber-300 block uppercase tracking-wider">
+                    POSITION / NUMBER (TARTEEB #) *
+                  </label>
+                  <span className="text-xs font-mono font-black text-amber-700 dark:text-amber-400">
+                    Position #{displayOrderInput}
+                  </span>
+                </div>
+
+                <div>
+                  <input
+                    type="number"
+                    min={1}
+                    max={500}
+                    required
+                    value={displayOrderInput}
+                    onChange={(e) => setDisplayOrderInput(Number(e.target.value))}
+                    placeholder="e.g. 1, 2, 3..."
+                    className="w-full bg-white dark:bg-slate-950 border border-amber-300 dark:border-amber-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white font-bold font-mono text-sm"
+                  />
+                  <p className="text-[10px] text-amber-800 dark:text-amber-400 mt-1">
+                    Enter the display sequence number (e.g. 1 will be shown first, then 2, 3, etc.).
+                  </p>
+                </div>
               </div>
 
               {/* AUTO-LOADED MEMBER PREVIEW BADGE */}
@@ -886,20 +946,23 @@ export const CabinetPage: React.FC = () => {
                 />
               </div>
 
-              {/* Modal Action Buttons */}
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end space-x-3">
+              </div>
+
+              {/* Modal Action Buttons (Fixed Bottom Bar) */}
+              <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/90 backdrop-blur-md flex items-center justify-end space-x-3 shrink-0 rounded-b-2xl sm:rounded-b-3xl">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold transition-colors cursor-pointer text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#052818] hover:bg-[#073822] text-amber-300 font-bold uppercase tracking-wider shadow-md cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-[#052818] hover:bg-[#073822] text-amber-300 font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center space-x-2 text-xs"
                 >
-                  {editingMember ? 'Save Changes' : isParliamentariansView ? 'ASSIGN PARLIAMENTARIAN' : 'ASSIGN MEMBER'}
+                  <UserCheck className="w-4 h-4" />
+                  <span>{editingMember ? 'Save Changes' : isParliamentariansView ? 'ASSIGN PARLIAMENTARIAN' : 'ASSIGN MEMBER'}</span>
                 </button>
               </div>
 
@@ -912,3 +975,4 @@ export const CabinetPage: React.FC = () => {
     </div>
   );
 };
+

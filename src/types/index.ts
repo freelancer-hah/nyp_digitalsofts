@@ -4,6 +4,7 @@ export type UserRole =
   | 'VERIFICATION_DESK' 
   | 'AUTHORISATION_DESK' 
   | 'PRESIDENT'
+  | 'WEB_COORDINATOR'
   | 'VERIFYING_OFFICER' 
   | 'APPROVAL_AUTHORITY' 
   | 'DIVISIONAL_ADMIN' 
@@ -78,6 +79,7 @@ export interface RoleApplicationRequest {
   paymentDetails?: {
     paymentMethod: string; // JazzCash, EasyPaisa, Bank Transfer
     transactionId: string;
+    paymentProofUrl?: string; // Image / screenshot URL of payment receipt
     submittedAt: string;
   };
   rejectionReason?: string;
@@ -145,6 +147,7 @@ export interface MemberProfile {
   paymentDetails?: {
     paymentMethod: string;
     transactionId: string;
+    paymentProofUrl?: string; // Image / screenshot URL of payment receipt
     feeAmount: number;
     submittedAt: string;
   };

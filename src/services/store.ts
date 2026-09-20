@@ -105,16 +105,6 @@ export function isSameCnic(c1?: string, c2?: string): boolean {
 
 const INITIAL_OFFICER_USERS: User[] = [
   {
-    id: 'usr-superadmin',
-    cnicNumber: '41304-0000000-0',
-    fullName: 'Super Admin - NYP Sindh',
-    email: 'admin@nypsindh.org.pk',
-    mobileNumber: '0333-7612564',
-    role: 'SUPER_ADMIN',
-    password: 'admin123',
-    createdAt: new Date().toISOString(),
-  },
-  {
     id: 'usr-president',
     cnicNumber: '41304-0000000-1',
     fullName: 'President Abdul Rehman Halepoto',
@@ -122,6 +112,26 @@ const INITIAL_OFFICER_USERS: User[] = [
     mobileNumber: '0333-7612564',
     role: 'PRESIDENT',
     password: 'president123',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'usr-superadmin',
+    cnicNumber: '41304-0000000-0',
+    fullName: 'President Executive Desk',
+    email: 'admin@nypsindh.org.pk',
+    mobileNumber: '0333-7612564',
+    role: 'PRESIDENT',
+    password: 'admin123',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'usr-coordinator',
+    cnicNumber: '41304-3333333-3',
+    fullName: 'Web Coordinator - NYP Sindh',
+    email: 'coordinator@nypsindh.org.pk',
+    mobileNumber: '0300-3333333',
+    role: 'WEB_COORDINATOR',
+    password: 'coordinator123',
     createdAt: new Date().toISOString(),
   },
   {
@@ -398,6 +408,54 @@ class StoreService {
         this.announcements = Array.from(annMap.values());
         localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
       }
+
+      // Fetch cabinet_members from Supabase
+      const { data: cabData, error: cabErr } = await supabase.from('cabinet_members').select('*');
+      if (!cabErr && cabData && cabData.length > 0) {
+        const fetchedCabinet: CabinetMember[] = cabData.map((d: any) => ({
+          id: d.id,
+          fullName: d.full_name || d.fullName || 'Member',
+          designation: d.designation || 'Youth Parliamentarian',
+          cabinetLevel: (d.cabinet_level || d.cabinetLevel || 'PROVINCIAL') as 'PROVINCIAL' | 'DIVISIONAL',
+          divisionId: d.division_id || d.divisionId || undefined,
+          photoUrl: d.photo_url || d.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+          bio: d.bio || undefined,
+          displayOrder: Number(d.display_order ?? d.displayOrder ?? 1),
+          isActive: d.is_active ?? d.isActive ?? true,
+          memberProfileId: d.member_profile_id || d.memberProfileId || undefined,
+          category: d.category || (d.designation?.toLowerCase().includes('mpa') || d.designation?.toLowerCase().includes('mna') || d.designation?.toLowerCase().includes('minister') ? 'PARLIAMENTARIAN' : 'CABINET'),
+          parliamentaryRole: d.parliamentary_role || undefined,
+          ministryDepartment: d.ministry_department || undefined,
+        }));
+
+        const cabMap = new Map<string, CabinetMember>();
+        this.cabinetMembers.forEach((m) => cabMap.set(m.id, m));
+        const remoteIds = new Set<string>();
+        fetchedCabinet.forEach((m) => {
+          remoteIds.add(m.id);
+          const local = cabMap.get(m.id);
+          if (local) {
+            cabMap.set(m.id, { ...local, ...m });
+          } else {
+            cabMap.set(m.id, m);
+          }
+        });
+
+        this.cabinetMembers = Array.from(cabMap.values());
+        localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+
+        // Push any local members not yet in Supabase
+        this.cabinetMembers.forEach((localMember) => {
+          if (!remoteIds.has(localMember.id)) {
+            this.pushCabinetMemberToSupabase(localMember);
+          }
+        });
+      } else if (!cabErr && cabData && cabData.length === 0 && this.cabinetMembers.length > 0) {
+        // Table is empty in Supabase, push all existing cabinet members
+        this.cabinetMembers.forEach((m) => {
+          this.pushCabinetMemberToSupabase(m);
+        });
+      }
     } catch (e) {
       console.warn('Supabase fetch notice:', e);
     }
@@ -439,6 +497,7 @@ class StoreService {
         social_links: {
           ...(profile.socialLinks || {}),
           actualStatus: profile.status || 'PENDING_VERIFICATION',
+          paymentDetails: profile.paymentDetails || undefined,
         },
         declaration_accepted: profile.declarationAccepted ?? true,
         status: profile.status === 'PAYMENT_SUBMITTED' ? 'VERIFIED' : (profile.status || 'PENDING_VERIFICATION'),
@@ -566,8 +625,9 @@ class StoreService {
         isSameCnic(u.cnicNumber, rawInput) || 
         (u.email && u.email.toLowerCase() === lowerInput) ||
         (cleanDigits && cleanDigits.length >= 10 && u.cnicNumber.replace(/\D/g, '') === cleanDigits) ||
-        ((lowerInput === 'admin' || lowerInput === 'superadmin' || lowerInput === 'super_admin') && (u.role === 'SUPER_ADMIN' || u.id === 'usr-superadmin')) ||
         ((lowerInput === 'president') && (u.role === 'PRESIDENT' || u.id === 'usr-president')) ||
+        ((lowerInput === 'admin' || lowerInput === 'superadmin' || lowerInput === 'super_admin') && (u.role === 'SUPER_ADMIN' || u.role === 'PRESIDENT' || u.id === 'usr-superadmin')) ||
+        ((lowerInput === 'coordinator' || lowerInput === 'webcoordinator' || lowerInput === 'web_coordinator' || lowerInput === 'web') && (u.role === 'WEB_COORDINATOR' || u.id === 'usr-coordinator')) ||
         ((lowerInput === 'verifier' || lowerInput === 'verification') && (u.role === 'VERIFICATION_DESK' || u.role === 'VERIFYING_OFFICER' || u.id === 'usr-verifier')) ||
         ((lowerInput === 'authoriser' || lowerInput === 'authorization' || lowerInput === 'approval') && (u.role === 'AUTHORISATION_DESK' || u.role === 'APPROVAL_AUTHORITY' || u.id === 'usr-authoriser'))
     );
@@ -578,10 +638,11 @@ class StoreService {
       }
 
       const expectedPassword = 
-        officer.id === 'usr-superadmin' || officer.role === 'SUPER_ADMIN' ? 'admin123' :
-        officer.id === 'usr-president' || officer.role === 'PRESIDENT' ? 'president123' :
-        officer.id === 'usr-verifier' || officer.role === 'VERIFICATION_DESK' ? 'verifier123' :
-        officer.id === 'usr-authoriser' || officer.role === 'AUTHORISATION_DESK' ? 'authoriser123' :
+        officer.id === 'usr-president' || officer.role === 'PRESIDENT' ? (officer.password || 'president123') :
+        officer.id === 'usr-superadmin' || officer.role === 'SUPER_ADMIN' ? (officer.password || 'admin123') :
+        officer.id === 'usr-coordinator' || officer.role === 'WEB_COORDINATOR' ? (officer.password || 'coordinator123') :
+        officer.id === 'usr-verifier' || officer.role === 'VERIFICATION_DESK' ? (officer.password || 'verifier123') :
+        officer.id === 'usr-authoriser' || officer.role === 'AUTHORISATION_DESK' ? (officer.password || 'authoriser123') :
         (officer.password || 'pass123');
 
       if (providedPassword.length > 0) {
@@ -653,19 +714,19 @@ class StoreService {
         ...profileData,
         userId: existing.userId || validUserId,
         id: toValidUuid(existing.id),
-        status: existing.status === 'APPROVED' ? 'APPROVED' : 'PENDING_VERIFICATION',
-        assignedDesignation: existing.assignedDesignation || 'Member',
+        status: existing.status || 'PENDING_VERIFICATION',
+        approvalDate: existing.approvalDate,
+        assignedDesignation: existing.assignedDesignation || 'Applicant',
+        membershipIdNumber: existing.membershipIdNumber,
       };
       this.profiles[existingIndex] = newProfile;
     } else {
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
       newProfile = {
         ...profileData,
         userId: validUserId,
         id: generateUuid(),
         status: 'PENDING_VERIFICATION',
-        assignedDesignation: 'Member',
-        membershipIdNumber: `NYPS-2026-${randomNum}`,
+        assignedDesignation: 'Applicant',
         submittedAt: new Date().toISOString(),
       };
       this.profiles.unshift(newProfile);
@@ -678,7 +739,7 @@ class StoreService {
       fullName: newProfile.fullName,
       email: newProfile.email,
       mobileNumber: newProfile.mobileNumber,
-      role: 'MEMBER',
+      role: newProfile.status === 'APPROVED' ? 'MEMBER' : 'APPLICANT',
       password: password || 'pass123',
       createdAt: newProfile.submittedAt,
     };
@@ -690,6 +751,23 @@ class StoreService {
     }
 
     return newProfile;
+  }
+
+  public async updateMemberDesignation(profileId: string, newDesignation: string): Promise<MemberProfile | null> {
+    const profile = this.profiles.find((p) => p.id === profileId);
+    if (!profile) return null;
+
+    profile.assignedDesignation = newDesignation;
+    profile.status = 'APPROVED';
+    if (!profile.approvalDate) {
+      profile.approvalDate = new Date().toISOString().split('T')[0];
+    }
+    this.saveProfiles();
+
+    if (isSupabaseConfigured()) {
+      await this.pushProfileToSupabase(profile);
+    }
+    return profile;
   }
 
   public async updateProfileStatus(
@@ -729,11 +807,36 @@ class StoreService {
     return profile;
   }
 
+  public async updateMemberProfile(
+    profileId: string,
+    updatedFields: Partial<MemberProfile>
+  ): Promise<MemberProfile | null> {
+    const profile = this.profiles.find((p) => p.id === profileId);
+    if (!profile) return null;
+
+    Object.assign(profile, updatedFields);
+    this.saveProfiles();
+
+    if (this.currentUser && (this.currentUser.id === profile.userId || isSameCnic(this.currentUser.cnicNumber, profile.cnicNumber))) {
+      if (updatedFields.fullName) this.currentUser.fullName = updatedFields.fullName;
+      if (updatedFields.mobileNumber) this.currentUser.mobileNumber = updatedFields.mobileNumber;
+      if (updatedFields.email) this.currentUser.email = updatedFields.email;
+      this.saveCurrentUser();
+    }
+
+    if (isSupabaseConfigured()) {
+      await this.pushProfileToSupabase(profile);
+    }
+
+    return profile;
+  }
+
   public async submitMembershipPayment(
     profileId: string, 
     paymentMethod: string, 
     transactionId: string, 
-    feeAmount: number = 1000
+    feeAmount: number = 1000,
+    paymentProofUrl?: string
   ): Promise<MemberProfile | null> {
     const profile = this.profiles.find((p) => p.id === profileId);
     if (!profile) return null;
@@ -743,6 +846,7 @@ class StoreService {
       paymentMethod,
       transactionId,
       feeAmount,
+      paymentProofUrl: paymentProofUrl || profile.paymentDetails?.paymentProofUrl,
       submittedAt: new Date().toISOString(),
     };
 
@@ -830,7 +934,11 @@ class StoreService {
     targetRoleTitle: string;
     reason: string;
     feeAmount: number;
+    paymentMethod?: string;
+    transactionId?: string;
+    paymentProofUrl?: string;
   }): RoleApplicationRequest {
+    const hasPayment = Boolean(data.transactionId || data.paymentProofUrl);
     const newApp: RoleApplicationRequest = {
       id: `role-app-${Date.now()}`,
       userId: data.userId,
@@ -840,7 +948,13 @@ class StoreService {
       targetRoleTitle: data.targetRoleTitle,
       reason: data.reason,
       feeAmount: data.feeAmount,
-      status: 'PENDING_VERIFICATION',
+      status: hasPayment ? 'PAYMENT_SUBMITTED_PENDING_AUTHORISATION' : 'PENDING_VERIFICATION',
+      paymentDetails: hasPayment ? {
+        paymentMethod: data.paymentMethod || 'JazzCash / EasyPaisa',
+        transactionId: data.transactionId || 'N/A',
+        paymentProofUrl: data.paymentProofUrl,
+        submittedAt: new Date().toISOString(),
+      } : undefined,
       submittedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -864,13 +978,19 @@ class StoreService {
     return null;
   }
 
-  public submitRoleApplicationPayment(requestId: string, paymentMethod: string, transactionId: string): RoleApplicationRequest | null {
+  public submitRoleApplicationPayment(
+    requestId: string, 
+    paymentMethod: string, 
+    transactionId: string,
+    paymentProofUrl?: string
+  ): RoleApplicationRequest | null {
     const app = this.roleApplications.find((r) => r.id === requestId);
     if (app) {
       app.status = 'PAYMENT_SUBMITTED_PENDING_AUTHORISATION';
       app.paymentDetails = {
         paymentMethod,
         transactionId,
+        paymentProofUrl: paymentProofUrl || app.paymentDetails?.paymentProofUrl,
         submittedAt: new Date().toISOString(),
       };
       app.updatedAt = new Date().toISOString();
@@ -889,11 +1009,16 @@ class StoreService {
       app.updatedAt = new Date().toISOString();
       this.saveRoleApplications();
 
-      // Update Member Profile Designation
+      // Update Member Profile Designation and Status
       const profile = this.profiles.find((p) => p.id === app.profileId || isSameCnic(p.cnicNumber, app.cnicNumber));
       if (profile) {
         profile.assignedDesignation = app.targetRoleTitle;
+        profile.status = 'APPROVED';
+        if (!profile.approvalDate) {
+          profile.approvalDate = new Date().toISOString().split('T')[0];
+        }
         this.saveProfiles();
+        this.pushProfileToSupabase(profile);
       }
 
       this.syncRoleAppToSupabase(app);
@@ -927,13 +1052,111 @@ class StoreService {
     return list.sort((a, b) => a.displayOrder - b.displayOrder);
   }
 
+  public async pushCabinetMemberToSupabase(member: CabinetMember) {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const validId = toValidUuid(member.id);
+      member.id = validId;
+      const payload: any = {
+        id: validId,
+        full_name: member.fullName,
+        designation: member.designation,
+        cabinet_level: member.cabinetLevel === 'DIVISIONAL' ? 'DIVISIONAL' : 'PROVINCIAL',
+        division_id: member.divisionId || null,
+        photo_url: member.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+        bio: member.bio || null,
+        display_order: Number(member.displayOrder) || 1,
+        is_active: member.isActive ?? true,
+      };
+      const { error } = await supabase.from('cabinet_members').upsert(payload);
+      if (error) {
+        console.warn('Supabase pushCabinetMemberToSupabase notice:', error.message);
+      }
+    } catch (e) {
+      console.warn('Supabase pushCabinetMemberToSupabase error:', e);
+    }
+  }
+
+  public async deleteCabinetMemberFromSupabase(id: string) {
+    if (!isSupabaseConfigured()) return;
+    try {
+      if (isUuid(id)) {
+        await supabase.from('cabinet_members').delete().eq('id', id);
+      }
+    } catch (e) {
+      console.warn('Supabase deleteCabinetMember notice:', e);
+    }
+  }
+
   public addCabinetMember(data: Omit<CabinetMember, 'id'>): CabinetMember {
+    const newMemberId = generateUuid();
     const newMember: CabinetMember = {
       ...data,
-      id: `cab-${Date.now()}`,
+      id: newMemberId,
     };
     this.cabinetMembers.unshift(newMember);
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+
+    // Instantly sync to Supabase database
+    this.pushCabinetMemberToSupabase(newMember);
+
+    // If linked to a profile or matching member name, update their card designation!
+    let targetProfile = data.memberProfileId 
+      ? this.profiles.find((p) => p.id === data.memberProfileId) 
+      : this.profiles.find((p) => p.fullName.trim().toLowerCase() === data.fullName.trim().toLowerCase());
+
+    if (targetProfile) {
+      targetProfile.assignedDesignation = data.designation;
+      targetProfile.status = 'APPROVED';
+      if (data.photoUrl && (!targetProfile.passportPhotoUrl || targetProfile.passportPhotoUrl.includes('unsplash'))) {
+        targetProfile.passportPhotoUrl = data.photoUrl;
+      }
+      this.saveProfiles();
+      this.pushProfileToSupabase(targetProfile);
+    } else {
+      // Auto-create member profile for new parliamentarian/cabinet member so their card is immediately available!
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      const autoProfile: MemberProfile = {
+        id: generateUuid(),
+        userId: generateUuid(),
+        fullName: data.fullName,
+        fatherGuardianName: 'N/A',
+        dob: '2000-01-01',
+        gender: 'Male',
+        cnicNumber: `42101-${randomNum}001-1`,
+        bloodGroup: 'B+',
+        mobileNumber: '03000000000',
+        email: `${data.fullName.toLowerCase().replace(/[^a-z0-9]/g, '')}@nyp.org.pk`,
+        passportPhotoUrl: data.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+        residentialAddress: 'Sindh, Pakistan',
+        cityTown: 'Karachi',
+        province: 'Sindh',
+        divisionId: data.divisionId || 'div-karachi',
+        districtId: 'dist-khi-south',
+        talukaId: 'tal-saddar',
+        qualification: 'Graduate',
+        institutionName: 'University of Sindh / Karachi',
+        profession: 'Youth Activist / Parliamentarian',
+        levelApplied: data.cabinetLevel === 'PROVINCIAL' ? 'Provincial Level' : 'Divisional Level',
+        preferredDepartment: data.designation,
+        assignedDesignation: data.designation,
+        statementOfPurpose: data.bio || `Official ${data.designation}`,
+        skills: ['Leadership', 'Governance', 'Parliamentary Affairs'],
+        areasOfInterest: ['Parliamentary Affairs', 'Youth Affairs', 'Leadership'],
+        declarationAccepted: true,
+        status: 'APPROVED',
+        approvalDate: new Date().toISOString().split('T')[0],
+        membershipIdNumber: `NYPS-2026-${randomNum}`,
+        submittedAt: new Date().toISOString(),
+      };
+      this.profiles.unshift(autoProfile);
+      newMember.memberProfileId = autoProfile.id;
+      this.saveProfiles();
+      this.pushProfileToSupabase(autoProfile);
+      // Update cabinet member with linked memberProfileId in Supabase
+      this.pushCabinetMemberToSupabase(newMember);
+    }
+
     return newMember;
   }
 
@@ -942,14 +1165,73 @@ class StoreService {
     if (member) {
       Object.assign(member, data);
       localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+      this.pushCabinetMemberToSupabase(member);
+
+      // Update linked profile designation
+      const targetProfile = member.memberProfileId
+        ? this.profiles.find((p) => p.id === member.memberProfileId)
+        : this.profiles.find((p) => p.fullName.trim().toLowerCase() === member.fullName.trim().toLowerCase());
+
+      if (targetProfile && data.designation) {
+        targetProfile.assignedDesignation = data.designation;
+        targetProfile.status = 'APPROVED';
+        if (data.photoUrl) targetProfile.passportPhotoUrl = data.photoUrl;
+        this.saveProfiles();
+        this.pushProfileToSupabase(targetProfile);
+      }
+
       return member;
     }
     return null;
   }
 
+  public setCabinetMemberDisplayOrder(id: string, newOrder: number) {
+    const member = this.cabinetMembers.find((m) => m.id === id);
+    if (member) {
+      member.displayOrder = newOrder;
+      localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+      this.pushCabinetMemberToSupabase(member);
+    }
+  }
+
+  public moveCabinetMemberOrder(id: string, direction: 'UP' | 'DOWN', currentFilteredList?: CabinetMember[]) {
+    const list = currentFilteredList || this.cabinetMembers.sort((a, b) => a.displayOrder - b.displayOrder);
+    const index = list.findIndex((m) => m.id === id);
+    if (index === -1) return;
+
+    if (direction === 'UP' && index > 0) {
+      const target = list[index];
+      const prev = list[index - 1];
+      const tempOrder = target.displayOrder || index + 1;
+      target.displayOrder = prev.displayOrder || index;
+      prev.displayOrder = tempOrder;
+      if (target.displayOrder === prev.displayOrder) {
+        target.displayOrder = index;
+        prev.displayOrder = index + 1;
+      }
+      this.pushCabinetMemberToSupabase(target);
+      this.pushCabinetMemberToSupabase(prev);
+    } else if (direction === 'DOWN' && index < list.length - 1) {
+      const target = list[index];
+      const next = list[index + 1];
+      const tempOrder = target.displayOrder || index + 1;
+      target.displayOrder = next.displayOrder || index + 2;
+      next.displayOrder = tempOrder;
+      if (target.displayOrder === next.displayOrder) {
+        target.displayOrder = index + 2;
+        next.displayOrder = index + 1;
+      }
+      this.pushCabinetMemberToSupabase(target);
+      this.pushCabinetMemberToSupabase(next);
+    }
+
+    localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+  }
+
   public deleteCabinetMember(id: string) {
     this.cabinetMembers = this.cabinetMembers.filter((m) => m.id !== id);
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+    this.deleteCabinetMemberFromSupabase(id);
   }
 
   public getAnnouncements(): Announcement[] {

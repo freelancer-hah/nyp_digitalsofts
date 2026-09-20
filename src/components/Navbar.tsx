@@ -31,35 +31,44 @@ export const Navbar: React.FC = () => {
   const displayName = profile?.fullName || currentUser?.fullName || 'Member';
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-[#0b1320] text-slate-900 dark:text-white border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs transition-colors duration-300 font-sans navbar-header">
+    <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#0b1320]/95 backdrop-blur-md text-slate-900 dark:text-white border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs transition-colors duration-300 font-sans navbar-header">
       
       {/* Main Top Header Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-20 sm:h-24">
           
           {/* Left Side: Brand Logo & Desktop Navigation Links grouped together */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3.5 group shrink-0 py-1">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-all duration-300">
-                <img src="/nyp-logo.jpg" alt="NYP Sindh Emblem" className="w-full h-full object-contain" />
-              </div>
-              <div className="text-center flex flex-col justify-center">
-                <div className="text-xs sm:text-base font-extrabold tracking-tight text-[#052818] dark:text-emerald-400 leading-tight font-heading group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors uppercase">
+              <img 
+                src="/nyp-logo.png" 
+                alt="National Youth Parliament Sindh Logo" 
+                className="h-14 sm:h-16 lg:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+              />
+              <div className="flex flex-col justify-center select-none">
+                <div className="text-sm sm:text-base lg:text-lg font-black tracking-tight text-[#052818] dark:text-emerald-400 leading-tight font-heading group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors uppercase">
                   NATIONAL YOUTH PARLIAMENT
                 </div>
-                <div className="text-[10px] sm:text-xs font-black text-[#c59b27] dark:text-amber-400 tracking-[0.35em] uppercase font-heading text-center w-full">
+                <div className="text-[10px] sm:text-xs font-black text-[#c59b27] dark:text-amber-400 tracking-[0.32em] sm:tracking-[0.38em] uppercase font-heading text-center w-full mt-0.5">
                   — S I N D H —
                 </div>
               </div>
             </Link>
 
-            {/* Desktop Navigation Links - Shifted right */}
-            <nav className="hidden lg:flex items-center space-x-6 lg:space-x-7 text-sm font-bold text-slate-700 dark:text-slate-200 font-heading ml-12 lg:ml-16 xl:ml-24">
+            {/* Desktop Navigation Links */}
+            <nav className="hidden lg:flex items-center space-x-6 lg:space-x-7 text-sm font-bold text-slate-700 dark:text-slate-200 font-heading ml-8 lg:ml-12 xl:ml-16">
               <Link 
                 to="/" 
                 className={`hover:text-[#059669] dark:hover:text-emerald-400 transition-colors py-1 ${isActive('/') ? 'text-[#059669] dark:text-emerald-400 border-b-2 border-[#059669] dark:border-emerald-400' : ''}`}
               >
                 Home
+              </Link>
+
+              <Link 
+                to="/about" 
+                className={`hover:text-[#059669] dark:hover:text-emerald-400 transition-colors py-1 ${isActive('/about') ? 'text-[#059669] dark:text-emerald-400 border-b-2 border-[#059669] dark:border-emerald-400' : ''}`}
+              >
+                About
               </Link>
 
               <Link 
@@ -113,10 +122,12 @@ export const Navbar: React.FC = () => {
                   to={
                     currentUser.role === 'APPLICANT' || currentUser.role === 'MEMBER'
                       ? "/member/dashboard"
-                      : currentUser.role === 'VERIFYING_OFFICER'
+                      : currentUser.role === 'VERIFYING_OFFICER' || currentUser.role === 'VERIFICATION_DESK'
                       ? "/admin/verification"
-                      : currentUser.role === 'APPROVAL_AUTHORITY'
+                      : currentUser.role === 'APPROVAL_AUTHORITY' || currentUser.role === 'AUTHORISATION_DESK'
                       ? "/admin/approval"
+                      : currentUser.role === 'WEB_COORDINATOR'
+                      ? "/admin/cms"
                       : "/admin/master"
                   }
                   className="flex items-center space-x-2 bg-[#052818] text-amber-300 border border-amber-400/40 hover:bg-[#073822] px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs"
@@ -203,6 +214,13 @@ export const Navbar: React.FC = () => {
             className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-[#059669] dark:hover:text-emerald-400"
           >
             Home
+          </Link>
+          <Link
+            to="/about"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-slate-800 dark:text-slate-200 py-2 text-sm font-semibold hover:text-[#059669] dark:hover:text-emerald-400"
+          >
+            About
           </Link>
           <Link
             to="/cabinets"

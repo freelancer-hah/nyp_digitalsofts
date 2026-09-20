@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Users, ArrowRight, ShieldCheck, MapPin, Megaphone, 
+import {
+  Users, ArrowRight, ShieldCheck, MapPin, Megaphone,
   ChevronRight, Building2, MessageSquare, TrendingUp,
   Lightbulb, GraduationCap, Heart, Leaf, Scale, MessageCircle,
   Eye, Handshake, Calendar, FileText, Landmark, Award, Crown,
@@ -59,22 +59,22 @@ export const HomePage: React.FC = () => {
 
   const displayNews = announcementsList.length > 0
     ? announcementsList.slice(0, 6).map((ann) => ({
-        id: ann.id,
-        date: ann.publishedAt,
-        title: ann.title,
-        desc: ann.content,
-        image: ann.bannerUrl || 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&q=80&w=600'
-      }))
+      id: ann.id,
+      date: ann.publishedAt,
+      title: ann.title,
+      desc: ann.content,
+      image: ann.bannerUrl || 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&q=80&w=600'
+    }))
     : latestNews;
 
   return (
     <div className="overflow-x-hidden bg-[#faf8f5] text-slate-900 font-sans transition-colors duration-300">
-      
+
       {/* ================= 1. HERO SECTION (Exact Reference Design) ================= */}
       <section className="relative pt-12 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[85vh] flex items-center bg-[#041a10] text-white">
-        
+
         {/* Hero Background Image (Sindh Assembly Hall background) */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-95 pointer-events-none filter brightness-105 contrast-105 saturate-110"
           style={{
             backgroundImage: `url('/sindh-assembly-hero.jpg')`
@@ -87,8 +87,28 @@ export const HomePage: React.FC = () => {
 
         {/* Top-Right Sindh Map Badge ("SINDH - OUR IDENTITY OUR PRIDE") */}
         <div className="absolute top-8 right-6 lg:right-12 z-20 hidden sm:flex items-center space-x-3 bg-[#03140e]/90 border border-amber-400/50 px-4 py-2 rounded-2xl backdrop-blur-md shadow-2xl">
-          <div className="w-9 h-9 rounded-xl bg-amber-400/20 border border-amber-400/60 flex items-center justify-center text-amber-300 font-bold text-xs shadow-inner">
-            <Building2 className="w-5 h-5 text-amber-400" />
+          <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/60 flex items-center justify-center p-1.5 shadow-inner">
+            <svg viewBox="0 0 100 120" className="w-full h-full text-amber-400 drop-shadow-[0_1px_3px_rgba(245,158,11,0.5)]" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              {/* Sindh Province Outline */}
+              <path
+                d="M 52 6 
+                   L 59 11 L 67 15 L 73 22 L 72 30 L 76 38 L 81 48 L 85 58 L 87 69 L 84 78 L 82 86 L 78 93 L 74 91 L 68 89 L 60 87 L 52 87 L 43 89 L 34 87 L 26 84 L 18 80 L 14 74 L 17 67 L 20 59 L 23 51 L 27 41 L 31 31 L 36 21 L 43 13 Z"
+                fill="currentColor"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              {/* Indus River stylized spine line */}
+              <path
+                d="M 58 12 Q 54 28 51 44 Q 48 60 45 72 Q 40 82 32 86"
+                fill="none"
+                stroke="#041a10"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              {/* Karachi Port Marker */}
+              <circle cx="21" cy="78" r="2.5" fill="#041a10" />
+            </svg>
           </div>
           <div className="text-right leading-tight">
             <span className="block font-black text-white text-xs tracking-wider font-heading">S I N D H</span>
@@ -107,7 +127,7 @@ export const HomePage: React.FC = () => {
         {/* Hero Main Content */}
         <div className="max-w-7xl mx-auto w-full relative z-10 pt-4">
           <div className="max-w-3xl space-y-6 text-left">
-            
+
             {/* Top Subtitle Tag */}
             <div className="inline-flex items-center space-x-2 text-amber-300 text-xs sm:text-sm font-black uppercase tracking-[0.25em]">
               <span className="w-8 h-0.5 bg-amber-400"></span>
@@ -116,7 +136,7 @@ export const HomePage: React.FC = () => {
 
             {/* Main Headline in Elegant Playfair/Cinzel Serif Font */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.08] font-serif-heading text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
-              YOUNG VOICES <br />
+              VOICE OF YOUTH <br />
               <span className="text-gold-metallic drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
                 A STRONGER SINDH
               </span>
@@ -129,15 +149,15 @@ export const HomePage: React.FC = () => {
 
             {/* Hero CTA Buttons */}
             <div className="flex flex-wrap items-center gap-4 pt-3">
-              <Link 
-                to={hasApplied ? "/member/dashboard" : "/signup"} 
+              <Link
+                to={hasApplied ? "/member/dashboard" : "/signup"}
                 className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-[#c59b27] hover:from-amber-600 hover:to-amber-700 text-slate-950 text-sm font-extrabold px-8 py-3.5 rounded-full shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
               >
                 <span>{hasApplied ? "Go to Dashboard" : "Join Us"}</span>
                 <ArrowRight className="w-4 h-4 text-slate-950" />
               </Link>
-              
-              <a 
+
+              <a
                 href="#about"
                 className="inline-flex items-center space-x-2 border border-emerald-600/80 bg-[#052818]/60 hover:bg-[#052818] text-white text-sm font-bold px-7 py-3.5 rounded-lg backdrop-blur-md shadow-md transition-all duration-200"
               >
@@ -189,7 +209,7 @@ export const HomePage: React.FC = () => {
       <section className="bg-[#f5f2eb] border-b border-[#eae5d8] py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-[#e2dcd0]">
-            
+
             {/* Pillar 1 */}
             <div className="flex items-start space-x-4 pt-4 sm:pt-0 sm:px-4">
               <div className="w-12 h-12 rounded-xl bg-white border border-[#e2dcd0] flex items-center justify-center text-[#052818] shrink-0 shadow-xs">
@@ -257,18 +277,18 @@ export const HomePage: React.FC = () => {
       {/* ================= 3. WHO WE ARE SECTION (Exact Reference Layout) ================= */}
       <section id="about" className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b border-[#eae5d8]">
         <div className="max-w-7xl mx-auto">
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            
+
             {/* Left Image with Quote Overlay Box */}
             <div className="lg:col-span-5 relative">
               <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100 relative group">
-                <img 
-                  src="/nyp-youth-summit.jpg" 
-                  alt="Official Sindh Youth Convention Delegates" 
+                <img
+                  src="/nyp-youth-summit.jpg"
+                  alt="Official Sindh Youth Convention Delegates"
                   className="w-full h-[420px] object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
-                
+
                 {/* Quote Box Overlaid at Bottom Left of Image */}
                 <div className="absolute bottom-4 left-4 right-4 bg-[#042217]/95 border-l-4 border-amber-400 p-4 rounded-xl shadow-2xl text-left backdrop-blur-md">
                   <span className="text-amber-400 text-2xl font-serif font-black leading-none block mb-1">“</span>
@@ -285,7 +305,7 @@ export const HomePage: React.FC = () => {
               <div className="text-[#c59b27] text-xs font-black uppercase tracking-[0.25em] font-heading">
                 ABOUT NYP SINDH
               </div>
-              
+
               <h2 className="text-3xl sm:text-4xl font-extrabold text-[#052818] font-serif-heading">
                 Who We Are
               </h2>
@@ -299,7 +319,7 @@ export const HomePage: React.FC = () => {
               </p>
 
               <div className="pt-2">
-                <a 
+                <a
                   href="#president-message"
                   onClick={(e) => {
                     e.preventDefault();
@@ -315,7 +335,7 @@ export const HomePage: React.FC = () => {
 
             {/* Right Cards: Mission, Vision, Values */}
             <div className="lg:col-span-3 space-y-4">
-              
+
               {/* Card 1: Mission */}
               <div className="p-4 rounded-xl bg-[#f8f6f0] border border-[#e8e2d5] flex items-start space-x-3 text-left">
                 <div className="w-10 h-10 rounded-full bg-[#eae4d5] flex items-center justify-center shrink-0 text-[#052818]">
@@ -371,7 +391,7 @@ export const HomePage: React.FC = () => {
       {/* ================= PRESIDENT'S MESSAGE SECTION ================= */}
       <section id="president-message" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-950 border-b border-slate-200/80 dark:border-slate-800">
         <div className="max-w-7xl mx-auto text-left space-y-8">
-          
+
           {/* Top Accent Pill */}
           <div className="inline-flex items-center space-x-2 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-700/60 px-4 py-1.5 rounded-full text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-xs">
             <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -379,7 +399,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            
+
             {/* President Message Content (Left Side) */}
             <div className="lg:col-span-8 space-y-4 order-2 lg:order-1">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#052818] dark:text-white font-serif-heading">
@@ -448,7 +468,7 @@ export const HomePage: React.FC = () => {
       {/* ================= 5. FOCUS AREAS ("Building a Better Tomorrow") ================= */}
       <section id="focus-areas" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#052818] border-b border-[#073822] text-white">
         <div className="max-w-7xl mx-auto text-left">
-          
+
           <div className="mb-10">
             <span className="text-amber-400 text-xs font-black uppercase tracking-[0.25em] font-heading block mb-1">
               OUR FOCUS AREAS
@@ -459,10 +479,10 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             {/* Left 7 Focus Area Cards */}
             <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              
+
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-800/40 shadow-md text-center flex flex-col items-center justify-center space-y-3 hover:border-amber-400 hover:scale-105 transition-all">
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-[#052818] dark:text-emerald-400">
                   <GraduationCap className="w-6 h-6 text-[#052818] dark:text-emerald-400" />
@@ -516,13 +536,13 @@ export const HomePage: React.FC = () => {
 
             {/* Right Featured Image Banner Card ("Be the Change Join NYP Sindh") */}
             <div className="lg:col-span-4 relative rounded-xl overflow-hidden shadow-lg border border-[#e8e2d5] min-h-[260px] flex items-end p-6 bg-[#042217]">
-              <img 
-                src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800" 
-                alt="Join NYP Sindh Assembly" 
+              <img
+                src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800"
+                alt="Join NYP Sindh Assembly"
                 className="absolute inset-0 w-full h-full object-cover opacity-50"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#042217] via-[#042217]/60 to-transparent"></div>
-              
+
               <div className="relative z-10 flex items-center justify-between w-full">
                 <div>
                   <h3 className="text-2xl font-extrabold text-white font-serif-heading leading-tight">
@@ -531,8 +551,8 @@ export const HomePage: React.FC = () => {
                   </h3>
                 </div>
 
-                <Link 
-                  to={hasApplied ? "/member/dashboard" : "/signup"} 
+                <Link
+                  to={hasApplied ? "/member/dashboard" : "/signup"}
                   className="w-12 h-12 rounded-full bg-amber-400 hover:bg-amber-500 text-slate-950 flex items-center justify-center shadow-lg transition-transform transform hover:scale-110 shrink-0"
                 >
                   <ArrowRight className="w-6 h-6 text-slate-950" />
@@ -548,7 +568,7 @@ export const HomePage: React.FC = () => {
       {/* ================= SINDH ADMINISTRATIVE DIVISIONS SECTION ================= */}
       <section id="divisions" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#fdfbf7] dark:bg-slate-950 border-b border-[#eae5d8] dark:border-slate-800">
         <div className="max-w-7xl mx-auto text-left space-y-10">
-          
+
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-slate-200/80 dark:border-slate-800">
             <div className="space-y-2">
               <div className="inline-flex items-center space-x-2 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/60 px-3.5 py-1 rounded-full text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-xs">
@@ -595,13 +615,13 @@ export const HomePage: React.FC = () => {
                 >
                   {/* Top Image Banner with Division Pill Badge */}
                   <div className="h-44 sm:h-48 overflow-hidden relative">
-                    <img 
-                      src={divImage} 
-                      alt={div.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    <img
+                      src={divImage}
+                      alt={div.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/20"></div>
-                    
+
                     {/* Top Left Badge: e.g. KHI DIVISION */}
                     <div className="absolute top-3 left-3 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700 px-3 py-1 rounded-lg shadow-md">
                       <span className="text-xs font-black text-[#052818] dark:text-emerald-400 uppercase tracking-wider">
@@ -646,7 +666,7 @@ export const HomePage: React.FC = () => {
       {/* ================= MEDIA & EVENT GALLERY SECTION ================= */}
       <section id="media-gallery" className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white border-b border-slate-800">
         <div className="max-w-7xl mx-auto text-left space-y-10">
-          
+
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4 border-b border-slate-800">
             <div className="space-y-2">
               <div className="inline-flex items-center space-x-2 bg-emerald-950/90 border border-emerald-700/80 px-3.5 py-1 rounded-full text-xs font-bold text-amber-300 shadow-xs">
@@ -667,11 +687,10 @@ export const HomePage: React.FC = () => {
                 <button
                   key={cat}
                   onClick={() => setSelectedMediaCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    selectedMediaCategory === cat 
-                      ? 'bg-amber-400 text-slate-950 shadow-md font-extrabold' 
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedMediaCategory === cat
+                      ? 'bg-amber-400 text-slate-950 shadow-md font-extrabold'
                       : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                  }`}
+                    }`}
                 >
                   {cat === 'ALL' ? 'All Gallery' : cat}
                 </button>
@@ -691,13 +710,13 @@ export const HomePage: React.FC = () => {
                 >
                   {/* Thumbnail Banner */}
                   <div className="h-52 overflow-hidden relative bg-slate-950">
-                    <img 
-                      src={item.mediaUrl} 
-                      alt={item.title} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100" 
+                    <img
+                      src={item.mediaUrl}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
-                    
+
                     {/* Top Format Badge */}
                     <div className="absolute top-3 left-3 bg-slate-950/90 border border-slate-700/80 px-2.5 py-1 rounded-lg shadow-md flex items-center space-x-1.5 backdrop-blur-md">
                       {item.mediaType === 'VIDEO' ? (
@@ -774,7 +793,7 @@ export const HomePage: React.FC = () => {
       {selectedMediaModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl relative text-left text-white my-8">
-            
+
             {/* Modal Close Button */}
             <button
               onClick={() => setSelectedMediaModal(null)}
@@ -785,18 +804,18 @@ export const HomePage: React.FC = () => {
 
             {/* Media Cover / Preview */}
             <div className="h-72 sm:h-96 relative bg-slate-950 overflow-hidden">
-              <img 
-                src={selectedMediaModal.mediaUrl} 
-                alt={selectedMediaModal.title} 
+              <img
+                src={selectedMediaModal.mediaUrl}
+                alt={selectedMediaModal.title}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-black/30"></div>
 
               {selectedMediaModal.mediaType === 'VIDEO' && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <a 
-                    href={selectedMediaModal.mediaUrl} 
-                    target="_blank" 
+                  <a
+                    href={selectedMediaModal.mediaUrl}
+                    target="_blank"
                     rel="noreferrer"
                     className="w-16 h-16 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-2xl hover:scale-110 transition-transform"
                   >
@@ -859,7 +878,7 @@ export const HomePage: React.FC = () => {
 
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b border-[#eae5d8]">
         <div className="max-w-7xl mx-auto text-left space-y-6">
-          
+
           <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <h3 className="text-xl font-extrabold text-[#052818] uppercase tracking-wider font-heading">
               LATEST NEWS &amp; ANNOUNCEMENTS
