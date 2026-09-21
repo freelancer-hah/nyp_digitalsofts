@@ -204,7 +204,11 @@ html:not(.dark) textarea {
 
 /* Dark Mode Overrides */
 html.dark body,
-html.dark .bg-slate-50 {
+html.dark .bg-slate-50,
+html.dark .bg-\[\#faf8f5\],
+html.dark .bg-\[\#f5f2eb\],
+html.dark .bg-\[\#fdfbf7\],
+html.dark .bg-\[\#f8f6f0\] {
   background-color: #0b1320 !important;
   color: #f8fafc !important;
 }
@@ -219,14 +223,15 @@ html.dark .glass-nav {
 
 html.dark .ui-card,
 html.dark .bg-white {
-  background-color: rgba(15, 23, 42, 0.95) !important;
+  background-color: #0f172a !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
   color: #f8fafc !important;
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5) !important;
 }
 
 html.dark .bg-slate-100,
-html.dark .bg-slate-200 {
+html.dark .bg-slate-200,
+html.dark .bg-\[\#eae4d5\] {
   background-color: #1e293b !important;
   color: #f8fafc !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
@@ -243,13 +248,21 @@ html.dark .text-slate-600 {
   color: #94a3b8 !important;
 }
 
-html.dark .text-[#052818] {
+html.dark .text-\[\#052818\],
+html.dark [class*="text-[#052818]"] {
   color: #34d399 !important;
 }
 
 html.dark .border-slate-200,
 html.dark .border-slate-300,
-html.dark .border-slate-100 {
+html.dark .border-slate-100,
+html.dark .border-\[\#eae5d8\],
+html.dark .border-\[\#e2dcd0\],
+html.dark .border-\[\#e8e2d5\] {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark .divide-\[\#e2dcd0\] > :not([hidden]) ~ :not([hidden]) {
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 

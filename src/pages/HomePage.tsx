@@ -68,7 +68,7 @@ export const HomePage: React.FC = () => {
     : latestNews;
 
   return (
-    <div className="overflow-x-hidden bg-[#faf8f5] text-slate-900 font-sans transition-colors duration-300">
+    <div className="overflow-x-hidden bg-[#faf8f5] dark:bg-[#060b13] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
 
       {/* ================= 1. HERO SECTION (Exact Reference Design) ================= */}
       <section className="relative pt-12 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[85vh] flex items-center bg-[#041a10] text-white">
@@ -87,28 +87,12 @@ export const HomePage: React.FC = () => {
 
         {/* Top-Right Sindh Map Badge ("SINDH - OUR IDENTITY OUR PRIDE") */}
         <div className="absolute top-8 right-6 lg:right-12 z-20 hidden sm:flex items-center space-x-3 bg-[#03140e]/90 border border-amber-400/50 px-4 py-2 rounded-2xl backdrop-blur-md shadow-2xl">
-          <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/60 flex items-center justify-center p-1.5 shadow-inner">
-            <svg viewBox="0 0 100 120" className="w-full h-full text-amber-400 drop-shadow-[0_1px_3px_rgba(245,158,11,0.5)]" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              {/* Sindh Province Outline */}
-              <path
-                d="M 52 6 
-                   L 59 11 L 67 15 L 73 22 L 72 30 L 76 38 L 81 48 L 85 58 L 87 69 L 84 78 L 82 86 L 78 93 L 74 91 L 68 89 L 60 87 L 52 87 L 43 89 L 34 87 L 26 84 L 18 80 L 14 74 L 17 67 L 20 59 L 23 51 L 27 41 L 31 31 L 36 21 L 43 13 Z"
-                fill="currentColor"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-              {/* Indus River stylized spine line */}
-              <path
-                d="M 58 12 Q 54 28 51 44 Q 48 60 45 72 Q 40 82 32 86"
-                fill="none"
-                stroke="#041a10"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              {/* Karachi Port Marker */}
-              <circle cx="21" cy="78" r="2.5" fill="#041a10" />
-            </svg>
+          <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-amber-400/80 shadow-md shrink-0 flex items-center justify-center bg-[#03140e]">
+            <img
+              src="/sindh-emblem.jpg"
+              alt="Sindh Map Official Emblem"
+              className="w-full h-full object-cover scale-105"
+            />
           </div>
           <div className="text-right leading-tight">
             <span className="block font-black text-white text-xs tracking-wider font-heading">S I N D H</span>
@@ -205,21 +189,21 @@ export const HomePage: React.FC = () => {
         </div>
       )}
 
-      {/* ================= 2. 4-PILLAR FEATURE BAR (Cream Background) ================= */}
-      <section className="bg-[#f5f2eb] border-b border-[#eae5d8] py-8 px-4 sm:px-6 lg:px-8">
+      {/* ================= 2. 4-PILLAR FEATURE BAR ================= */}
+      <section className="bg-[#f5f2eb] dark:bg-[#060b13] border-b border-[#eae5d8] dark:border-slate-800 py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-[#e2dcd0]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-[#e2dcd0] dark:divide-slate-800">
 
             {/* Pillar 1 */}
             <div className="flex items-start space-x-4 pt-4 sm:pt-0 sm:px-4">
-              <div className="w-12 h-12 rounded-xl bg-white border border-[#e2dcd0] flex items-center justify-center text-[#052818] shrink-0 shadow-xs">
-                <Users className="w-6 h-6 text-[#052818]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#042217] dark:bg-emerald-950 border border-emerald-700/60 dark:border-emerald-600/50 flex items-center justify-center text-amber-400 shrink-0 shadow-md">
+                <Users className="w-6 h-6 text-amber-400" />
               </div>
               <div className="text-left">
-                <h3 className="font-extrabold text-sm text-[#052818] font-heading uppercase tracking-wide">
+                <h3 className="font-extrabold text-sm text-[#052818] dark:text-white font-heading uppercase tracking-wide">
                   ENGAGE YOUTH
                 </h3>
-                <p className="text-xs text-slate-600 leading-snug mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug mt-1">
                   Building a stronger youth network across Sindh
                 </p>
               </div>
@@ -227,14 +211,14 @@ export const HomePage: React.FC = () => {
 
             {/* Pillar 2 */}
             <div className="flex items-start space-x-4 pt-4 sm:pt-0 sm:px-4">
-              <div className="w-12 h-12 rounded-xl bg-white border border-[#e2dcd0] flex items-center justify-center text-[#052818] shrink-0 shadow-xs">
-                <MessageSquare className="w-6 h-6 text-[#052818]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#042217] dark:bg-emerald-950 border border-emerald-700/60 dark:border-emerald-600/50 flex items-center justify-center text-amber-400 shrink-0 shadow-md">
+                <MessageSquare className="w-6 h-6 text-amber-400" />
               </div>
               <div className="text-left">
-                <h3 className="font-extrabold text-sm text-[#052818] font-heading uppercase tracking-wide">
+                <h3 className="font-extrabold text-sm text-[#052818] dark:text-white font-heading uppercase tracking-wide">
                   STRENGTHEN DEMOCRACY
                 </h3>
-                <p className="text-xs text-slate-600 leading-snug mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug mt-1">
                   Promoting dialogue and civic participation
                 </p>
               </div>
@@ -242,14 +226,14 @@ export const HomePage: React.FC = () => {
 
             {/* Pillar 3 */}
             <div className="flex items-start space-x-4 pt-4 sm:pt-0 sm:px-4">
-              <div className="w-12 h-12 rounded-xl bg-white border border-[#e2dcd0] flex items-center justify-center text-[#052818] shrink-0 shadow-xs">
-                <TrendingUp className="w-6 h-6 text-[#052818]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#042217] dark:bg-emerald-950 border border-emerald-700/60 dark:border-emerald-600/50 flex items-center justify-center text-amber-400 shrink-0 shadow-md">
+                <TrendingUp className="w-6 h-6 text-amber-400" />
               </div>
               <div className="text-left">
-                <h3 className="font-extrabold text-sm text-[#052818] font-heading uppercase tracking-wide">
+                <h3 className="font-extrabold text-sm text-[#052818] dark:text-white font-heading uppercase tracking-wide">
                   CREATE SOLUTIONS
                 </h3>
-                <p className="text-xs text-slate-600 leading-snug mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug mt-1">
                   Turning ideas into action
                 </p>
               </div>
@@ -257,14 +241,14 @@ export const HomePage: React.FC = () => {
 
             {/* Pillar 4 */}
             <div className="flex items-start space-x-4 pt-4 sm:pt-0 sm:px-4">
-              <div className="w-12 h-12 rounded-xl bg-white border border-[#e2dcd0] flex items-center justify-center text-[#052818] shrink-0 shadow-xs">
-                <Lightbulb className="w-6 h-6 text-[#052818]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#042217] dark:bg-emerald-950 border border-emerald-700/60 dark:border-emerald-600/50 flex items-center justify-center text-amber-400 shrink-0 shadow-md">
+                <Lightbulb className="w-6 h-6 text-amber-400" />
               </div>
               <div className="text-left">
-                <h3 className="font-extrabold text-sm text-[#052818] font-heading uppercase tracking-wide">
+                <h3 className="font-extrabold text-sm text-[#052818] dark:text-white font-heading uppercase tracking-wide">
                   BUILD A BRIGHTER SINDH
                 </h3>
-                <p className="text-xs text-slate-600 leading-snug mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug mt-1">
                   For a progressive and inclusive tomorrow
                 </p>
               </div>
@@ -275,14 +259,14 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= 3. WHO WE ARE SECTION (Exact Reference Layout) ================= */}
-      <section id="about" className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b border-[#eae5d8]">
+      <section id="about" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0b1320] border-b border-[#eae5d8] dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
 
             {/* Left Image with Quote Overlay Box */}
             <div className="lg:col-span-5 relative">
-              <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100 relative group">
+              <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-slate-100 dark:bg-slate-900 relative group">
                 <img
                   src="/nyp-youth-summit.jpg"
                   alt="Official Sindh Youth Convention Delegates"
@@ -302,19 +286,19 @@ export const HomePage: React.FC = () => {
 
             {/* Center Content: About Description & CTA */}
             <div className="lg:col-span-4 text-left space-y-5">
-              <div className="text-[#c59b27] text-xs font-black uppercase tracking-[0.25em] font-heading">
+              <div className="text-[#c59b27] dark:text-amber-400 text-xs font-black uppercase tracking-[0.25em] font-heading">
                 ABOUT NYP SINDH
               </div>
 
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#052818] font-serif-heading">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#052818] dark:text-white font-serif-heading">
                 Who We Are
               </h2>
 
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 The National Youth Parliament (NYP) Sindh is a youth-led platform committed to empowering young people, promoting democratic values, and creating opportunities for meaningful youth engagement across Sindh.
               </p>
 
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 We believe in a progressive, inclusive and empowered Sindh led by its youth — where every young person has a voice, an opportunity and a role in shaping a better tomorrow.
               </p>
 
@@ -325,7 +309,7 @@ export const HomePage: React.FC = () => {
                     e.preventDefault();
                     document.getElementById('president-message')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="inline-flex items-center space-x-2 bg-[#052818] hover:bg-[#073822] text-white text-xs font-bold px-6 py-3 rounded-lg shadow-md transition-all cursor-pointer"
+                  className="inline-flex items-center space-x-2 bg-[#052818] hover:bg-[#073822] dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold px-6 py-3 rounded-lg shadow-md transition-all cursor-pointer"
                 >
                   <span>Read More</span>
                   <ArrowRight className="w-4 h-4" />
@@ -337,45 +321,45 @@ export const HomePage: React.FC = () => {
             <div className="lg:col-span-3 space-y-4">
 
               {/* Card 1: Mission */}
-              <div className="p-4 rounded-xl bg-[#f8f6f0] border border-[#e8e2d5] flex items-start space-x-3 text-left">
-                <div className="w-10 h-10 rounded-full bg-[#eae4d5] flex items-center justify-center shrink-0 text-[#052818]">
-                  <Handshake className="w-5 h-5 text-[#052818]" />
+              <div className="p-4 rounded-xl bg-[#f8f6f0] dark:bg-[#0f172a] border border-[#e8e2d5] dark:border-slate-800 flex items-start space-x-3 text-left shadow-xs">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/90 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0 text-emerald-800 dark:text-amber-400">
+                  <Handshake className="w-5 h-5 text-emerald-800 dark:text-amber-400" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-xs text-[#052818] uppercase tracking-wide font-heading">
+                  <h4 className="font-extrabold text-xs text-[#052818] dark:text-white uppercase tracking-wide font-heading">
                     Our Mission
                   </h4>
-                  <p className="text-[11px] text-slate-600 mt-1 leading-snug">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-snug">
                     To empower youth through dialogue, leadership and action.
                   </p>
                 </div>
               </div>
 
               {/* Card 2: Vision */}
-              <div className="p-4 rounded-xl bg-[#f8f6f0] border border-[#e8e2d5] flex items-start space-x-3 text-left">
-                <div className="w-10 h-10 rounded-full bg-[#eae4d5] flex items-center justify-center shrink-0 text-[#052818]">
-                  <Eye className="w-5 h-5 text-[#052818]" />
+              <div className="p-4 rounded-xl bg-[#f8f6f0] dark:bg-[#0f172a] border border-[#e8e2d5] dark:border-slate-800 flex items-start space-x-3 text-left shadow-xs">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/90 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0 text-emerald-800 dark:text-amber-400">
+                  <Eye className="w-5 h-5 text-emerald-800 dark:text-amber-400" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-xs text-[#052818] uppercase tracking-wide font-heading">
+                  <h4 className="font-extrabold text-xs text-[#052818] dark:text-white uppercase tracking-wide font-heading">
                     Our Vision
                   </h4>
-                  <p className="text-[11px] text-slate-600 mt-1 leading-snug">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-snug">
                     A progressive, inclusive and empowered Sindh led by its youth.
                   </p>
                 </div>
               </div>
 
               {/* Card 3: Values */}
-              <div className="p-4 rounded-xl bg-[#f8f6f0] border border-[#e8e2d5] flex items-start space-x-3 text-left">
-                <div className="w-10 h-10 rounded-full bg-[#eae4d5] flex items-center justify-center shrink-0 text-[#052818]">
-                  <Users className="w-5 h-5 text-[#052818]" />
+              <div className="p-4 rounded-xl bg-[#f8f6f0] dark:bg-[#0f172a] border border-[#e8e2d5] dark:border-slate-800 flex items-start space-x-3 text-left shadow-xs">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/90 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0 text-emerald-800 dark:text-amber-400">
+                  <Users className="w-5 h-5 text-emerald-800 dark:text-amber-400" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-xs text-[#052818] uppercase tracking-wide font-heading">
+                  <h4 className="font-extrabold text-xs text-[#052818] dark:text-white uppercase tracking-wide font-heading">
                     Our Values
                   </h4>
-                  <p className="text-[11px] text-slate-600 mt-1 leading-snug">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-snug">
                     Integrity, Inclusion, Service and Youth Leadership.
                   </p>
                 </div>
@@ -876,14 +860,14 @@ export const HomePage: React.FC = () => {
 
       {/* ================= 6. LATEST NEWS ================= */}
 
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b border-[#eae5d8]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0b1320] border-b border-[#eae5d8] dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto text-left space-y-6">
 
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <h3 className="text-xl font-extrabold text-[#052818] uppercase tracking-wider font-heading">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h3 className="text-xl font-extrabold text-[#052818] dark:text-white uppercase tracking-wider font-heading">
               LATEST NEWS &amp; ANNOUNCEMENTS
             </h3>
-            <Link to="/announcements" className="text-xs font-bold text-[#059669] hover:text-[#042217] flex items-center space-x-1">
+            <Link to="/announcements" className="text-xs font-bold text-[#059669] dark:text-emerald-400 hover:text-[#042217] dark:hover:text-emerald-300 flex items-center space-x-1">
               <span>View All</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </Link>
@@ -891,23 +875,23 @@ export const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayNews.map((news) => (
-              <article key={news.id} className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-xs hover:shadow-md transition-all hover:-translate-y-1 flex flex-col">
-                <div className="h-44 overflow-hidden relative bg-slate-100">
+              <article key={news.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition-all hover:-translate-y-1 flex flex-col">
+                <div className="h-44 overflow-hidden relative bg-slate-100 dark:bg-slate-800">
                   <img src={news.image} alt={news.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
                   <div>
-                    <span className="text-[11px] font-bold text-emerald-700 block mb-1">
+                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 block mb-1">
                       {news.date}
                     </span>
-                    <h4 className="font-bold text-sm text-[#052818] line-clamp-2 leading-snug">
+                    <h4 className="font-bold text-sm text-[#052818] dark:text-white line-clamp-2 leading-snug">
                       {news.title}
                     </h4>
-                    <p className="text-xs text-slate-500 line-clamp-2 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1.5 leading-relaxed">
                       {news.desc}
                     </p>
                   </div>
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700">
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-400">
                     <Link to="/announcements" className="hover:underline flex items-center space-x-1">
                       <span>Read Full Release</span>
                       <ChevronRight className="w-3.5 h-3.5" />

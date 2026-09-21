@@ -88,7 +88,7 @@ export function App() {
   if (appMode === 'public') {
     return (
       <Router>
-        <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-600 selection:text-white">
+        <div className="min-h-screen bg-slate-50 dark:bg-[#060b13] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-emerald-600 selection:text-white transition-colors duration-300">
           <Navbar />
           <main className="flex-1">
             <Routes>
@@ -171,7 +171,7 @@ export function App() {
         <Route
           path="/*"
           element={
-            <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-600 selection:text-white">
+            <div className="min-h-screen bg-slate-50 dark:bg-[#060b13] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-emerald-600 selection:text-white transition-colors duration-300">
               <Navbar />
               <main className="flex-1">
                 <Routes>

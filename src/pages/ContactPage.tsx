@@ -65,11 +65,11 @@ export const ContactPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 text-left space-y-10 bg-slate-50">
+    <div className="max-w-6xl mx-auto px-4 py-12 text-left space-y-10 bg-slate-50 dark:bg-[#060b13] text-slate-900 dark:text-slate-100 transition-colors">
       
-      <div className="ui-card p-8 space-y-3 shadow-sm border-slate-200">
-        <h1 className="text-3xl font-extrabold text-slate-900">Contact NYP Sindh Secretariat</h1>
-        <p className="text-slate-600 text-xs sm:text-sm">
+      <div className="ui-card p-8 space-y-3 shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1320] rounded-3xl">
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">Contact NYP Sindh Secretariat</h1>
+        <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
           Get in touch with central management, office bearers, or submit public inquiries and feedback.
         </p>
       </div>
@@ -78,67 +78,67 @@ export const ContactPage: React.FC = () => {
         
         {/* Left Official Details */}
         <div className="md:col-span-5 space-y-6">
-          <div className="ui-card p-6 space-y-6 shadow-sm border-slate-200">
-            <h3 className="font-bold text-slate-900 text-base border-b border-slate-100 pb-3">Official Helpline Contacts</h3>
+          <div className="ui-card p-6 space-y-6 shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1320] rounded-3xl">
+            <h3 className="font-bold text-slate-900 dark:text-white text-base border-b border-slate-100 dark:border-slate-800 pb-3">Official Helpline Contacts</h3>
 
             <div className="space-y-4 text-xs">
               {/* 1. Shakir Chandio */}
-              <div className="flex items-start space-x-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 transition-colors">
-                <Phone className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+              <div className="flex items-start space-x-3 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 transition-colors">
+                <Phone className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-slate-900 text-sm">SHAKIR CHANDIO</h4>
-                  <span className="text-emerald-800 font-semibold block text-[11px]">Information Secretary, NYP Sindh</span>
-                  <a href="tel:03319226110" className="text-slate-700 font-mono text-xs block mt-1 hover:text-emerald-700 transition-colors font-medium">
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">SHAKIR CHANDIO</h4>
+                  <span className="text-emerald-800 dark:text-emerald-400 font-semibold block text-[11px]">Information Secretary, NYP Sindh</span>
+                  <a href="tel:03319226110" className="text-slate-700 dark:text-slate-300 font-mono text-xs block mt-1 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors font-medium">
                     0331 9226110
                   </a>
                 </div>
               </div>
 
               {/* 2. Qaisar Panhwar */}
-              <div className="flex items-start space-x-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 transition-colors">
-                <Phone className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+              <div className="flex items-start space-x-3 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 transition-colors">
+                <Phone className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-slate-900 text-sm">QAISAR PANHWAR</h4>
-                  <span className="text-emerald-800 font-semibold block text-[11px]">Web Coordinator, NYP Sindh</span>
-                  <a href="tel:03043664842" className="text-slate-700 font-mono text-xs block mt-1 hover:text-emerald-700 transition-colors font-medium">
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">QAISAR PANHWAR</h4>
+                  <span className="text-emerald-800 dark:text-emerald-400 font-semibold block text-[11px]">Web Coordinator, NYP Sindh</span>
+                  <a href="tel:03043664842" className="text-slate-700 dark:text-slate-300 font-mono text-xs block mt-1 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors font-medium">
                     0304 3664842
                   </a>
                 </div>
               </div>
 
               {/* 3. Abdul Rehman Halepoto */}
-              <div className="flex items-start space-x-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 transition-colors">
-                <Phone className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+              <div className="flex items-start space-x-3 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 transition-colors">
+                <Phone className="w-5 h-5 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-slate-900 text-sm">ABDUL REHMAN HALEPOTO</h4>
-                  <span className="text-emerald-800 font-semibold block text-[11px]">President, NYP Sindh</span>
-                  <a href="tel:03337612564" className="text-slate-700 font-mono text-xs block mt-1 hover:text-emerald-700 transition-colors font-medium">
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">ABDUL REHMAN HALEPOTO</h4>
+                  <span className="text-emerald-800 dark:text-emerald-400 font-semibold block text-[11px]">President, NYP Sindh</span>
+                  <a href="tel:03337612564" className="text-slate-700 dark:text-slate-300 font-mono text-xs block mt-1 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors font-medium">
                     0333 7612564
                   </a>
-                  <a href="mailto:abdulrehman_64@live.com" className="text-slate-700 text-xs flex items-center space-x-1 mt-1 hover:text-emerald-700 transition-colors break-all">
-                    <Mail className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <a href="mailto:abdulrehman_64@live.com" className="text-slate-700 dark:text-slate-300 text-xs flex items-center space-x-1 mt-1 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors break-all">
+                    <Mail className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0" />
                     <span>abdulrehman_64@live.com</span>
                   </a>
                 </div>
               </div>
 
               {/* General Inquiries Email */}
-              <div className="flex items-start space-x-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 transition-colors">
-                <Mail className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+              <div className="flex items-start space-x-3 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 transition-colors">
+                <Mail className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <span className="text-slate-500 text-[10px] block font-medium uppercase tracking-wider">For Info &amp; Queries Email</span>
-                  <a href="mailto:nypsindh@gmail.com" className="text-slate-900 font-bold hover:text-emerald-700 transition-colors block text-xs sm:text-sm">
+                  <span className="text-slate-500 dark:text-slate-400 text-[10px] block font-medium uppercase tracking-wider">For Info &amp; Queries Email</span>
+                  <a href="mailto:nypsindh@gmail.com" className="text-slate-900 dark:text-white font-bold hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors block text-xs sm:text-sm">
                     nypsindh@gmail.com
                   </a>
                 </div>
               </div>
 
               {/* Provincial Secretariat */}
-              <div className="flex items-start space-x-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <MapPin className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+              <div className="flex items-start space-x-3 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <MapPin className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-slate-500 text-[10px] block font-medium uppercase tracking-wider">Provincial Secretariat</span>
-                  <span className="text-slate-800 font-medium">Karachi / Hyderabad, Sindh, Pakistan</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[10px] block font-medium uppercase tracking-wider">Provincial Secretariat</span>
+                  <span className="text-slate-800 dark:text-slate-200 font-medium">Karachi / Hyderabad, Sindh, Pakistan</span>
                 </div>
               </div>
             </div>
@@ -147,10 +147,10 @@ export const ContactPage: React.FC = () => {
 
         {/* Right Inquiry Form */}
         <div className="md:col-span-7">
-          <div className="ui-card p-8 space-y-6 shadow-sm border-slate-200">
-            <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 text-base">Submit Public Inquiry</h3>
-              <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+          <div className="ui-card p-8 space-y-6 shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1320] rounded-3xl">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center justify-between">
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">Submit Public Inquiry</h3>
+              <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                 Direct to Secretariat Gmail
               </span>
             </div>
@@ -184,7 +184,7 @@ export const ContactPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-700 font-semibold mb-1">
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                       Your Full Name <span className="text-red-500 font-bold ml-0.5">*</span>
                     </label>
                     <input
@@ -193,12 +193,12 @@ export const ContactPage: React.FC = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Muhammad Ali"
-                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 focus:border-emerald-600 outline-none transition-colors"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:border-emerald-600 outline-none transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-700 font-semibold mb-1">
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                       Your Email Address <span className="text-red-500 font-bold ml-0.5">*</span>
                     </label>
                     <input
@@ -207,14 +207,14 @@ export const ContactPage: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="name@example.com"
-                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 focus:border-emerald-600 outline-none transition-colors"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:border-emerald-600 outline-none transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-700 font-semibold mb-1">
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                       Phone Number <span className="text-slate-400 font-normal">(Optional)</span>
                     </label>
                     <input
@@ -222,18 +222,18 @@ export const ContactPage: React.FC = () => {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="0300 1234567"
-                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 focus:border-emerald-600 outline-none transition-colors"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:border-emerald-600 outline-none transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-700 font-semibold mb-1">
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                       Subject / Purpose <span className="text-red-500 font-bold ml-0.5">*</span>
                     </label>
                     <select
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 focus:border-emerald-600 outline-none transition-colors"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:border-emerald-600 outline-none transition-colors"
                     >
                       <option value="General Inquiry">General Inquiry</option>
                       <option value="Membership & ID Card Query">Membership &amp; ID Card Query</option>
@@ -246,7 +246,7 @@ export const ContactPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-700 font-semibold mb-1">
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                     Your Message <span className="text-red-500 font-bold ml-0.5">*</span>
                   </label>
                   <textarea
@@ -255,7 +255,7 @@ export const ContactPage: React.FC = () => {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Write your inquiry or feedback in detail..."
-                    className="w-full bg-white border border-slate-300 rounded-xl p-4 text-slate-900 focus:border-emerald-600 outline-none transition-colors"
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-4 text-slate-900 dark:text-white focus:border-emerald-600 outline-none transition-colors"
                   />
                 </div>
 
