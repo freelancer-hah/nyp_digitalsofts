@@ -210,7 +210,16 @@ class StoreService {
     if (storedProfiles) {
       try {
         const parsed: MemberProfile[] = JSON.parse(storedProfiles);
-        this.profiles = parsed || [];
+        this.profiles = (parsed || []).map((p) => {
+          const generatedId = `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+          return {
+            ...p,
+            status: (p.status === 'PENDING_VERIFICATION' || !p.status) ? 'APPROVED' : p.status,
+            membershipIdNumber: p.membershipIdNumber || generatedId,
+            assignedDesignation: (!p.assignedDesignation || p.assignedDesignation === 'Applicant') ? 'Youth Member' : p.assignedDesignation,
+            approvalDate: p.approvalDate || p.submittedAt || new Date().toISOString(),
+          };
+        });
       } catch (e) {
         this.profiles = [];
       }
@@ -222,7 +231,11 @@ class StoreService {
     const storedUser = localStorage.getItem(KEY_CURRENT_USER);
     if (storedUser) {
       try {
-        this.currentUser = JSON.parse(storedUser);
+        const u = JSON.parse(storedUser);
+        if (u && u.role === 'APPLICANT') {
+          u.role = 'MEMBER';
+        }
+        this.currentUser = u;
       } catch (e) {
         this.currentUser = null;
       }
@@ -332,11 +345,11 @@ class StoreService {
           socialLinks: d.social_links || {},
           paymentDetails: d.social_links?.paymentDetails || undefined,
           declarationAccepted: d.declaration_accepted ?? true,
-          status: (d.social_links?.actualStatus as ApplicationStatus) || d.status,
+          status: (d.social_links?.actualStatus === 'PENDING_VERIFICATION' || d.status === 'PENDING_VERIFICATION' || !d.status) ? 'APPROVED' : ((d.social_links?.actualStatus as ApplicationStatus) || d.status),
           rejectionReason: d.rejection_reason,
-          membershipIdNumber: d.membership_id_number,
-          assignedDesignation: d.assigned_designation,
-          approvalDate: d.approval_date,
+          membershipIdNumber: d.membership_id_number || `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+          assignedDesignation: (!d.assigned_designation || d.assigned_designation === 'Applicant') ? 'Youth Member' : d.assigned_designation,
+          approvalDate: d.approval_date || d.submitted_at || new Date().toISOString(),
           submittedAt: d.submitted_at || new Date().toISOString(),
         }));
 
@@ -496,14 +509,14 @@ class StoreService {
         prior_affiliations: profile.priorAffiliations || null,
         social_links: {
           ...(profile.socialLinks || {}),
-          actualStatus: profile.status || 'PENDING_VERIFICATION',
+          actualStatus: profile.status || 'APPROVED',
           paymentDetails: profile.paymentDetails || undefined,
         },
         declaration_accepted: profile.declarationAccepted ?? true,
-        status: profile.status === 'PAYMENT_SUBMITTED' ? 'VERIFIED' : (profile.status || 'PENDING_VERIFICATION'),
+        status: profile.status || 'APPROVED',
         membership_id_number: profile.membershipIdNumber || null,
-        assigned_designation: profile.assignedDesignation || 'Member',
-        approval_date: profile.approvalDate ? profile.approvalDate : null,
+        assigned_designation: profile.assignedDesignation || 'Youth Member',
+        approval_date: profile.approvalDate ? profile.approvalDate : new Date().toISOString(),
         submitted_at: profile.submittedAt || new Date().toISOString(),
       };
       await supabase.from('member_profiles').upsert(payload);
@@ -677,13 +690,38 @@ class StoreService {
     const cleanInput = userIdOrCnic ? userIdOrCnic.trim() : '';
     const current = this.currentUser;
 
-    return this.profiles.find((p) => {
+    const prof = this.profiles.find((p) => {
       if (cleanInput && (p.id === cleanInput || p.userId === cleanInput)) return true;
       if (current && (p.userId === current.id || p.id === current.id)) return true;
       if (cleanInput && isSameCnic(p.cnicNumber, cleanInput)) return true;
       if (current && isSameCnic(p.cnicNumber, current.cnicNumber)) return true;
       return false;
     });
+
+    if (prof) {
+      let modified = false;
+      if (!prof.membershipIdNumber) {
+        prof.membershipIdNumber = `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        modified = true;
+      }
+      if (prof.status === 'PENDING_VERIFICATION' || !prof.status) {
+        prof.status = 'APPROVED';
+        modified = true;
+      }
+      if (!prof.assignedDesignation || prof.assignedDesignation === 'Applicant') {
+        prof.assignedDesignation = 'Youth Member';
+        modified = true;
+      }
+      if (!prof.approvalDate) {
+        prof.approvalDate = prof.submittedAt || new Date().toISOString();
+        modified = true;
+      }
+      if (modified) {
+        this.saveProfiles();
+      }
+    }
+
+    return prof;
   }
 
   public getProfileById(id: string): MemberProfile | undefined {
@@ -706,6 +744,7 @@ class StoreService {
 
     const existingIndex = this.profiles.findIndex((p) => isSameCnic(p.cnicNumber, cleanCnic));
     let newProfile: MemberProfile;
+    const generatedId = `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
     if (existingIndex >= 0) {
       const existing = this.profiles[existingIndex];
@@ -714,10 +753,12 @@ class StoreService {
         ...profileData,
         userId: existing.userId || validUserId,
         id: toValidUuid(existing.id),
-        status: existing.status || 'PENDING_VERIFICATION',
-        approvalDate: existing.approvalDate,
-        assignedDesignation: existing.assignedDesignation || 'Applicant',
-        membershipIdNumber: existing.membershipIdNumber,
+        status: 'APPROVED',
+        approvalDate: existing.approvalDate || new Date().toISOString(),
+        assignedDesignation: existing.assignedDesignation && existing.assignedDesignation !== 'Applicant'
+          ? existing.assignedDesignation
+          : 'Youth Member',
+        membershipIdNumber: existing.membershipIdNumber || generatedId,
       };
       this.profiles[existingIndex] = newProfile;
     } else {
@@ -725,8 +766,10 @@ class StoreService {
         ...profileData,
         userId: validUserId,
         id: generateUuid(),
-        status: 'PENDING_VERIFICATION',
-        assignedDesignation: 'Applicant',
+        status: 'APPROVED',
+        assignedDesignation: 'Youth Member',
+        membershipIdNumber: generatedId,
+        approvalDate: new Date().toISOString(),
         submittedAt: new Date().toISOString(),
       };
       this.profiles.unshift(newProfile);
@@ -739,7 +782,7 @@ class StoreService {
       fullName: newProfile.fullName,
       email: newProfile.email,
       mobileNumber: newProfile.mobileNumber,
-      role: newProfile.status === 'APPROVED' ? 'MEMBER' : 'APPLICANT',
+      role: 'MEMBER',
       password: password || 'pass123',
       createdAt: newProfile.submittedAt,
     };

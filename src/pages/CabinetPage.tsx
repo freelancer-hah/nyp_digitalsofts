@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   Landmark,
   Search,
+  Quote,
 } from 'lucide-react';
 
 export const CabinetPage: React.FC = () => {
@@ -468,129 +469,193 @@ export const CabinetPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayMembers.map((member) => {
-              const isProvincialLeader = member.cabinetLevel === 'PROVINCIAL' || member.parliamentaryRole === 'CHIEF_MINISTER' || member.parliamentaryRole === 'SPEAKER';
+              const isLeadershipRole = 
+                member.cabinetLevel === 'PROVINCIAL' && (
+                  ['SPEAKER', 'DEPUTY_SPEAKER', 'CHIEF_MINISTER', 'OPPOSITION_LEADER', 'MINISTER'].includes(member.parliamentaryRole || '') ||
+                  member.designation.toLowerCase().includes('president') ||
+                  member.designation.toLowerCase().includes('speaker') ||
+                  member.designation.toLowerCase().includes('chief minister') ||
+                  member.designation.toLowerCase().includes('minister')
+                );
+
+              const isProvincial = member.cabinetLevel === 'PROVINCIAL';
 
               return (
                 <div
                   key={member.id}
-                  className={`relative rounded-3xl overflow-hidden transition-all duration-300 text-left flex flex-col justify-between group p-6 ${
-                    isProvincialLeader && isParliamentariansView
-                      ? 'bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 text-white border-2 border-amber-400/80 shadow-lg'
-                      : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500/40 shadow-sm hover:shadow-md'
+                  className={`group relative rounded-3xl overflow-hidden transition-all duration-300 text-left flex flex-col justify-between hover:-translate-y-1.5 ${
+                    isLeadershipRole
+                      ? 'bg-gradient-to-b from-[#062419] via-[#041a12] to-[#02100b] text-white border-2 border-amber-400/70 shadow-xl shadow-emerald-950/20 hover:border-amber-400 hover:shadow-2xl hover:shadow-amber-500/10'
+                      : 'bg-white dark:bg-[#0c1424] text-slate-900 dark:text-white border border-slate-200/90 dark:border-slate-800/90 shadow-sm hover:shadow-xl hover:shadow-emerald-950/10 dark:hover:shadow-emerald-950/30 hover:border-emerald-500/50 dark:hover:border-emerald-500/40'
                   }`}
                 >
-                  {/* Card Header Content */}
-                  <div className="space-y-4">
+                  {/* Decorative Top Accent Line */}
+                  <div className={`h-1.5 w-full ${
+                    isLeadershipRole
+                      ? 'bg-gradient-to-r from-amber-400 via-amber-200 to-amber-500'
+                      : isProvincial
+                      ? 'bg-gradient-to-r from-emerald-600 via-teal-400 to-amber-400'
+                      : 'bg-gradient-to-r from-emerald-700 via-teal-500 to-emerald-600'
+                  }`} />
+
+                  {/* Ambient Glow in Corner */}
+                  <div className={`pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl transition-opacity duration-300 opacity-40 group-hover:opacity-75 ${
+                    isLeadershipRole ? 'bg-amber-400/20' : 'bg-emerald-500/15 dark:bg-emerald-400/15'
+                  }`} />
+
+                  {/* Card Content Area */}
+                  <div className="p-5 sm:p-6 space-y-4 relative z-10 flex-1">
                     
-                    {/* Top Level Badge & Number / Admin Actions */}
+                    {/* Header: Level & Division Badges / Admin Actions */}
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                        <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                          isProvincialLeader
-                            ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-xs' 
-                            : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                      <div className="flex items-center space-x-1.5 flex-wrap gap-y-1.5">
+                        <span className={`inline-flex items-center space-x-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+                          isLeadershipRole
+                            ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-xs'
+                            : isProvincial
+                            ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                            : 'bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                         }`}>
-                          {member.cabinetLevel} {isParliamentariansView ? 'PARLIAMENT' : 'CABINET'}
+                          {isLeadershipRole ? (
+                            <Crown className="w-3 h-3 text-slate-950" />
+                          ) : isProvincial ? (
+                            <Landmark className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <Users className="w-3 h-3 text-emerald-500" />
+                          )}
+                          <span>
+                            {member.cabinetLevel} {isParliamentariansView ? 'PARLIAMENT' : 'CABINET'}
+                          </span>
                         </span>
 
                         {member.divisionId && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            {store.getDivisionName(member.divisionId)}
+                          <span className="inline-flex items-center space-x-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            <MapPin className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
+                            <span>{store.getDivisionName(member.divisionId)}</span>
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center space-x-1.5 shrink-0">
-                        {/* Clean Sequence Number Badge */}
-                        <span 
-                          className="text-xs font-mono font-black px-2.5 py-0.5 rounded-lg bg-amber-400/20 border border-amber-400/50 text-amber-700 dark:text-amber-300 shadow-2xs" 
-                          title={`Position #${member.displayOrder || 1}`}
-                        >
-                          #{member.displayOrder || 1}
-                        </span>
-
-                        {isSuperAdmin && (
-                          <div className="flex items-center space-x-1">
-                            <button
-                              onClick={() => handleOpenEditModal(member)}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 text-slate-600 dark:text-slate-300 hover:text-white transition-colors cursor-pointer"
-                              title="Edit Member"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteMember(member.id, member.fullName)}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 text-slate-600 dark:text-slate-300 hover:text-white transition-colors cursor-pointer"
-                              title="Remove Member"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      {/* Admin Actions (Numbering is strictly backend, hidden from public frontend) */}
+                      {isSuperAdmin && (
+                        <div className="flex items-center space-x-1 bg-slate-100/90 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 shadow-2xs shrink-0">
+                          <button
+                            onClick={() => handleOpenEditModal(member)}
+                            className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
+                            title="Edit Member & Sequence Order"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMember(member.id, member.fullName)}
+                            className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
+                            title="Remove Member"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Member Details */}
+                    {/* Member Profile Block */}
                     <div className="space-y-4 pt-1">
-                      <div className="flex items-start space-x-3.5">
-                        {/* Member Photo */}
-                        <div className="w-18 h-22 sm:w-20 sm:h-24 rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-sm bg-slate-100 dark:bg-slate-800 shrink-0">
-                          <img
-                            src={member.photoUrl}
-                            alt={member.fullName}
-                            className="w-full h-full object-cover object-top"
-                          />
+                      <div className="flex items-start space-x-4">
+                        
+                        {/* Member Portrait */}
+                        <div className="relative shrink-0">
+                          <div className={`w-20 h-24 sm:w-22 sm:h-26 rounded-2xl overflow-hidden shadow-md ${
+                            isLeadershipRole
+                              ? 'ring-2 ring-amber-400/90 bg-emerald-950'
+                              : 'ring-2 ring-emerald-500/25 dark:ring-emerald-400/30 bg-slate-100 dark:bg-slate-800'
+                          }`}>
+                            <img
+                              src={member.photoUrl}
+                              alt={member.fullName}
+                              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300';
+                              }}
+                            />
+                          </div>
+                          
+                          {/* Verified Badge Icon */}
+                          <div 
+                            className="absolute -bottom-1.5 -right-1.5 bg-emerald-600 text-white p-1 rounded-full shadow-md ring-2 ring-white dark:ring-slate-900 flex items-center justify-center" 
+                            title="Official Appointment"
+                          >
+                            <ShieldCheck className="w-3 h-3" />
+                          </div>
                         </div>
 
-                        <div className="space-y-1.5 text-left flex-1 min-w-0">
-                          {/* HIGHLIGHTED DESIGNATION BADGE */}
-                          <div className={`inline-block font-black px-2.5 py-1 rounded-lg text-xs uppercase tracking-wide shadow-xs font-heading truncate max-w-full ${
-                            isProvincialLeader && isParliamentariansView
-                              ? 'bg-amber-400 text-slate-950 border border-amber-300'
-                              : 'bg-gradient-to-r from-emerald-800 to-emerald-600 dark:from-emerald-600 dark:to-emerald-500 text-amber-300 dark:text-white border border-emerald-700 dark:border-emerald-400'
+                        {/* Title, Ministry & Full Name */}
+                        <div className="space-y-2 text-left flex-1 min-w-0">
+                          
+                          {/* Highlighted Designation Pill */}
+                          <div className={`inline-flex items-center space-x-1.5 font-black px-2.5 py-1 rounded-lg text-xs uppercase tracking-wide shadow-xs font-heading max-w-full ${
+                            isLeadershipRole
+                              ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 border border-amber-300'
+                              : 'bg-gradient-to-r from-emerald-800 to-emerald-700 dark:from-emerald-700 dark:to-emerald-600 text-amber-200 dark:text-white border border-emerald-700 dark:border-emerald-500'
                           }`}>
-                            {member.designation}
+                            {isLeadershipRole && <Sparkles className="w-3 h-3 text-slate-950 shrink-0" />}
+                            <span className="truncate">{member.designation}</span>
                           </div>
 
-                          {/* MINISTRY DEPARTMENT SUB-LINE FOR PROVINCIAL MINISTERS */}
+                          {/* Ministry Department Sub-Tag */}
                           {member.ministryDepartment && (
-                            <div className="text-[11px] font-bold text-amber-400 block truncate">
-                              Minister for {member.ministryDepartment}
+                            <div className="flex items-center space-x-1 text-[11px] font-bold text-amber-500 dark:text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-md border border-amber-400/20 w-fit max-w-full truncate">
+                              <Landmark className="w-3 h-3 shrink-0" />
+                              <span className="truncate">Minister for {member.ministryDepartment}</span>
                             </div>
                           )}
 
-                          <h3 className={`font-black text-base leading-snug font-heading truncate ${
-                            isProvincialLeader && isParliamentariansView ? 'text-white' : 'text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors'
+                          {/* Full Name */}
+                          <h3 className={`font-black text-base sm:text-lg leading-snug font-heading truncate ${
+                            isLeadershipRole
+                              ? 'text-white'
+                              : 'text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors'
                           }`}>
                             {member.fullName}
                           </h3>
                         </div>
                       </div>
 
+                      {/* Bio / Quote Section */}
                       {member.bio && (
-                        <p className={`text-xs leading-relaxed italic border-l-2 border-emerald-500 pl-3 line-clamp-3 ${
-                          isProvincialLeader && isParliamentariansView ? 'text-slate-300' : 'text-slate-600 dark:text-slate-300'
+                        <div className={`p-3 rounded-2xl text-xs leading-relaxed ${
+                          isLeadershipRole
+                            ? 'bg-emerald-950/40 border border-emerald-800/40 text-slate-200'
+                            : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 text-slate-600 dark:text-slate-300'
                         }`}>
-                          "{member.bio}"
-                        </p>
+                          <div className="flex items-start space-x-2">
+                            <Quote className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5 opacity-70 rotate-180" />
+                            <p className="italic line-clamp-3 leading-relaxed">
+                              {member.bio}
+                            </p>
+                          </div>
+                        </div>
                       )}
+
                     </div>
 
                   </div>
 
-                  {/* Card Footer */}
-                  <div className={`pt-3 mt-4 border-t flex items-center justify-between text-[11px] font-medium ${
-                    isProvincialLeader && isParliamentariansView 
-                      ? 'border-emerald-900/60 text-slate-400' 
-                      : 'border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400'
+                  {/* Card Footer Bar */}
+                  <div className={`px-5 sm:px-6 py-3 border-t flex items-center justify-between text-[11px] font-medium z-10 ${
+                    isLeadershipRole
+                      ? 'border-emerald-900/60 bg-emerald-950/20 text-slate-400' 
+                      : 'border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400'
                   }`}>
                     <div className="flex items-center space-x-1.5 truncate">
                       <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span className="truncate">
-                        {member.divisionId ? store.getDivisionName(member.divisionId) : 'Sindh Province'}
+                      <span className="truncate font-semibold">
+                        {member.divisionId ? store.getDivisionName(member.divisionId) : 'Sindh Province (General)'}
                       </span>
                     </div>
-                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+
+                    <div className="flex items-center space-x-1 font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>{isParliamentariansView ? 'Youth Assembly' : 'Cabinet Member'}</span>
+                    </div>
                   </div>
 
                 </div>

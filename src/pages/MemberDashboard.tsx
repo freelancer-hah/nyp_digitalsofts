@@ -8,7 +8,8 @@ import {
   CheckCircle2, Clock, XCircle, FileText, UserCheck, 
   Sparkles, Award, CreditCard, ChevronRight, X, ShieldCheck,
   Upload, Image as ImageIcon, Truck, Loader2, FileCheck, AlertCircle,
-  Edit3, Save, Camera, User, Phone, Mail, MapPin, GraduationCap, Briefcase, Heart
+  Edit3, Save, Camera, User, Phone, Mail, MapPin, GraduationCap, Briefcase, Heart,
+  Copy, Check
 } from 'lucide-react';
 import { MemberProfile, RoleApplicationRequest, RoleTier } from '../types';
 
@@ -44,6 +45,14 @@ export const MemberDashboard: React.FC = () => {
   const [memPaymentProofUrl, setMemPaymentProofUrl] = useState('');
   const [isUploadingMemProof, setIsUploadingMemProof] = useState(false);
   const [memProofUploadError, setMemProofUploadError] = useState('');
+
+  // Quick Copy Helper
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const copyToClipboard = (text: string, fieldId: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldId);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   // Edit Profile Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -339,43 +348,7 @@ export const MemberDashboard: React.FC = () => {
             </button>
 
             {/* Membership Designation Badge */}
-            {profile.status === 'APPROVED' ? (
-              <div className="bg-emerald-50 dark:bg-emerald-950/80 border-2 border-emerald-400 dark:border-emerald-600 p-3.5 rounded-2xl flex items-center space-x-3 text-emerald-900 dark:text-emerald-300 shadow-md">
-                <CheckCircle2 className="w-7 h-7 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <div>
-                  <span className="text-[9px] uppercase font-black text-emerald-800 dark:text-emerald-400 block tracking-wider">
-                    Official Membership Status
-                  </span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white block">
-                    APPROVED • {profile.assignedDesignation || 'General Member'}
-                  </span>
-                </div>
-              </div>
-            ) : profile.status === 'PAYMENT_SUBMITTED' ? (
-              <div className="bg-purple-50 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-700/60 p-3.5 rounded-2xl flex items-center space-x-3 text-purple-900 dark:text-purple-300">
-                <Clock className="w-7 h-7 text-purple-600 dark:text-purple-400 shrink-0 animate-pulse" />
-                <div>
-                  <span className="text-[9px] uppercase font-black text-purple-800 dark:text-purple-400 block tracking-wider">
-                    Official Membership Status
-                  </span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">
-                    FEE PAID • PENDING FINAL AUTHORISATION
-                  </span>
-                </div>
-              </div>
-            ) : profile.status === 'VERIFIED' ? (
-              <div className="bg-blue-50 dark:bg-blue-950/80 border border-blue-300 dark:border-blue-700/60 p-3.5 rounded-2xl flex items-center space-x-3 text-blue-900 dark:text-blue-300">
-                <CreditCard className="w-7 h-7 text-blue-600 dark:text-blue-400 shrink-0" />
-                <div>
-                  <span className="text-[9px] uppercase font-black text-blue-800 dark:text-blue-400 block tracking-wider">
-                    Official Membership Status
-                  </span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">
-                    VERIFIED • MEMBERSHIP FEE REQUIRED
-                  </span>
-                </div>
-              </div>
-            ) : profile.status === 'REJECTED' ? (
+            {profile.status === 'REJECTED' ? (
               <div className="bg-rose-50 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-700/60 p-3.5 rounded-2xl flex items-center space-x-3 text-rose-900 dark:text-rose-300">
                 <XCircle className="w-7 h-7 text-rose-600 dark:text-rose-400 shrink-0" />
                 <div>
@@ -388,14 +361,14 @@ export const MemberDashboard: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-amber-50 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700/60 p-3.5 rounded-2xl flex items-center space-x-3 text-amber-900 dark:text-amber-300">
-                <Clock className="w-7 h-7 text-amber-600 dark:text-amber-400 shrink-0 animate-pulse" />
+              <div className="bg-emerald-50 dark:bg-emerald-950/80 border-2 border-emerald-400 dark:border-emerald-600 p-3.5 rounded-2xl flex items-center space-x-3 text-emerald-900 dark:text-emerald-300 shadow-md">
+                <CheckCircle2 className="w-7 h-7 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <div>
-                  <span className="text-[9px] uppercase font-black text-amber-800 dark:text-amber-400 block tracking-wider">
+                  <span className="text-[9px] uppercase font-black text-emerald-800 dark:text-emerald-400 block tracking-wider">
                     Official Membership Status
                   </span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">
-                    PENDING VERIFICATION
+                  <span className="text-xs font-black text-slate-900 dark:text-white block">
+                    ACTIVE • {profile.assignedDesignation || 'Youth Member'}
                   </span>
                 </div>
               </div>
@@ -461,92 +434,13 @@ export const MemberDashboard: React.FC = () => {
                 NYP Sindh Digital &amp; Printable Membership Card
               </h3>
             </div>
-            {profile.status === 'APPROVED' ? (
-              <span className="text-xs text-emerald-700 dark:text-emerald-400 font-extrabold flex items-center space-x-1.5 bg-emerald-100 dark:bg-emerald-950 px-3 py-1.5 rounded-full border border-emerald-300 dark:border-emerald-700/60 shrink-0">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>VERIFIED &amp; AUTHORISED</span>
-              </span>
-            ) : profile.status === 'VERIFIED' ? (
-              <span className="text-xs text-blue-700 dark:text-blue-400 font-extrabold flex items-center space-x-1.5 bg-blue-100 dark:bg-blue-950 px-3 py-1.5 rounded-full border border-blue-300 dark:border-blue-700/60 shrink-0">
-                <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span>VERIFIED - PENDING FINAL APPROVAL</span>
-              </span>
-            ) : profile.status === 'REJECTED' ? (
-              <span className="text-xs text-rose-700 dark:text-rose-400 font-extrabold flex items-center space-x-1.5 bg-rose-100 dark:bg-rose-950 px-3 py-1.5 rounded-full border border-rose-300 dark:border-rose-700/60 shrink-0">
-                <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                <span>REJECTED</span>
-              </span>
-            ) : (
-              <span className="text-xs text-amber-700 dark:text-amber-400 font-extrabold flex items-center space-x-1.5 bg-amber-100 dark:bg-amber-950 px-3 py-1.5 rounded-full border border-amber-300 dark:border-amber-700/60 shrink-0">
-                <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>PENDING VERIFICATION</span>
-              </span>
-            )}
+            <span className="text-xs text-emerald-700 dark:text-emerald-400 font-extrabold flex items-center space-x-1.5 bg-emerald-100 dark:bg-emerald-950 px-3 py-1.5 rounded-full border border-emerald-300 dark:border-emerald-700/60 shrink-0">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>ACTIVE • CONFERRED</span>
+            </span>
           </div>
 
-          {profile.status === 'APPROVED' ? (
-            <DigitalIdCard profile={profile} />
-          ) : profile.status === 'PAYMENT_SUBMITTED' ? (
-            <div className="bg-purple-50 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800 p-8 rounded-2xl text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-950 border border-purple-300 dark:border-purple-700 flex items-center justify-center mx-auto text-purple-600 dark:text-purple-400">
-                <Clock className="w-8 h-8 animate-pulse" />
-              </div>
-              <div className="space-y-2 max-w-lg mx-auto">
-                <h4 className="text-lg font-black text-slate-900 dark:text-white font-heading">
-                  Membership Fee Payment Submitted (Txn ID: {profile.paymentDetails?.transactionId || 'Submitted'})
-                </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Your Membership Fee payment of PKR 1,000 via {profile.paymentDetails?.paymentMethod || 'Online'} has been received. It is currently undergoing final verification at the Authorisation Desk. Once confirmed by the Authoriser, your official Digital &amp; Printable Membership Card will be automatically conferred &amp; displayed here.
-                </p>
-              </div>
-              <div className="inline-flex items-center space-x-2 bg-purple-100 dark:bg-purple-950 px-4 py-2 rounded-xl text-xs font-mono text-purple-900 dark:text-purple-300 font-bold border border-purple-300 dark:border-purple-800">
-                <span>Payment Method: {profile.paymentDetails?.paymentMethod}</span>
-                <span>•</span>
-                <span>Txn ID: {profile.paymentDetails?.transactionId}</span>
-              </div>
-            </div>
-          ) : profile.status === 'VERIFIED' ? (
-            <div className="bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-800 p-8 rounded-2xl text-center space-y-5">
-              <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-700 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400">
-                <CreditCard className="w-8 h-8" />
-              </div>
-              <div className="space-y-2 max-w-lg mx-auto">
-                <h4 className="text-lg font-black text-slate-900 dark:text-white font-heading">
-                  Profile Verified! Membership Fee Payment Required
-                </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Your membership profile details have passed Desk Verification! Please submit your official Membership Fee (PKR 1,000) below to send your record to the Authorisation Desk and receive your Official Digital &amp; Printable Card.
-                </p>
-              </div>
-              <div>
-                <button
-                  onClick={() => setMembershipFeeModalOpen(true)}
-                  className="ui-btn-gold text-slate-950 font-black px-8 py-3.5 rounded-2xl text-xs uppercase tracking-wider shadow-xl flex items-center justify-center space-x-2 mx-auto cursor-pointer hover:scale-105 transition-all"
-                >
-                  <CreditCard className="w-4 h-4 text-slate-950" />
-                  <span>PAY MEMBERSHIP FEE NOW (PKR 1,000)</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-8 rounded-2xl text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950 border border-amber-300 dark:border-amber-700 flex items-center justify-center mx-auto text-amber-600 dark:text-amber-400">
-                <Clock className="w-8 h-8" />
-              </div>
-              <div className="space-y-2 max-w-lg mx-auto">
-                <h4 className="text-lg font-black text-slate-900 dark:text-white font-heading">
-                  {profile.status === 'REJECTED'
-                    ? 'Application Rejected'
-                    : 'Membership Card Generation Pending Verification'}
-                </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {profile.status === 'REJECTED'
-                    ? `Your membership application was not approved. Reason: ${profile.rejectionReason || 'Please contact Secretariat for details.'}`
-                    : 'Your membership application details have been submitted successfully. Your request is currently under scrutiny at the Verification Desk. Once verified, fee payment option will be unlocked to issue your Official Membership Card.'}
-                </p>
-              </div>
-            </div>
-          )}
+          <DigitalIdCard profile={profile} />
         </div>
       </div>
 
@@ -677,7 +571,7 @@ export const MemberDashboard: React.FC = () => {
       )}
 
       {/* 5. SECTION: UPGRADE YOUR ROLE / APPLY FOR ASSEMBLY ROLES (PLACED AT THE BOTTOM) */}
-      {profile.status === 'APPROVED' && (() => {
+      {(() => {
         const hasActiveRoleApp = (tier: RoleTier) => roleApplications.some((r) => r.roleTier === tier && r.status !== 'REJECTED');
         const showYouthMpa = !hasActiveRoleApp('YOUTH_MPA');
         const showYouthMna = !hasActiveRoleApp('YOUTH_MNA');
@@ -1232,14 +1126,55 @@ export const MemberDashboard: React.FC = () => {
 
             <form onSubmit={handleCreateRoleApplication} className="space-y-4 text-xs">
               {/* Fee & Payment Account Banner */}
-              <div className="bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-950 text-white p-4 rounded-2xl space-y-2 border border-amber-400/40 shadow-inner">
+              <div className="bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-950 text-white p-4 rounded-2xl space-y-3 border border-amber-400/40 shadow-inner">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-amber-300 block uppercase font-bold">Official Role Verification Fee</span>
                   <span className="text-xl font-black font-mono text-amber-400">PKR {selectedRoleModal.fee}</span>
                 </div>
-                <div className="pt-1.5 text-[11px] text-emerald-100 space-y-0.5 border-t border-emerald-800/80">
-                  <p>• <strong>JazzCash / EasyPaisa:</strong> 0331 9226110 (NYP Sindh)</p>
-                  <p>• <strong>Bank:</strong> Meezan Bank (National Youth Parliament Sindh)</p>
+                
+                <div className="pt-2 text-[11px] text-emerald-100 space-y-2 border-t border-emerald-800/80">
+                  {/* Faysal Bank Card */}
+                  <div className="p-3 rounded-xl bg-black/30 border border-emerald-700/60 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-amber-300 text-xs">🏦 Faysal Bank</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('PK07FAYS3542567000003492', 'role_iban')}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-amber-200 transition-colors flex items-center space-x-1 cursor-pointer"
+                        title="Copy IBAN"
+                      >
+                        {copiedField === 'role_iban' ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedField === 'role_iban' ? 'Copied' : 'Copy IBAN'}</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                      <p>• <strong>Title:</strong> <span className="font-bold text-white">QAISAR</span></p>
+                      <p>• <strong>Branch:</strong> <span className="text-white">IBB MATLI</span></p>
+                    </div>
+                    <p className="pt-0.5">
+                      • <strong>IBAN:</strong> <span className="font-mono font-black text-amber-300 tracking-wider select-all">PK07FAYS3542567000003492</span>
+                    </p>
+                  </div>
+
+                  {/* JazzCash Card */}
+                  <div className="p-3 rounded-xl bg-black/30 border border-emerald-700/60 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-amber-300 text-xs">📱 JazzCash</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('03043664842', 'role_jazz')}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-amber-200 transition-colors flex items-center space-x-1 cursor-pointer"
+                        title="Copy JazzCash Number"
+                      >
+                        {copiedField === 'role_jazz' ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedField === 'role_jazz' ? 'Copied' : 'Copy Number'}</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                      <p>• <strong>Account / Mobile:</strong> <span className="font-mono font-black text-amber-300 tracking-wider select-all">03043664842</span></p>
+                      <p>• <strong>Title:</strong> <span className="font-bold text-white">QAISAR</span></p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1274,9 +1209,8 @@ export const MemberDashboard: React.FC = () => {
                     onChange={(e) => setPaymentMethod(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
                   >
-                    <option value="JazzCash">JazzCash (0331 9226110)</option>
-                    <option value="EasyPaisa">EasyPaisa (0331 9226110)</option>
-                    <option value="Bank Transfer">Bank Transfer (Meezan Bank)</option>
+                    <option value="JazzCash">JazzCash (03043664842 - QAISAR)</option>
+                    <option value="Bank Transfer">Faysal Bank (IBAN: PK07FAYS3542567000003492 - QAISAR)</option>
                   </select>
                 </div>
 
@@ -1403,10 +1337,56 @@ export const MemberDashboard: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmitPayment} className="space-y-4 text-xs">
-              <div className="bg-gradient-to-r from-emerald-900 to-teal-900 text-white p-4 rounded-xl space-y-1">
-                <span className="text-[10px] text-emerald-200 block uppercase font-bold">Total Fee Amount</span>
-                <p className="text-2xl font-black font-mono">PKR {paymentModalReq.feeAmount}</p>
-                <p className="text-[11px] text-emerald-100">Send fee to NYP Sindh Official Account (JazzCash / EasyPaisa: 0331 9226110)</p>
+              <div className="bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-950 text-white p-4 rounded-2xl space-y-3 border border-amber-400/40 shadow-inner">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-amber-300 block uppercase font-bold">Total Fee Amount</span>
+                  <p className="text-2xl font-black font-mono text-amber-400">PKR {paymentModalReq.feeAmount}</p>
+                </div>
+                
+                <div className="pt-2 text-[11px] text-emerald-100 space-y-2 border-t border-emerald-800/80">
+                  {/* Faysal Bank Card */}
+                  <div className="p-3 rounded-xl bg-black/30 border border-emerald-700/60 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-amber-300 text-xs">🏦 Faysal Bank</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('PK07FAYS3542567000003492', 'req_iban')}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-amber-200 transition-colors flex items-center space-x-1 cursor-pointer"
+                        title="Copy IBAN"
+                      >
+                        {copiedField === 'req_iban' ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedField === 'req_iban' ? 'Copied' : 'Copy IBAN'}</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                      <p>• <strong>Title:</strong> <span className="font-bold text-white">QAISAR</span></p>
+                      <p>• <strong>Branch:</strong> <span className="text-white">IBB MATLI</span></p>
+                    </div>
+                    <p className="pt-0.5">
+                      • <strong>IBAN:</strong> <span className="font-mono font-black text-amber-300 tracking-wider select-all">PK07FAYS3542567000003492</span>
+                    </p>
+                  </div>
+
+                  {/* JazzCash Card */}
+                  <div className="p-3 rounded-xl bg-black/30 border border-emerald-700/60 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-amber-300 text-xs">📱 JazzCash</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('03043664842', 'req_jazz')}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-amber-200 transition-colors flex items-center space-x-1 cursor-pointer"
+                        title="Copy JazzCash Number"
+                      >
+                        {copiedField === 'req_jazz' ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedField === 'req_jazz' ? 'Copied' : 'Copy Number'}</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                      <p>• <strong>Account / Mobile:</strong> <span className="font-mono font-black text-amber-300 tracking-wider select-all">03043664842</span></p>
+                      <p>• <strong>Title:</strong> <span className="font-bold text-white">QAISAR</span></p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -1416,9 +1396,8 @@ export const MemberDashboard: React.FC = () => {
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
                 >
-                  <option value="JazzCash">JazzCash (0331 9226110)</option>
-                  <option value="EasyPaisa">EasyPaisa (0331 9226110)</option>
-                  <option value="Bank Transfer">Bank Transfer (Meezan Bank NYP Sindh)</option>
+                  <option value="JazzCash">JazzCash (03043664842 - QAISAR)</option>
+                  <option value="Bank Transfer">Faysal Bank (IBAN: PK07FAYS3542567000003492 - QAISAR)</option>
                 </select>
               </div>
 
@@ -1545,12 +1524,55 @@ export const MemberDashboard: React.FC = () => {
             </div>
 
             <form onSubmit={handleMembershipFeeSubmit} className="space-y-4 text-xs">
-              <div className="bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-950 text-white p-5 rounded-2xl space-y-2 border border-amber-400/40">
-                <span className="text-[10px] text-amber-300 block uppercase font-bold">Total Membership Fee</span>
-                <p className="text-3xl font-black font-mono text-amber-400">PKR 1,000</p>
-                <div className="pt-2 text-[11px] text-emerald-100 space-y-1 border-t border-emerald-800/80">
-                  <p>• <strong>JazzCash / EasyPaisa:</strong> 0331 9226110 (NYP Sindh Secretariat)</p>
-                  <p>• <strong>Meezan Bank:</strong> 01020304050607 (National Youth Parliament Sindh)</p>
+              <div className="bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-950 text-white p-5 rounded-2xl space-y-3 border border-amber-400/40 shadow-inner">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-amber-300 block uppercase font-bold">Total Membership Fee</span>
+                  <p className="text-3xl font-black font-mono text-amber-400">PKR 1,000</p>
+                </div>
+
+                <div className="pt-2 text-[11px] text-emerald-100 space-y-2 border-t border-emerald-800/80">
+                  {/* Faysal Bank Card */}
+                  <div className="p-3 rounded-xl bg-black/30 border border-emerald-700/60 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-amber-300 text-xs">🏦 Faysal Bank</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('PK07FAYS3542567000003492', 'mem_iban')}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-amber-200 transition-colors flex items-center space-x-1 cursor-pointer"
+                        title="Copy IBAN"
+                      >
+                        {copiedField === 'mem_iban' ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedField === 'mem_iban' ? 'Copied' : 'Copy IBAN'}</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                      <p>• <strong>Title:</strong> <span className="font-bold text-white">QAISAR</span></p>
+                      <p>• <strong>Branch:</strong> <span className="text-white">IBB MATLI</span></p>
+                    </div>
+                    <p className="pt-0.5">
+                      • <strong>IBAN:</strong> <span className="font-mono font-black text-amber-300 tracking-wider select-all">PK07FAYS3542567000003492</span>
+                    </p>
+                  </div>
+
+                  {/* JazzCash Card */}
+                  <div className="p-3 rounded-xl bg-black/30 border border-emerald-700/60 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-amber-300 text-xs">📱 JazzCash</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('03043664842', 'mem_jazz')}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-amber-200 transition-colors flex items-center space-x-1 cursor-pointer"
+                        title="Copy JazzCash Number"
+                      >
+                        {copiedField === 'mem_jazz' ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedField === 'mem_jazz' ? 'Copied' : 'Copy Number'}</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                      <p>• <strong>Account / Mobile:</strong> <span className="font-mono font-black text-amber-300 tracking-wider select-all">03043664842</span></p>
+                      <p>• <strong>Title:</strong> <span className="font-bold text-white">QAISAR</span></p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1561,9 +1583,8 @@ export const MemberDashboard: React.FC = () => {
                   onChange={(e) => setMemPaymentMethod(e.target.value)}
                   className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
                 >
-                  <option value="JazzCash">JazzCash (0331 9226110)</option>
-                  <option value="EasyPaisa">EasyPaisa (0331 9226110)</option>
-                  <option value="Bank Transfer">Bank Transfer (Meezan Bank NYP Sindh)</option>
+                  <option value="JazzCash">JazzCash (03043664842 - QAISAR)</option>
+                  <option value="Bank Transfer">Faysal Bank (IBAN: PK07FAYS3542567000003492 - QAISAR)</option>
                 </select>
               </div>
 

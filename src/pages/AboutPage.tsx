@@ -12,7 +12,8 @@ import {
   ArrowRight, 
   Scale, 
   HeartHandshake,
-  CheckCircle2
+  CheckCircle2,
+  Megaphone
 } from 'lucide-react';
 
 export const AboutPage: React.FC = () => {
@@ -117,7 +118,7 @@ export const AboutPage: React.FC = () => {
       </section>
 
       {/* ================= 3. LEADERSHIP STATEMENTS & MESSAGES ================= */}
-      {/* Exclusive Leadership Messages (Malik Usman Khan, Abdul Muiz Lakho, Rao Humayun Farrukh) */}
+      {/* Exclusive Leadership Messages (Malik Usman Khan, Abdul Rehman Halepoto, Abdul Muiz Lakho, Rao Humayun Farrukh, Shakir Chandio) */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#090f1a] border-y border-slate-200 dark:border-slate-800 transition-colors">
         <div className="max-w-6xl mx-auto space-y-16">
           
@@ -130,7 +131,7 @@ export const AboutPage: React.FC = () => {
               Guiding Voices of National Youth Parliament
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Key perspectives from our central leadership, chairman, and general secretariat on empowering youth across Sindh.
+              Key perspectives from our central leadership, provincial president, chairman, general secretariat, and information desk on empowering youth across Sindh.
             </p>
           </div>
 
@@ -187,12 +188,89 @@ export const AboutPage: React.FC = () => {
             </div>
           </div>
 
-          {/* ----------------- LEADER 2: ABDUL MUIZ LAKHO (Chairman, NYP Sindh) ----------------- */}
+          {/* ----------------- LEADER 2: ABDUL REHMAN HALEPOTO (President, National Youth Parliament Sindh) ----------------- */}
           <div className="bg-slate-50 dark:bg-[#0b1320] p-8 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               
               {/* Message Content (Left) */}
               <div className="lg:col-span-8 space-y-4 order-2 lg:order-1">
+                <div className="inline-flex items-center space-x-1.5 bg-emerald-100/80 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/60 px-3 py-1 rounded-full text-[11px] font-bold text-emerald-900 dark:text-emerald-300">
+                  <Award className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>Provincial Presidential Message</span>
+                </div>
+
+                <h3 className="text-xl sm:text-2xl font-extrabold text-[#052818] dark:text-white font-serif-heading">
+                  Youth Leading Future
+                </h3>
+
+                <div className="space-y-3.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-relaxed border-l-4 border-amber-400 pl-4 py-1 italic font-serif">
+                    "It is a privilege to lead the National Youth Parliament Sindh with a firm belief that the future of our province depends on the ideas, courage and participation of its young people."
+                  </p>
+
+                  <p>
+                    Our youth must be more than observers of change, they must become its architects. NYP Sindh is committed to providing young people with a platform where they can discuss, debate, lead, and transform ideas into meaningful action. We aim to promote responsible leadership, democratic values, education, social inclusion, innovation and community service across Sindh.
+                  </p>
+
+                  <p>
+                    I believe leadership is not defined by a position, it is defined by the positive difference we create for others. Every young person has the potential to contribute and when that potential is given direction and opportunity, it can shape a stronger society.
+                  </p>
+
+                  <p className="font-medium text-emerald-950 dark:text-emerald-200 bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-300/80 dark:border-emerald-800/60 p-3.5 rounded-xl">
+                    <strong>Our message is simple:</strong> believe in your voice, take responsibility, serve your community, and have the courage to lead. Together we can build a progressive, inclusive and empowered Sindh led by its youth.
+                  </p>
+                </div>
+              </div>
+
+              {/* Photo Card (Right) */}
+              <div className="lg:col-span-4 flex flex-col items-center text-center order-1 lg:order-2">
+                <div className="w-48 h-60 sm:w-56 sm:h-68 rounded-2xl overflow-hidden border-4 border-amber-400 shadow-xl bg-slate-100 dark:bg-slate-900 shrink-0 relative group">
+                  <img
+                    src="/nyp-president.png"
+                    alt="President Abdul Rehman Halepoto"
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute bottom-3 right-3 bg-amber-400 text-slate-950 p-1.5 rounded-full shadow-md">
+                    <Crown className="w-4 h-4 text-slate-950" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading mt-3 uppercase">
+                  Abdul Rehman Halepoto
+                </h3>
+                <p className="text-xs font-semibold text-emerald-700 dark:text-amber-400 uppercase tracking-wider mt-0.5">
+                  President, National Youth Parliament Sindh
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ----------------- LEADER 3: ABDUL MUIZ LAKHO (Chairman, NYP Sindh) ----------------- */}
+          <div className="bg-slate-50 dark:bg-[#0b1320] p-8 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              
+              {/* Photo Card (Left) */}
+              <div className="lg:col-span-4 flex flex-col items-center text-center">
+                <div className="w-48 h-60 sm:w-56 sm:h-68 rounded-2xl overflow-hidden border-4 border-amber-500 shadow-xl bg-slate-100 dark:bg-slate-900 shrink-0 relative group">
+                  <img
+                    src="/nyp-chairman.png"
+                    alt="Chairman Abdul Muiz Lakho"
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute bottom-3 right-3 bg-amber-500 text-slate-950 p-1.5 rounded-full shadow-md">
+                    <Award className="w-4 h-4 text-slate-950" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading mt-3 uppercase">
+                  Abdul Muiz Lakho
+                </h3>
+                <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mt-0.5">
+                  Chairman, National Youth Parliament Sindh
+                </p>
+              </div>
+
+              {/* Message Content (Right) */}
+              <div className="lg:col-span-8 space-y-4">
                 <div className="inline-flex items-center space-x-1.5 bg-amber-100/80 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700/60 px-3 py-1 rounded-full text-[11px] font-bold text-amber-900 dark:text-amber-300">
                   <Crown className="w-3 h-3 text-amber-600" />
                   <span>Chairman's Message</span>
@@ -217,55 +295,15 @@ export const AboutPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Photo Card (Right) */}
-              <div className="lg:col-span-4 flex flex-col items-center text-center order-1 lg:order-2">
-                <div className="w-48 h-60 sm:w-56 sm:h-68 rounded-2xl overflow-hidden border-4 border-amber-500 shadow-xl bg-slate-100 dark:bg-slate-900 shrink-0 relative group">
-                  <img
-                    src="/nyp-chairman.png"
-                    alt="Chairman Abdul Muiz Lakho"
-                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute bottom-3 right-3 bg-amber-500 text-slate-950 p-1.5 rounded-full shadow-md">
-                    <Award className="w-4 h-4 text-slate-950" />
-                  </div>
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading mt-3 uppercase">
-                  Abdul Muiz Lakho
-                </h3>
-                <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mt-0.5">
-                  Chairman, National Youth Parliament Sindh
-                </p>
-              </div>
-
             </div>
           </div>
 
-          {/* ----------------- LEADER 3: RAO HUMAYUN FARRUKH (General Secretary, NYP Sindh) ----------------- */}
+          {/* ----------------- LEADER 4: RAO HUMAYUN FARRUKH (General Secretary, NYP Sindh) ----------------- */}
           <div className="bg-slate-50 dark:bg-[#0b1320] p-8 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               
-              {/* Photo Card */}
-              <div className="lg:col-span-4 flex flex-col items-center text-center">
-                <div className="w-48 h-60 sm:w-56 sm:h-68 rounded-2xl overflow-hidden border-4 border-emerald-600 dark:border-emerald-500 shadow-xl bg-slate-100 dark:bg-slate-900 shrink-0 relative group">
-                  <img
-                    src="/nyp-general-secretary.png"
-                    alt="General Secretary Rao Humayun Farrukh"
-                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute bottom-3 right-3 bg-emerald-600 text-white p-1.5 rounded-full shadow-md">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading mt-3 uppercase">
-                  Rao Humayun Farrukh
-                </h3>
-                <p className="text-xs font-semibold text-emerald-700 dark:text-amber-400 uppercase tracking-wider mt-0.5">
-                  General Secretary, NYP Sindh
-                </p>
-              </div>
-
-              {/* Message Content */}
-              <div className="lg:col-span-8 space-y-4">
+              {/* Message Content (Left) */}
+              <div className="lg:col-span-8 space-y-4 order-2 lg:order-1">
                 <div className="inline-flex items-center space-x-1.5 bg-emerald-100/80 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/60 px-3 py-1 rounded-full text-[11px] font-bold text-emerald-900 dark:text-emerald-300">
                   <Sparkles className="w-3 h-3 text-emerald-600" />
                   <span>General Secretary's Message</span>
@@ -286,6 +324,79 @@ export const AboutPage: React.FC = () => {
 
                   <p className="font-medium text-amber-950 dark:text-amber-200 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 p-3.5 rounded-xl">
                     <strong>Our Commitment:</strong> Building institutional pathways and empowering dynamic young minds who will lead Sindh towards lasting prosperity, social justice, and good governance.
+                  </p>
+                </div>
+              </div>
+
+              {/* Photo Card (Right) */}
+              <div className="lg:col-span-4 flex flex-col items-center text-center order-1 lg:order-2">
+                <div className="w-48 h-60 sm:w-56 sm:h-68 rounded-2xl overflow-hidden border-4 border-emerald-600 dark:border-emerald-500 shadow-xl bg-slate-100 dark:bg-slate-900 shrink-0 relative group">
+                  <img
+                    src="/nyp-general-secretary.png"
+                    alt="General Secretary Rao Humayun Farrukh"
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute bottom-3 right-3 bg-emerald-600 text-white p-1.5 rounded-full shadow-md">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading mt-3 uppercase">
+                  Rao Humayun Farrukh
+                </h3>
+                <p className="text-xs font-semibold text-emerald-700 dark:text-amber-400 uppercase tracking-wider mt-0.5">
+                  General Secretary, NYP Sindh
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ----------------- LEADER 5: SHAKIR CHANDIO (Information Secretary, National Youth Parliament Sindh) ----------------- */}
+          <div className="bg-slate-50 dark:bg-[#0b1320] p-8 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              
+              {/* Photo Card (Left) */}
+              <div className="lg:col-span-4 flex flex-col items-center text-center">
+                <div className="w-48 h-60 sm:w-56 sm:h-68 rounded-2xl overflow-hidden border-4 border-amber-500 shadow-xl bg-slate-100 dark:bg-slate-900 shrink-0 relative group">
+                  <img
+                    src="/nyp-information-secretary.png"
+                    alt="Information Secretary Shakir Chandio"
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute bottom-3 right-3 bg-amber-500 text-slate-950 p-1.5 rounded-full shadow-md">
+                    <Megaphone className="w-4 h-4 text-slate-950" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading mt-3 uppercase">
+                  Shakir Chandio
+                </h3>
+                <p className="text-xs font-semibold text-emerald-700 dark:text-amber-400 uppercase tracking-wider mt-0.5">
+                  Information Secretary, National Youth Parliament Sindh
+                </p>
+              </div>
+
+              {/* Message Content (Right) */}
+              <div className="lg:col-span-8 space-y-4">
+                <div className="inline-flex items-center space-x-1.5 bg-amber-100/80 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700/60 px-3 py-1 rounded-full text-[11px] font-bold text-amber-900 dark:text-amber-300">
+                  <Megaphone className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span>Message from the Information Secretary</span>
+                </div>
+
+                <h3 className="text-xl sm:text-2xl font-extrabold text-[#052818] dark:text-white font-serif-heading">
+                  Amplify Youth Voices &amp; Lead Positive Change
+                </h3>
+
+                <div className="space-y-3.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-relaxed border-l-4 border-amber-500 pl-4 py-1 italic font-serif">
+                    “As Information Secretary, National Youth Parliament Sindh, my commitment is to amplify the voice of our youth, highlight their ideas and achievements, and strengthen meaningful communication across Sindh. Together, we aim to build an informed, connected, and empowered generation ready to lead positive change.”
+                  </p>
+
+                  <p>
+                    Effective communication, democratic awareness, and transparent representation are pivotal to empowering our youth. We are dedicated to ensuring that every young citizen across Sindh has a platform where their ideas resonate, their achievements are recognized, and their potential is realized.
+                  </p>
+
+                  <p className="font-medium text-emerald-950 dark:text-emerald-200 bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-300/80 dark:border-emerald-800/60 p-3.5 rounded-xl">
+                    <strong>Our Vision:</strong> Uniting young minds, amplifying inspiring stories, and building an informed and empowered youth community across Sindh.
                   </p>
                 </div>
               </div>
