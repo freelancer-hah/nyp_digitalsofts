@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { store } from '../services/store';
-import { ShieldCheck, LogIn, AlertCircle, ArrowLeft, KeyRound, Lock, Crown, Search, CheckSquare } from 'lucide-react';
+import { ShieldCheck, LogIn, AlertCircle, ArrowLeft, KeyRound, Lock } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,31 +19,16 @@ export const AdminLoginPage: React.FC = () => {
       return;
     }
 
+    if (!passwordInput) {
+      setError('Please enter your password');
+      return;
+    }
+
     const res = store.loginUserByCnic(usernameInput, passwordInput);
     if (res.success && res.user) {
       if (res.user.role === 'MEMBER' || res.user.role === 'APPLICANT') {
         setError('This portal is restricted for Administrative Officers. Please use Public Member Login.');
       } else if (res.user.role === 'VERIFICATION_DESK' || res.user.role === 'VERIFYING_OFFICER') {
-        navigate('/admin/verification');
-      } else if (res.user.role === 'AUTHORISATION_DESK' || res.user.role === 'APPROVAL_AUTHORITY') {
-        navigate('/admin/approval');
-      } else if (res.user.role === 'WEB_COORDINATOR') {
-        navigate('/admin/cms');
-      } else {
-        navigate('/admin/master');
-      }
-    } else {
-      setError(res.error || 'Invalid Administrative Credentials');
-    }
-  };
-
-  const handleQuickDemoLogin = (demoUsername: string, demoPass: string) => {
-    setError('');
-    setUsernameInput(demoUsername);
-    setPasswordInput(demoPass);
-    const res = store.loginUserByCnic(demoUsername, demoPass);
-    if (res.success && res.user) {
-      if (res.user.role === 'VERIFICATION_DESK' || res.user.role === 'VERIFYING_OFFICER') {
         navigate('/admin/verification');
       } else if (res.user.role === 'AUTHORISATION_DESK' || res.user.role === 'APPROVAL_AUTHORITY') {
         navigate('/admin/approval');
@@ -133,50 +118,6 @@ export const AdminLoginPage: React.FC = () => {
               <span>ACCESS EXECUTIVE DESK</span>
             </button>
           </form>
-
-          {/* Smooth Quick Admin Desk Demo Shortcuts */}
-          <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5">
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-extrabold tracking-wider block text-center">
-              Quick Admin Desk Demo Shortcuts:
-            </span>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin('president', 'president123')}
-                className="bg-purple-50 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 border border-purple-200 dark:border-purple-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-purple-100 dark:hover:bg-purple-900/80 hover:scale-105 flex items-center justify-center space-x-1"
-              >
-                <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span>President</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin('coordinator', 'coordinator123')}
-                className="bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 border border-teal-200 dark:border-teal-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-teal-100 dark:hover:bg-teal-900/80 hover:scale-105 flex items-center justify-center space-x-1"
-              >
-                <span>Web Coordinator</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin('verifier', 'verifier123')}
-                className="bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-blue-100 dark:hover:bg-blue-900/80 hover:scale-105 flex items-center justify-center space-x-1"
-              >
-                <Search className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span>Verifier</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin('authoriser', 'authoriser123')}
-                className="bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800/70 p-2.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer shadow-xs hover:bg-amber-100 dark:hover:bg-amber-900/80 hover:scale-105 flex items-center justify-center space-x-1"
-              >
-                <CheckSquare className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>Authoriser</span>
-              </button>
-            </div>
-          </div>
 
           <div className="text-center pt-1">
             <Link

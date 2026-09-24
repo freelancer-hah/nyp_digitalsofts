@@ -588,19 +588,26 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
                 </div>
               </div>
 
-              {/* President Official Stamp & Title Right */}
-              <div style={{ width: '80px', textAlign: 'center', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: '56px', height: '56px' }}>
-                  <PresidentStampSvg />
+              {/* Sindh Identity Map Logo & Slogan Badge Right */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0, paddingTop: '2px' }}>
+                <div style={{ width: '36px', height: '48px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <img 
+                    src="/sindh-identity-logo.png" 
+                    alt="Sindh Map" 
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                  />
                 </div>
-                <div style={{ fontSize: '7.5px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', lineHeight: 1.1, marginTop: '2px', whiteSpace: 'nowrap' }}>
-                  ABDUL REHMAN HALEPOTO
-                </div>
-                <div style={{ fontSize: '6.5px', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', lineHeight: 1, fontStyle: 'italic', whiteSpace: 'nowrap' }}>
-                  PRESIDENT
-                </div>
-                <div style={{ fontSize: '5.5px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', lineHeight: 1, whiteSpace: 'nowrap' }}>
-                  NYP SINDH
+                <div style={{ width: '2.5px', height: '36px', background: 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)', borderRadius: '1.5px', flexShrink: 0 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left', lineHeight: 1.15 }}>
+                  <span style={{ fontSize: '11px', fontWeight: 900, color: '#0f172a', letterSpacing: '0.5px', fontFamily: "'Outfit', sans-serif" }}>
+                    SINDH
+                  </span>
+                  <span style={{ fontSize: '6px', fontWeight: 800, color: '#1e293b', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    OUR IDENTITY
+                  </span>
+                  <span style={{ fontSize: '6px', fontWeight: 800, color: '#1e293b', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    OUR PRIDE
+                  </span>
                 </div>
               </div>
 
@@ -808,7 +815,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
               </div>
 
               {/* Title Center */}
-              <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+              <div style={{ flex: 1, textAlign: 'center', minWidth: 0, paddingRight: '12px' }}>
                 <h2 style={{ color: '#ffffff', fontSize: '13.2px', fontWeight: 900, letterSpacing: '-0.1px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
                   NATIONAL YOUTH PARLIAMENT
                 </h2>
@@ -920,21 +927,28 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
 
               </div>
 
-              {/* General Secretary Signature & Stamp Block Right */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', minWidth: '140px', flexShrink: 0 }}>
-                <div style={{ width: '128px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <GeneralSecretarySignatureSvg />
+              {/* Sindh Map Logo & Slogan Badge Right (In place of stamp) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, paddingRight: '4px' }}>
+                <div style={{ width: '42px', height: '54px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <img 
+                    src="/sindh-identity-logo.png" 
+                    alt="Sindh Map" 
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                  />
                 </div>
-                <div style={{ width: '100%', borderTop: '1.5px solid #1d4ed8', paddingTop: '3px', marginTop: '1px' }}>
-                  <div style={{ fontSize: '9px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.4px', whiteSpace: 'nowrap' }}>
-                    RAO HUMAYUN
-                  </div>
-                  <div style={{ fontSize: '7.8px', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', fontStyle: 'italic', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
-                    GENERAL SECRETARY
-                  </div>
-                  <div style={{ fontSize: '6.8px', fontWeight: 700, color: '#475569', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
-                    National Youth Parliament Sindh
-                  </div>
+
+                <div style={{ width: '3px', height: '42px', background: 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)', borderRadius: '1.5px', flexShrink: 0 }} />
+
+                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', lineHeight: 1.15 }}>
+                  <span style={{ fontSize: '13px', fontWeight: 900, color: '#0f172a', letterSpacing: '0.5px', fontFamily: "'Outfit', sans-serif" }}>
+                    SINDH
+                  </span>
+                  <span style={{ fontSize: '7.5px', fontWeight: 800, color: '#1e293b', letterSpacing: '0.4px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    OUR IDENTITY
+                  </span>
+                  <span style={{ fontSize: '7.5px', fontWeight: 800, color: '#1e293b', letterSpacing: '0.4px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    OUR PRIDE
+                  </span>
                 </div>
               </div>
 

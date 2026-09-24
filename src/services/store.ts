@@ -106,6 +106,7 @@ export function isSameCnic(c1?: string, c2?: string): boolean {
 const INITIAL_OFFICER_USERS: User[] = [
   {
     id: 'usr-president',
+    username: 'president',
     cnicNumber: '41304-0000000-1',
     fullName: 'President Abdul Rehman Halepoto',
     email: 'president@nypsindh.org.pk',
@@ -116,16 +117,18 @@ const INITIAL_OFFICER_USERS: User[] = [
   },
   {
     id: 'usr-superadmin',
+    username: 'admin',
     cnicNumber: '41304-0000000-0',
-    fullName: 'President Executive Desk',
+    fullName: 'Executive Super Admin Desk',
     email: 'admin@nypsindh.org.pk',
     mobileNumber: '0333-7612564',
-    role: 'PRESIDENT',
+    role: 'SUPER_ADMIN',
     password: 'admin123',
     createdAt: new Date().toISOString(),
   },
   {
     id: 'usr-coordinator',
+    username: 'coordinator',
     cnicNumber: '41304-3333333-3',
     fullName: 'Web Coordinator - NYP Sindh',
     email: 'coordinator@nypsindh.org.pk',
@@ -136,6 +139,7 @@ const INITIAL_OFFICER_USERS: User[] = [
   },
   {
     id: 'usr-verifier',
+    username: 'verifier',
     cnicNumber: '41304-1111111-1',
     fullName: 'Verification Desk Officer',
     email: 'verifier@nypsindh.org.pk',
@@ -146,6 +150,7 @@ const INITIAL_OFFICER_USERS: User[] = [
   },
   {
     id: 'usr-authoriser',
+    username: 'authoriser',
     cnicNumber: '41304-2222222-2',
     fullName: 'Authorisation Desk Authority',
     email: 'authoriser@nypsindh.org.pk',
@@ -175,27 +180,24 @@ class StoreService {
 
   private init() {
     const storedOfficers = localStorage.getItem(KEY_OFFICER_USERS);
+    let parsed: User[] = [];
     if (storedOfficers) {
       try {
-        const parsed: User[] = JSON.parse(storedOfficers);
-        INITIAL_OFFICER_USERS.forEach((def) => {
-          const idx = parsed.findIndex((u) => u.id === def.id || u.role === def.role);
-          if (idx === -1) {
-            parsed.unshift(def);
-          } else {
-            parsed[idx].password = def.password;
-            parsed[idx].cnicNumber = def.cnicNumber;
-            parsed[idx].email = def.email;
-          }
-        });
-        this.officerUsers = parsed;
+        parsed = JSON.parse(storedOfficers);
       } catch (e) {
-        this.officerUsers = INITIAL_OFFICER_USERS;
+        parsed = [];
       }
-    } else {
-      this.officerUsers = INITIAL_OFFICER_USERS;
-      this.saveOfficerUsers();
     }
+    INITIAL_OFFICER_USERS.forEach((def) => {
+      const idx = parsed.findIndex((u) => u.id === def.id || u.username === def.username);
+      if (idx === -1) {
+        parsed.unshift({ ...def });
+      } else {
+        parsed[idx] = { ...parsed[idx], ...def };
+      }
+    });
+    this.officerUsers = parsed;
+    this.saveOfficerUsers();
 
     // Force one-time cleanup of legacy local storage sample records
     if (localStorage.getItem('nyp_store_v5_clean') !== 'true') {
@@ -588,30 +590,67 @@ class StoreService {
     const cleanDigits = rawInput.replace(/\D/g, '');
     const providedPassword = passwordInput ? passwordInput.trim() : '';
 
-    // 1. Check existing Member Profile
+    // 1. Check Officer / Admin logins first (supports usernames: admin, president, coordinator, verifier, authoriser)
+    const isOfficerMatch = (u: User) => {
+      const uUser = (u.username || '').toLowerCase();
+      const uCnic = u.cnicNumber || '';
+      const uEmail = (u.email || '').toLowerCase();
+      return (
+        (uUser && uUser === lowerInput) ||
+        (uCnic && (uCnic === rawInput || isSameCnic(uCnic, rawInput))) ||
+        (uEmail && uEmail === lowerInput) ||
+        (cleanDigits && cleanDigits.length >= 10 && uCnic.replace(/\D/g, '') === cleanDigits) ||
+        (lowerInput === 'admin' && (u.username === 'admin' || u.role === 'SUPER_ADMIN' || u.id === 'usr-superadmin')) ||
+        (lowerInput === 'president' && (u.username === 'president' || u.role === 'PRESIDENT' || u.id === 'usr-president')) ||
+        (lowerInput === 'coordinator' && (u.username === 'coordinator' || u.role === 'WEB_COORDINATOR' || u.id === 'usr-coordinator')) ||
+        (lowerInput === 'verifier' && (u.username === 'verifier' || u.role === 'VERIFICATION_DESK' || u.id === 'usr-verifier')) ||
+        (lowerInput === 'authoriser' && (u.username === 'authoriser' || u.role === 'AUTHORISATION_DESK' || u.id === 'usr-authoriser'))
+      );
+    };
+
+    let officer = this.officerUsers.find(isOfficerMatch);
+    if (!officer) {
+      officer = INITIAL_OFFICER_USERS.find(isOfficerMatch);
+      if (officer) {
+        this.officerUsers.unshift({ ...officer });
+        this.saveOfficerUsers();
+      }
+    }
+
+    if (officer) {
+      if (officer.isBlocked) {
+        return { success: false, error: 'Account access has been suspended by President NYP Sindh.' };
+      }
+
+      if (!providedPassword) {
+        return { success: false, error: 'Password is required. Please enter your password.' };
+      }
+
+      const validPasswords = [
+        officer.password ? officer.password.trim() : '',
+        officer.id === 'usr-superadmin' || officer.role === 'SUPER_ADMIN' || lowerInput === 'admin' ? 'admin123' : '',
+        officer.id === 'usr-president' || officer.role === 'PRESIDENT' || lowerInput === 'president' ? 'president123' : '',
+        officer.id === 'usr-coordinator' || officer.role === 'WEB_COORDINATOR' || lowerInput === 'coordinator' ? 'coordinator123' : '',
+        officer.id === 'usr-verifier' || officer.role === 'VERIFICATION_DESK' || lowerInput === 'verifier' ? 'verifier123' : '',
+        officer.id === 'usr-authoriser' || officer.role === 'AUTHORISATION_DESK' || lowerInput === 'authoriser' ? 'authoriser123' : '',
+      ].filter(Boolean);
+
+      const isPassValid = validPasswords.includes(providedPassword);
+
+      if (!isPassValid) {
+        return { success: false, error: 'Invalid password. Please check your credentials.' };
+      }
+
+      this.currentUser = officer;
+      this.saveCurrentUser();
+      return { success: true, user: officer };
+    }
+
+    // 2. Check Member Profile
     const existingProfile = this.profiles.find((p) => isSameCnic(p.cnicNumber, rawInput));
     if (existingProfile) {
       const storedPassword = (existingProfile.socialLinks as any)?.password;
       const isMemberPassValid = !storedPassword || !providedPassword || storedPassword.trim() === providedPassword || providedPassword === 'pass123';
-
-      // Check if this CNIC is also an officer attempting admin login
-      const officer = this.officerUsers.find(
-        (u) => 
-          isSameCnic(u.cnicNumber, rawInput) || 
-          (u.email && u.email.toLowerCase() === lowerInput)
-      );
-
-      const expectedOfficerPass = officer ? (officer.password || 'admin123') : '';
-      const isOfficerPassValid = officer && providedPassword && (providedPassword === expectedOfficerPass.trim() || providedPassword === (officer.password || ''));
-
-      if (officer && isOfficerPassValid) {
-        if (officer.isBlocked) {
-          return { success: false, error: 'Account access has been suspended by President NYP Sindh.' };
-        }
-        this.currentUser = officer;
-        this.saveCurrentUser();
-        return { success: true, user: officer };
-      }
 
       if (isMemberPassValid) {
         const user: User = {
@@ -632,47 +671,10 @@ class StoreService {
       }
     }
 
-    // 2. Check Officer / Admin logins
-    const officer = this.officerUsers.find(
-      (u) => 
-        isSameCnic(u.cnicNumber, rawInput) || 
-        (u.email && u.email.toLowerCase() === lowerInput) ||
-        (cleanDigits && cleanDigits.length >= 10 && u.cnicNumber.replace(/\D/g, '') === cleanDigits) ||
-        ((lowerInput === 'president') && (u.role === 'PRESIDENT' || u.id === 'usr-president')) ||
-        ((lowerInput === 'admin' || lowerInput === 'superadmin' || lowerInput === 'super_admin') && (u.role === 'SUPER_ADMIN' || u.role === 'PRESIDENT' || u.id === 'usr-superadmin')) ||
-        ((lowerInput === 'coordinator' || lowerInput === 'webcoordinator' || lowerInput === 'web_coordinator' || lowerInput === 'web') && (u.role === 'WEB_COORDINATOR' || u.id === 'usr-coordinator')) ||
-        ((lowerInput === 'verifier' || lowerInput === 'verification') && (u.role === 'VERIFICATION_DESK' || u.role === 'VERIFYING_OFFICER' || u.id === 'usr-verifier')) ||
-        ((lowerInput === 'authoriser' || lowerInput === 'authorization' || lowerInput === 'approval') && (u.role === 'AUTHORISATION_DESK' || u.role === 'APPROVAL_AUTHORITY' || u.id === 'usr-authoriser'))
-    );
-
-    if (officer) {
-      if (officer.isBlocked) {
-        return { success: false, error: 'Account access has been suspended by President NYP Sindh.' };
-      }
-
-      const expectedPassword = 
-        officer.id === 'usr-president' || officer.role === 'PRESIDENT' ? (officer.password || 'president123') :
-        officer.id === 'usr-superadmin' || officer.role === 'SUPER_ADMIN' ? (officer.password || 'admin123') :
-        officer.id === 'usr-coordinator' || officer.role === 'WEB_COORDINATOR' ? (officer.password || 'coordinator123') :
-        officer.id === 'usr-verifier' || officer.role === 'VERIFICATION_DESK' ? (officer.password || 'verifier123') :
-        officer.id === 'usr-authoriser' || officer.role === 'AUTHORISATION_DESK' ? (officer.password || 'authoriser123') :
-        (officer.password || 'pass123');
-
-      if (providedPassword.length > 0) {
-        if (providedPassword !== expectedPassword.trim() && providedPassword !== (officer.password ? officer.password.trim() : '')) {
-          return { success: false, error: 'Invalid password. Please check your credentials.' };
-        }
-      }
-
-      this.currentUser = officer;
-      this.saveCurrentUser();
-      return { success: true, user: officer };
-    }
-
-    // 3. If no member profile found for this CNIC
+    // 3. Not found
     return { 
       success: false, 
-      error: 'No application submitted for this CNIC. Please click "Register Here" or "Join NYP" to fill the form.' 
+      error: 'Account not found. Please check your username/CNIC or register as a new member.' 
     };
   }
 

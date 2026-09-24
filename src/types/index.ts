@@ -39,7 +39,8 @@ export interface Taluka {
 
 export interface User {
   id: string;
-  cnicNumber: string; // Username
+  cnicNumber: string; // CNIC
+  username?: string;
   fullName: string;
   email: string;
   mobileNumber: string;

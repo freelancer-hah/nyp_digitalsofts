@@ -41,15 +41,12 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickDemoLogin = (demoCnic: string) => {
-    const res = store.loginUserByCnic(demoCnic, 'pass123');
-    if (res.success && res.user) {
-      navigate('/member/dashboard');
-    }
-  };
-
   const handleCnicChange = (val: string) => {
-    setCnicNumber(formatCnic(val));
+    if (/[a-zA-Z]/.test(val)) {
+      setCnicNumber(val.trim());
+    } else {
+      setCnicNumber(formatCnic(val));
+    }
   };
 
   return (
@@ -59,8 +56,8 @@ export const LoginPage: React.FC = () => {
           <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center mx-auto overflow-hidden">
             <img src="/nyp-logo.png" alt="NYP Sindh Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading">Member Sign In</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Enter your CNIC (Username) and Password to access your dashboard.</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading">Sign In Portal</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Enter your CNIC or Username and Password to access your portal.</p>
         </div>
 
         {error && (
@@ -73,15 +70,15 @@ export const LoginPage: React.FC = () => {
         <form onSubmit={handleLogin} className="space-y-3 text-xs">
           <div>
             <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
-              CNIC Number (Username) *
+              CNIC Number or Username *
             </label>
             <input
               type="text"
               required
               value={cnicNumber}
               onChange={(e) => handleCnicChange(e.target.value)}
-              placeholder="41101-1234567-1"
-              maxLength={15}
+              placeholder="e.g. 41101-1234567-1 or admin"
+              maxLength={30}
               className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white font-mono text-xs font-bold focus:border-emerald-600 outline-none"
             />
           </div>
