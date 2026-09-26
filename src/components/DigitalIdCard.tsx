@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { MemberProfile } from '../types';
 import { Download, Printer, ShieldCheck, Loader2, Eye, RotateCw, LayoutGrid } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -35,6 +35,34 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [activeTab, setActiveTab] = useState<'BOTH' | 'FRONT' | 'BACK'>('BOTH');
+  const [cardScale, setCardScale] = useState<number>(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth - 16;
+        if (containerWidth > 0 && containerWidth < 540) {
+          setCardScale(containerWidth / 540);
+        } else {
+          setCardScale(1);
+        }
+      }
+    };
+
+    updateScale();
+
+    window.addEventListener('resize', updateScale);
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      observer = new ResizeObserver(updateScale);
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      if (observer) observer.disconnect();
+    };
+  }, []);
 
   const issueDateStr = formatDateDDMMYYYY(profile.approvalDate || profile.submittedAt) || '18/09/2026';
 
@@ -553,505 +581,523 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
           </button>
         </div>
 
-      </div>
-
-      {/* Fully Responsive Unclipped Horizontal Card Container */}
+        {/* Fully Responsive Unclipped Horizontal Card Container */}
       <div
         ref={containerRef}
-        className="w-full py-4 flex flex-col items-center justify-center gap-8 min-h-[500px] max-w-full overflow-visible px-1"
+        className="w-full py-4 flex flex-col items-center justify-center gap-6 min-h-fit max-w-full overflow-hidden px-1"
       >
 
         {/* ======================================================== */}
         {/* FRONT SIDE OF ID CARD (HORIZONTAL / LANDSCAPE FORMAT)    */}
         {/* ======================================================== */}
         <div
-          ref={frontCardRef}
-          className={`print-card-front transition-all duration-300 shrink-0 ${activeTab === 'BACK' ? 'hidden' : 'block'}`}
+          className={`transition-all duration-300 shrink-0 ${activeTab === 'BACK' ? 'hidden' : 'block'}`}
           style={{
-            width: '540px',
-            maxWidth: '100%',
-            height: '340px',
-            minHeight: '340px',
-            background: '#ffffff',
-            color: '#0f172a',
-            border: '2px solid #cbd5e1',
-            borderRadius: '20px',
-            boxSizing: 'border-box',
-            position: 'relative',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            boxShadow: '0 25px 35px -5px rgba(0, 0, 0, 0.2), 0 10px 15px -5px rgba(0, 0, 0, 0.1)',
-            fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+            width: cardScale < 1 ? `${540 * cardScale}px` : '540px',
+            height: cardScale < 1 ? `${340 * cardScale}px` : '340px',
+            position: 'relative'
           }}
         >
-          {/* TOP SECTION: WHITE HEADER WITH EMBLEM, TITLE & SINDH MAP */}
-          <div style={{ position: 'relative', zIndex: 10, padding: '12px 16px 2px 16px', background: '#ffffff' }}>
+          <div
+            ref={frontCardRef}
+            className="print-card-front"
+            style={{
+              width: '540px',
+              height: '340px',
+              minHeight: '340px',
+              transform: cardScale < 1 ? `scale(${cardScale})` : 'none',
+              transformOrigin: 'top left',
+              background: '#ffffff',
+              color: '#0f172a',
+              border: '2px solid #cbd5e1',
+              borderRadius: '20px',
+              boxSizing: 'border-box',
+              position: 'relative',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 25px 35px -5px rgba(0, 0, 0, 0.2), 0 10px 15px -5px rgba(0, 0, 0, 0.1)',
+              fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+            }}
+          >
+            {/* TOP SECTION: WHITE HEADER WITH EMBLEM, TITLE & SINDH MAP */}
+            <div style={{ position: 'relative', zIndex: 10, padding: '12px 16px 2px 16px', background: '#ffffff' }}>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
 
-              {/* NYP Emblem Logo Left */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '52px', flexShrink: 0 }}>
-                <div style={{ width: '50px', height: '50px', position: 'relative' }}>
-                  <img src="/nyp-logo.png" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                </div>
-              </div>
-
-              {/* Center Title & S I N D H */}
-              <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
-                <h1 style={{ color: '#0f172a', fontSize: '14.2px', fontWeight: 900, letterSpacing: '0.1px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
-                  NATIONAL YOUTH PARLIAMENT
-                </h1>
-
-                {/* Gold Lines with S I N D H */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', margin: '3px 0' }}>
-                  <span style={{ height: '1.8px', background: '#d97706', flex: 1 }}></span>
-                  <span style={{ color: '#d97706', fontSize: '11.5px', fontWeight: 900, letterSpacing: '3.5px', whiteSpace: 'nowrap' }}>
-                    S I N D H
-                  </span>
-                  <span style={{ height: '1.8px', background: '#d97706', flex: 1 }}></span>
-                </div>
-
-                <div style={{ color: '#334155', fontSize: '6.8px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                  YOUTH TODAY &nbsp;|&nbsp; A STRONGER PAKISTAN TOMORROW
-                </div>
-              </div>
-
-              {/* Sindh Identity Map Logo & Slogan Badge Right */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-                <div style={{ width: '36px', height: '46px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <img
-                    src="/sindh-identity-logo.png"
-                    alt="Sindh Map"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  />
-                </div>
-                <div style={{ width: '2px', height: '34px', background: 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)', borderRadius: '1px', flexShrink: 0 }} />
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left', lineHeight: 1.15 }}>
-                  <span style={{ fontSize: '11px', fontWeight: 900, color: '#0f172a', letterSpacing: '0.5px', fontFamily: "'Outfit', sans-serif" }}>
-                    SINDH
-                  </span>
-                  <span style={{ fontSize: '6px', fontWeight: 800, color: '#1e293b', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                    OUR IDENTITY
-                  </span>
-                  <span style={{ fontSize: '6px', fontWeight: 800, color: '#1e293b', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                    OUR PRIDE
-                  </span>
-                </div>
-              </div>
-
-            </div>
-
-            {/* MEMBERSHIP CARD Gold Flanked Banner Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '6px', marginBottom: '4px' }}>
-              <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
-              <span style={{ color: '#0f172a', fontSize: '10px', fontWeight: 900, letterSpacing: '3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                MEMBERSHIP CARD
-              </span>
-              <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
-            </div>
-
-          </div>
-
-          {/* MAIN BODY: 3 HORIZONTAL COLUMNS (PHOTO LEFT, DETAILS CENTER, SIGNATURES & QR RIGHT) */}
-          <div style={{ padding: '2px 16px 4px 16px', display: 'flex', gap: '14px', alignItems: 'stretch', position: 'relative', zIndex: 10, flex: 1 }}>
-
-            {/* COLUMN 1: Member Photo Frame (Gold Double Border) */}
-            <div style={{ width: '114px', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <div
-                style={{
-                  width: '114px',
-                  height: '146px',
-                  borderRadius: '14px',
-                  border: '3.5px solid #d97706',
-                  padding: '2.5px',
-                  background: '#ffffff',
-                  boxShadow: '0 6px 14px -2px rgba(0, 0, 0, 0.14)',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {profile.passportPhotoUrl ? (
-                  <img
-                    src={profile.passportPhotoUrl}
-                    alt={profile.fullName}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      borderRadius: '9px'
-                    }}
-                  />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', background: '#e2e8f0', borderRadius: '9px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' }}>
-                    <svg viewBox="0 0 100 120" style={{ width: '85%', height: '85%', fill: '#1e293b' }}>
-                      <circle cx="50" cy="38" r="22" />
-                      <path d="M10,120 C10,80 30,70 50,70 C70,70 90,80 90,120 Z" />
-                      <polygon points="50,70 42,90 58,90" fill="#ffffff" />
-                      <polygon points="50,75 46,120 54,120" fill="#0f172a" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-
-              {/* OVERLAPPING OFFICIAL RED STAMP AT BOTTOM RIGHT OF PHOTO */}
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: '-12px',
-                  right: '-24px',
-                  width: '80px',
-                  height: '80px',
-                  zIndex: 25,
-                  pointerEvents: 'none',
-                  transform: 'rotate(-10deg)',
-                  filter: 'drop-shadow(0px 2px 5px rgba(220, 38, 38, 0.4))'
-                }}
-              >
-                <OfficialRedStampSvg />
-              </div>
-            </div>
-
-            {/* COLUMN 2: Member Information Details */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left', gap: '2px', overflow: 'hidden', minWidth: 0, paddingLeft: '26px' }}>
-
-              <h2 style={{ color: '#0f172a', fontSize: '17px', fontWeight: 900, margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, letterSpacing: '-0.2px', wordBreak: 'break-word', fontFamily: "'Outfit', sans-serif" }}>
-                {profile.fullName || 'Abdul Hannan'}
-              </h2>
-
-              <div style={{ color: '#022c1e', fontSize: '11.8px', fontWeight: 900, marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1.2, fontFamily: "'Outfit', sans-serif" }}>
-                {(profile.assignedDesignation || 'JOINT SECRETARY').toUpperCase()}
-              </div>
-
-              <div style={{ color: '#065f46', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.3px', lineHeight: 1.2, marginTop: '1px', fontFamily: "'Outfit', sans-serif" }}>
-                {divisionName || 'Karachi Division'}
-              </div>
-
-              {/* Gold Accent Line */}
-              <div style={{ width: '42px', height: '2px', background: '#d97706', margin: '4px 0 6px 0' }}></div>
-
-              {/* Key Value Details Table */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '9.4px', marginTop: '1px' }}>
-
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Member ID</span>
-                  <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {profile.membershipIdNumber || 'NYPS-2026-3578'}</span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>CNIC</span>
-                  <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {profile.cnicNumber || '33105-7853093-7'}</span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Date of Birth</span>
-                  <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {formatDateDDMMYYYY(profile.dob) || '01/01/2003'}</span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Date of Issue</span>
-                  <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {issueDateStr || '18/09/2026'}</span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Valid Till</span>
-                  <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: 31/12/2026</span>
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* COLUMN 3: Signatures (President & Gen Sec) & Verification QR Code */}
-            <div style={{ width: '130px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: '6px', paddingTop: '16px', paddingLeft: '8px', borderLeft: '1.5px solid #e2e8f0' }}>
-
-              {/* President Signature */}
-              <div style={{ textAlign: 'center', width: '100%' }}>
-                <div style={{ height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2px' }}>
-                  <img
-                    src="/president-signature.png"
-                    alt="President Signature"
-                    style={{ maxHeight: '22px', maxWidth: '100%', objectFit: 'contain' }}
-                  />
-                </div>
-                <div style={{ borderTop: '1px solid #0f172a', paddingTop: '1.5px' }}>
-                  <div style={{ fontSize: '7.8px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap' }}>
-                    ABDUL REHMAN HALEPOTO
-                  </div>
-                  <div style={{ fontSize: '6.2px', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', fontStyle: 'italic', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
-                    PRESIDENT
+                {/* NYP Emblem Logo Left */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '52px', flexShrink: 0 }}>
+                  <div style={{ width: '50px', height: '50px', position: 'relative' }}>
+                    <img src="/nyp-logo.png" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </div>
                 </div>
+
+                {/* Center Title & S I N D H */}
+                <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+                  <h1 style={{ color: '#0f172a', fontSize: '14.2px', fontWeight: 900, letterSpacing: '0.1px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
+                    NATIONAL YOUTH PARLIAMENT
+                  </h1>
+
+                  {/* Gold Lines with S I N D H */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', margin: '3px 0' }}>
+                    <span style={{ height: '1.8px', background: '#d97706', flex: 1 }}></span>
+                    <span style={{ color: '#d97706', fontSize: '11.5px', fontWeight: 900, letterSpacing: '3.5px', whiteSpace: 'nowrap' }}>
+                      S I N D H
+                    </span>
+                    <span style={{ height: '1.8px', background: '#d97706', flex: 1 }}></span>
+                  </div>
+
+                  <div style={{ color: '#334155', fontSize: '6.8px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    YOUTH TODAY &nbsp;|&nbsp; A STRONGER PAKISTAN TOMORROW
+                  </div>
+                </div>
+
+                {/* Sindh Identity Map Logo & Slogan Badge Right */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+                  <div style={{ width: '36px', height: '46px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <img
+                      src="/sindh-identity-logo.png"
+                      alt="Sindh Map"
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                  </div>
+                  <div style={{ width: '2px', height: '34px', background: 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)', borderRadius: '1px', flexShrink: 0 }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left', lineHeight: 1.15 }}>
+                    <span style={{ fontSize: '11px', fontWeight: 900, color: '#0f172a', letterSpacing: '0.5px', fontFamily: "'Outfit', sans-serif" }}>
+                      SINDH
+                    </span>
+                    <span style={{ fontSize: '6px', fontWeight: 800, color: '#1e293b', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                      OUR IDENTITY
+                    </span>
+                    <span style={{ fontSize: '6px', fontWeight: 800, color: '#1e293b', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                      OUR PRIDE
+                    </span>
+                  </div>
+                </div>
+
               </div>
 
-              {/* General Secretary Signature */}
-              <div style={{ textAlign: 'center', width: '100%' }}>
-                <div style={{ height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2px' }}>
-                  <img
-                    src="/general-secretary-signature.png"
-                    alt="General Secretary Signature"
-                    style={{ maxHeight: '22px', maxWidth: '100%', objectFit: 'contain' }}
-                  />
-                </div>
-                <div style={{ borderTop: '1px solid #0f172a', paddingTop: '1.5px' }}>
-                  <div style={{ fontSize: '7.8px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap' }}>
-                    RAO HUMAYUN
-                  </div>
-                  <div style={{ fontSize: '6.2px', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', fontStyle: 'italic', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
-                    GENERAL SECRETARY
-                  </div>
-                </div>
-              </div>
-
-              {/* QR Code */}
-              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, marginTop: '2px' }}>
-                <div style={{ padding: '2px', background: '#ffffff', borderRadius: '5px', border: '1.2px solid #0f172a', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                  <img src={qrCodeUrl} alt="Verification QR" style={{ width: '40px', height: '40px', display: 'block', borderRadius: '3px' }} />
-                </div>
-                <span style={{ fontSize: '6px', fontWeight: 800, color: '#1e293b', display: 'block', marginTop: '1px', whiteSpace: 'nowrap' }}>
-                  Scan to Verify
+              {/* MEMBERSHIP CARD Gold Flanked Banner Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '6px', marginBottom: '4px' }}>
+                <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+                <span style={{ color: '#0f172a', fontSize: '10px', fontWeight: 900, letterSpacing: '3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  MEMBERSHIP CARD
                 </span>
+                <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
               </div>
 
             </div>
 
-          </div>
+            {/* MAIN BODY: 3 HORIZONTAL COLUMNS (PHOTO LEFT, DETAILS CENTER, SIGNATURES & QR RIGHT) */}
+            <div style={{ padding: '2px 16px 4px 16px', display: 'flex', gap: '14px', alignItems: 'stretch', position: 'relative', zIndex: 10, flex: 1 }}>
 
-          {/* CURVED WAVE DARK GREEN FOOTER BANNER WITH GOLD BORDER */}
-          <div style={{ position: 'relative', width: '100%', marginTop: 'auto', zIndex: 10 }}>
-            {/* Curved SVG Wave Top with Gold Border Stroke */}
-            <svg viewBox="0 0 540 22" style={{ display: 'block', width: '100%', height: '16px' }}>
-              <path d="M 0,22 Q 270,-8 540,22 Z" fill="#032e1e" />
-              <path d="M 0,22 Q 270,-8 540,22" fill="none" stroke="#d97706" strokeWidth="2.5" />
-            </svg>
+              {/* COLUMN 1: Member Photo Frame (Gold Double Border) */}
+              <div style={{ width: '114px', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <div
+                  style={{
+                    width: '114px',
+                    height: '146px',
+                    borderRadius: '14px',
+                    border: '3.5px solid #d97706',
+                    padding: '2.5px',
+                    background: '#ffffff',
+                    boxShadow: '0 6px 14px -2px rgba(0, 0, 0, 0.14)',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  {profile.passportPhotoUrl ? (
+                    <img
+                      src={profile.passportPhotoUrl}
+                      alt={profile.fullName}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '9px'
+                      }}
+                    />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', background: '#e2e8f0', borderRadius: '9px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' }}>
+                      <svg viewBox="0 0 100 120" style={{ width: '85%', height: '85%', fill: '#1e293b' }}>
+                        <circle cx="50" cy="38" r="22" />
+                        <path d="M10,120 C10,80 30,70 50,70 C70,70 90,80 90,120 Z" />
+                        <polygon points="50,70 42,90 58,90" fill="#ffffff" />
+                        <polygon points="50,75 46,120 54,120" fill="#0f172a" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
 
-            {/* Dark Green Footer Banner Body */}
-            <div style={{ background: 'linear-gradient(135deg, #022c1e 0%, #064e3b 100%)', color: '#ffffff', padding: '5px 12px 7px 12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '10px', fontWeight: 900, letterSpacing: '2.5px', color: '#fbbf24', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                — Y O U T H &nbsp; L E A D I N G &nbsp; F U T U R E —
+                {/* OVERLAPPING OFFICIAL RED STAMP AT BOTTOM RIGHT OF PHOTO */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '-12px',
+                    right: '-24px',
+                    width: '80px',
+                    height: '80px',
+                    zIndex: 25,
+                    pointerEvents: 'none',
+                    transform: 'rotate(-10deg)',
+                    filter: 'drop-shadow(0px 2px 5px rgba(220, 38, 38, 0.4))'
+                  }}
+                >
+                  <OfficialRedStampSvg />
+                </div>
               </div>
-              <div style={{ fontSize: '6.5px', fontWeight: 700, color: '#e2e8f0', letterSpacing: '0.4px', marginTop: '2px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                EMPOWERING YOUTH &nbsp;|&nbsp; STRENGTHENING SINDH &nbsp;|&nbsp; BUILDING A BRIGHTER TOMORROW
+
+              {/* COLUMN 2: Member Information Details */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left', gap: '2px', overflow: 'hidden', minWidth: 0, paddingLeft: '26px' }}>
+
+                <h2 style={{ color: '#0f172a', fontSize: '17px', fontWeight: 900, margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.15, letterSpacing: '-0.2px', wordBreak: 'break-word', fontFamily: "'Outfit', sans-serif" }}>
+                  {profile.fullName || 'Abdul Hannan'}
+                </h2>
+
+                <div style={{ color: '#022c1e', fontSize: '11.8px', fontWeight: 900, marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1.2, fontFamily: "'Outfit', sans-serif" }}>
+                  {(profile.assignedDesignation || 'JOINT SECRETARY').toUpperCase()}
+                </div>
+
+                <div style={{ color: '#065f46', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.3px', lineHeight: 1.2, marginTop: '1px', fontFamily: "'Outfit', sans-serif" }}>
+                  {divisionName || 'Karachi Division'}
+                </div>
+
+                {/* Gold Accent Line */}
+                <div style={{ width: '42px', height: '2px', background: '#d97706', margin: '4px 0 6px 0' }}></div>
+
+                {/* Key Value Details Table */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '9.4px', marginTop: '1px' }}>
+
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Member ID</span>
+                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {profile.membershipIdNumber || 'NYPS-2026-3578'}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>CNIC</span>
+                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {profile.cnicNumber || '33105-7853093-7'}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Date of Birth</span>
+                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {formatDateDDMMYYYY(profile.dob) || '01/01/2003'}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Date of Issue</span>
+                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {issueDateStr || '18/09/2026'}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Valid Till</span>
+                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: 31/12/2026</span>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* COLUMN 3: Signatures (President & Gen Sec) & Verification QR Code */}
+              <div style={{ width: '130px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: '6px', paddingTop: '16px', paddingLeft: '8px', borderLeft: '1.5px solid #e2e8f0' }}>
+
+                {/* President Signature */}
+                <div style={{ textAlign: 'center', width: '100%' }}>
+                  <div style={{ height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2px' }}>
+                    <img
+                      src="/president-signature.png"
+                      alt="President Signature"
+                      style={{ maxHeight: '22px', maxWidth: '100%', objectFit: 'contain' }}
+                    />
+                  </div>
+                  <div style={{ borderTop: '1px solid #0f172a', paddingTop: '1.5px' }}>
+                    <div style={{ fontSize: '7.8px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap' }}>
+                      ABDUL REHMAN HALEPOTO
+                    </div>
+                    <div style={{ fontSize: '6.2px', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', fontStyle: 'italic', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
+                      PRESIDENT
+                    </div>
+                  </div>
+                </div>
+
+                {/* General Secretary Signature */}
+                <div style={{ textAlign: 'center', width: '100%' }}>
+                  <div style={{ height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2px' }}>
+                    <img
+                      src="/general-secretary-signature.png"
+                      alt="General Secretary Signature"
+                      style={{ maxHeight: '22px', maxWidth: '100%', objectFit: 'contain' }}
+                    />
+                  </div>
+                  <div style={{ borderTop: '1px solid #0f172a', paddingTop: '1.5px' }}>
+                    <div style={{ fontSize: '7.8px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap' }}>
+                      RAO HUMAYUN
+                    </div>
+                    <div style={{ fontSize: '6.2px', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', fontStyle: 'italic', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
+                      GENERAL SECRETARY
+                    </div>
+                  </div>
+                </div>
+
+                {/* QR Code */}
+                <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, marginTop: '2px' }}>
+                  <div style={{ padding: '2px', background: '#ffffff', borderRadius: '5px', border: '1.2px solid #0f172a', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                    <img src={qrCodeUrl} alt="Verification QR" style={{ width: '40px', height: '40px', display: 'block', borderRadius: '3px' }} />
+                  </div>
+                  <span style={{ fontSize: '6px', fontWeight: 800, color: '#1e293b', display: 'block', marginTop: '1px', whiteSpace: 'nowrap' }}>
+                    Scan to Verify
+                  </span>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* CURVED WAVE DARK GREEN FOOTER BANNER WITH GOLD BORDER */}
+            <div style={{ position: 'relative', width: '100%', marginTop: 'auto', zIndex: 10 }}>
+              {/* Curved SVG Wave Top with Gold Border Stroke */}
+              <svg viewBox="0 0 540 22" style={{ display: 'block', width: '100%', height: '16px' }}>
+                <path d="M 0,22 Q 270,-8 540,22 Z" fill="#032e1e" />
+                <path d="M 0,22 Q 270,-8 540,22" fill="none" stroke="#d97706" strokeWidth="2.5" />
+              </svg>
+
+              {/* Dark Green Footer Banner Body */}
+              <div style={{ background: 'linear-gradient(135deg, #022c1e 0%, #064e3b 100%)', color: '#ffffff', padding: '5px 12px 7px 12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '10px', fontWeight: 900, letterSpacing: '2.5px', color: '#fbbf24', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  — Y O U T H &nbsp; L E A D I N G &nbsp; F U T U R E —
+                </div>
+                <div style={{ fontSize: '6.5px', fontWeight: 700, color: '#e2e8f0', letterSpacing: '0.4px', marginTop: '2px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  EMPOWERING YOUTH &nbsp;|&nbsp; STRENGTHENING SINDH &nbsp;|&nbsp; BUILDING A BRIGHTER TOMORROW
+                </div>
               </div>
             </div>
-          </div>
 
+          </div>
         </div>
 
         {/* ======================================================== */}
         {/* BACK SIDE OF ID CARD (HORIZONTAL / LANDSCAPE FORMAT)     */}
         {/* ======================================================== */}
         <div
-          ref={backCardRef}
-          className={`print-card-back transition-all duration-300 shrink-0 ${activeTab === 'FRONT' ? 'hidden' : 'block'}`}
+          className={`transition-all duration-300 shrink-0 ${activeTab === 'FRONT' ? 'hidden' : 'block'}`}
           style={{
-            width: '540px',
-            maxWidth: '100%',
-            height: '340px',
-            minHeight: '340px',
-            background: '#ffffff',
-            color: '#0f172a',
-            border: '2px solid #cbd5e1',
-            borderRadius: '20px',
-            boxSizing: 'border-box',
-            position: 'relative',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            boxShadow: '0 25px 35px -5px rgba(0, 0, 0, 0.2), 0 10px 15px -5px rgba(0, 0, 0, 0.1)',
-            fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+            width: cardScale < 1 ? `${540 * cardScale}px` : '540px',
+            height: cardScale < 1 ? `${340 * cardScale}px` : '340px',
+            position: 'relative'
           }}
         >
-          {/* Background Watermark Mazar-e-Quaid (Realistic High-Res Photo Landmark Graphic - Shifted Further Right) */}
-          <div style={{ position: 'absolute', bottom: '8px', right: '-55px', width: '320px', height: '235px', pointerEvents: 'none', zIndex: 1, opacity: 0.55, mixBlendMode: 'multiply' }}>
-            <img src="/mazar-e-quaid.png" alt="Mazar-e-Quaid Karachi" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          </div>
-
-          {/* TOP SECTION: DARK GREEN HEADER MATCHING REFERENCE BANNER */}
-          <div style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(135deg, #022c1e 0%, #043927 50%, #064e3b 100%)', color: '#ffffff', padding: '10px 14px 10px 14px', borderBottom: '2px solid #d97706' }}>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-
-              {/* Left: NYP Emblem Logo Badge */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <div style={{ width: '48px', height: '48px', background: '#ffffff', borderRadius: '50%', padding: '3px', boxShadow: '0 3px 10px rgba(0,0,0,0.4)', border: '2px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <img src="/nyp-logo.png" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.2))' }} />
-                </div>
-              </div>
-
-              {/* Center: Title, Sindh & Slogan */}
-              <div style={{ flex: 1, textAlign: 'center', minWidth: 0, padding: '0 4px' }}>
-                <h2 style={{ color: '#ffffff', fontSize: '15px', fontWeight: 900, letterSpacing: '0.4px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.1, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
-                  NATIONAL YOUTH PARLIAMENT
-                </h2>
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: '3px 0' }}>
-                  <span style={{ height: '1.5px', background: '#f59e0b', flex: 1, maxWidth: '55px' }}></span>
-                  <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 900, letterSpacing: '4px', whiteSpace: 'nowrap' }}>
-                    S I N D H
-                  </span>
-                  <span style={{ height: '1.5px', background: '#f59e0b', flex: 1, maxWidth: '55px' }}></span>
-                </div>
-
-                <div style={{ color: '#ffffff', fontSize: '7.2px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', whiteSpace: 'nowrap', opacity: 0.95 }}>
-                  YOUTH TODAY &nbsp;|&nbsp; A STRONGER PAKISTAN TOMORROW
-                </div>
-              </div>
-
-              {/* Right: Sindh Map Logo + Amber Bar + SINDH OUR IDENTITY OUR PRIDE */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                <div style={{ width: '32px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img
-                    src="/sindh-identity-logo.png"
-                    alt="Sindh Map"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'brightness(1.1) drop-shadow(0px 1px 2px rgba(0,0,0,0.4))' }}
-                  />
-                </div>
-
-                <div style={{ width: '2px', height: '32px', background: '#f59e0b', borderRadius: '1px' }} />
-
-                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', lineHeight: 1.1 }}>
-                  <span style={{ fontSize: '12px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.5px', fontFamily: "'Outfit', sans-serif" }}>
-                    SINDH
-                  </span>
-                  <span style={{ fontSize: '6.5px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                    OUR IDENTITY
-                  </span>
-                  <span style={{ fontSize: '6.5px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                    OUR PRIDE
-                  </span>
-                </div>
-              </div>
-
+          <div
+            ref={backCardRef}
+            className="print-card-back"
+            style={{
+              width: '540px',
+              height: '340px',
+              minHeight: '340px',
+              transform: cardScale < 1 ? `scale(${cardScale})` : 'none',
+              transformOrigin: 'top left',
+              background: '#ffffff',
+              color: '#0f172a',
+              border: '2px solid #cbd5e1',
+              borderRadius: '20px',
+              boxSizing: 'border-box',
+              position: 'relative',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 25px 35px -5px rgba(0, 0, 0, 0.2), 0 10px 15px -5px rgba(0, 0, 0, 0.1)',
+              fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+            }}
+          >
+            {/* Background Watermark Mazar-e-Quaid (Realistic High-Res Photo Landmark Graphic - Shifted Further Right) */}
+            <div style={{ position: 'absolute', bottom: '8px', right: '-55px', width: '320px', height: '235px', pointerEvents: 'none', zIndex: 1, opacity: 0.55, mixBlendMode: 'multiply' }}>
+              <img src="/mazar-e-quaid.png" alt="Mazar-e-Quaid Karachi" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
 
-          </div>
+            {/* TOP SECTION: DARK GREEN HEADER MATCHING REFERENCE BANNER */}
+            <div style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(135deg, #022c1e 0%, #043927 50%, #064e3b 100%)', color: '#ffffff', padding: '10px 14px 10px 14px', borderBottom: '2px solid #d97706' }}>
 
-          {/* BACK CARD MIDDLE CONTENT (2 LANDSCAPE COLUMNS) */}
-          <div style={{ padding: '10px 20px 8px 20px', flex: 1, display: 'flex', gap: '18px', alignItems: 'stretch', justifyContent: 'space-between', textAlign: 'left', position: 'relative', zIndex: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
 
-            {/* LEFT COLUMN: VISION & TERMS & CONDITIONS */}
-            <div style={{ width: '48%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '8px' }}>
-
-              {/* OUR VISION */}
-              <div style={{ textAlign: 'left' }}>
-                <span style={{ fontSize: '10.5px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '2px', display: 'block' }}>
-                  O U R &nbsp; V I S I O N
-                </span>
-                <p style={{ fontSize: '10.5px', fontWeight: 800, color: '#1e293b', fontStyle: 'italic', margin: '3px 0 0 0', fontFamily: 'Georgia, serif', lineHeight: 1.35 }}>
-                  “A Progressive, Inclusive and Empowered Sindh Led by its Youth”
-                </p>
-              </div>
-
-              {/* TERMS & CONDITIONS */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                  <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
-                  <span style={{ fontSize: '10px', fontWeight: 900, color: '#d97706', textTransform: 'uppercase', letterSpacing: '2px', whiteSpace: 'nowrap' }}>
-                    TERMS &amp; CONDITIONS
-                  </span>
-                  <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
-                </div>
-
-                <ol style={{ fontSize: '8.8px', color: '#1e293b', fontWeight: 700, lineHeight: 1.45, margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <li>This card is non-transferable and remains property of NYP Sindh.</li>
-                  <li>Must abide by the constitution, policies and code of conduct.</li>
-                  <li>Produce when required for official purposes.</li>
-                  <li>In case of loss, inform NYP Sindh Secretariat immediately.</li>
-                </ol>
-              </div>
-
-            </div>
-
-            {/* RIGHT COLUMN: MOTTO & CONTACT LINKS */}
-            <div style={{ width: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', gap: '12px', borderLeft: '1.5px solid #e2e8f0', paddingLeft: '14px', position: 'relative' }}>
-
-              {/* MOTTO BANNER */}
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '9.5px', fontWeight: 900, color: '#0f172a', letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                  D I S C U S S &nbsp;<span style={{ color: '#d97706' }}>|</span>&nbsp; D E B A T E &nbsp;<span style={{ color: '#d97706' }}>|</span>&nbsp; D E L I V E R
-                </div>
-                <div style={{ fontSize: '8.5px', fontWeight: 900, color: '#b45309', letterSpacing: '1px', textTransform: 'uppercase', marginTop: '2px', whiteSpace: 'nowrap' }}>
-                  F O R &nbsp; A &nbsp; B E T T E R &nbsp; S I N D H
-                </div>
-              </div>
-
-              {/* CONTACT & SOCIAL MEDIA LINKS */}
-              <div style={{ fontSize: '9.5px', color: '#1e293b', fontWeight: 800, display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
-
-                {/* Website */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '18px' }}>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="2" y1="12" x2="22" y2="12" />
-                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                    </svg>
+                {/* Left: NYP Emblem Logo Badge */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: '48px', height: '48px', background: '#ffffff', borderRadius: '50%', padding: '3px', boxShadow: '0 3px 10px rgba(0,0,0,0.4)', border: '2px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <img src="/nyp-logo.png" alt="NYP Emblem" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.2))' }} />
                   </div>
-                  <span className="pdf-contact-text" style={{ fontSize: '9.5px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', height: '18px', lineHeight: 1 }}>www.nypsindh.org.pk</span>
                 </div>
 
-                {/* Instagram */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '18px' }}>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                    </svg>
+                {/* Center: Title, Sindh & Slogan */}
+                <div style={{ flex: 1, textAlign: 'center', minWidth: 0, padding: '0 4px' }}>
+                  <h2 style={{ color: '#ffffff', fontSize: '15px', fontWeight: 900, letterSpacing: '0.4px', margin: 0, padding: 0, textTransform: 'uppercase', lineHeight: 1.1, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
+                    NATIONAL YOUTH PARLIAMENT
+                  </h2>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: '3px 0' }}>
+                    <span style={{ height: '1.5px', background: '#f59e0b', flex: 1, maxWidth: '55px' }}></span>
+                    <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 900, letterSpacing: '4px', whiteSpace: 'nowrap' }}>
+                      S I N D H
+                    </span>
+                    <span style={{ height: '1.5px', background: '#f59e0b', flex: 1, maxWidth: '55px' }}></span>
                   </div>
-                  <span className="pdf-contact-text" style={{ fontSize: '9.5px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', height: '18px', lineHeight: 1 }}>@nypsindh</span>
+
+                  <div style={{ color: '#ffffff', fontSize: '7.2px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', whiteSpace: 'nowrap', opacity: 0.95 }}>
+                    YOUTH TODAY &nbsp;|&nbsp; A STRONGER PAKISTAN TOMORROW
+                  </div>
                 </div>
 
-                {/* Facebook */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '18px' }}>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="#ffffff">
-                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                    </svg>
+                {/* Right: Sindh Map Logo + Amber Bar + SINDH OUR IDENTITY OUR PRIDE */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                  <div style={{ width: '32px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img
+                      src="/sindh-identity-logo.png"
+                      alt="Sindh Map"
+                      style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'brightness(1.1) drop-shadow(0px 1px 2px rgba(0,0,0,0.4))' }}
+                    />
                   </div>
-                  <span className="pdf-contact-text" style={{ fontSize: '9.5px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', height: '18px', lineHeight: 1 }}>National Youth Parliament Sindh</span>
-                </div>
 
-                {/* LinkedIn */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '18px' }}>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="#ffffff">
-                      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-                      <rect x="2" y="9" width="4" height="12" />
-                      <circle cx="4" cy="4" r="2" />
-                    </svg>
+                  <div style={{ width: '2px', height: '32px', background: '#f59e0b', borderRadius: '1px' }} />
+
+                  <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', lineHeight: 1.1 }}>
+                    <span style={{ fontSize: '12px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.5px', fontFamily: "'Outfit', sans-serif" }}>
+                      SINDH
+                    </span>
+                    <span style={{ fontSize: '6.5px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                      OUR IDENTITY
+                    </span>
+                    <span style={{ fontSize: '6.5px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                      OUR PRIDE
+                    </span>
                   </div>
-                  <span className="pdf-contact-text" style={{ fontSize: '9.5px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', height: '18px', lineHeight: 1 }}>NYPSindh</span>
                 </div>
 
               </div>
 
             </div>
 
-          </div>
+            {/* BACK CARD MIDDLE CONTENT (2 LANDSCAPE COLUMNS) */}
+            <div style={{ padding: '10px 20px 8px 20px', flex: 1, display: 'flex', gap: '18px', alignItems: 'stretch', justifyContent: 'space-between', textAlign: 'left', position: 'relative', zIndex: 10 }}>
 
-          {/* CURVED WAVE DARK GREEN FOOTER BANNER WITH GOLD BORDER */}
-          <div style={{ position: 'relative', width: '100%', marginTop: 'auto', zIndex: 10 }}>
-            {/* Curved SVG Wave Top with Gold Border Stroke */}
-            <svg viewBox="0 0 540 22" style={{ display: 'block', width: '100%', height: '16px' }}>
-              <path d="M 0,22 Q 270,-8 540,22 Z" fill="#032e1e" />
-              <path d="M 0,22 Q 270,-8 540,22" fill="none" stroke="#d97706" strokeWidth="2.5" />
-            </svg>
+              {/* LEFT COLUMN: VISION & TERMS & CONDITIONS */}
+              <div style={{ width: '48%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '8px' }}>
 
-            {/* Dark Green Footer Banner Body */}
-            <div style={{ background: 'linear-gradient(135deg, #022c1e 0%, #064e3b 100%)', color: '#ffffff', padding: '5px 12px 7px 12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '10px', fontWeight: 900, letterSpacing: '2.5px', color: '#fbbf24', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                — Y O U T H &nbsp; L E A D I N G &nbsp; F U T U R E —
+                {/* OUR VISION */}
+                <div style={{ textAlign: 'left' }}>
+                  <span style={{ fontSize: '10.5px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '2px', display: 'block' }}>
+                    O U R &nbsp; V I S I O N
+                  </span>
+                  <p style={{ fontSize: '10.5px', fontWeight: 800, color: '#1e293b', fontStyle: 'italic', margin: '3px 0 0 0', fontFamily: 'Georgia, serif', lineHeight: 1.35 }}>
+                    “A Progressive, Inclusive and Empowered Sindh Led by its Youth”
+                  </p>
+                </div>
+
+                {/* TERMS & CONDITIONS */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                    <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#d97706', textTransform: 'uppercase', letterSpacing: '2px', whiteSpace: 'nowrap' }}>
+                      TERMS &amp; CONDITIONS
+                    </span>
+                    <span style={{ height: '1.5px', background: '#d97706', flex: 1 }}></span>
+                  </div>
+
+                  <ol style={{ fontSize: '8.8px', color: '#1e293b', fontWeight: 700, lineHeight: 1.45, margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <li>This card is non-transferable and remains property of NYP Sindh.</li>
+                    <li>Must abide by the constitution, policies and code of conduct.</li>
+                    <li>Produce when required for official purposes.</li>
+                    <li>In case of loss, inform NYP Sindh Secretariat immediately.</li>
+                  </ol>
+                </div>
+
               </div>
-              <div style={{ fontSize: '6.5px', fontWeight: 700, color: '#e2e8f0', letterSpacing: '0.4px', marginTop: '2px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                EMPOWERING YOUTH &nbsp;|&nbsp; STRENGTHENING SINDH &nbsp;|&nbsp; BUILDING A BRIGHTER TOMORROW
+
+              {/* RIGHT COLUMN: MOTTO & CONTACT LINKS */}
+              <div style={{ width: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', gap: '12px', borderLeft: '1.5px solid #e2e8f0', paddingLeft: '14px', position: 'relative' }}>
+
+                {/* MOTTO BANNER */}
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '9.5px', fontWeight: 900, color: '#0f172a', letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    D I S C U S S &nbsp;<span style={{ color: '#d97706' }}>|</span>&nbsp; D E B A T E &nbsp;<span style={{ color: '#d97706' }}>|</span>&nbsp; D E L I V E R
+                  </div>
+                  <div style={{ fontSize: '8.5px', fontWeight: 900, color: '#b45309', letterSpacing: '1px', textTransform: 'uppercase', marginTop: '2px', whiteSpace: 'nowrap' }}>
+                    F O R &nbsp; A &nbsp; B E T T E R &nbsp; S I N D H
+                  </div>
+                </div>
+
+                {/* CONTACT & SOCIAL MEDIA LINKS */}
+                <div style={{ fontSize: '9.5px', color: '#1e293b', fontWeight: 800, display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
+
+                  {/* Website */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '18px' }}>
+                    <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                    </div>
+                    <span className="pdf-contact-text" style={{ fontSize: '9.5px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', height: '18px', lineHeight: 1 }}>www.nypsindh.org.pk</span>
+                  </div>
+
+                  {/* Instagram */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '18px' }}>
+                    <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                      </svg>
+                    </div>
+                    <span className="pdf-contact-text" style={{ fontSize: '9.5px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', height: '18px', lineHeight: 1 }}>@nypsindh</span>
+                  </div>
+
+                  {/* Facebook */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '18px' }}>
+                    <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="#ffffff">
+                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                      </svg>
+                    </div>
+                    <span className="pdf-contact-text" style={{ fontSize: '9.5px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', height: '18px', lineHeight: 1 }}>National Youth Parliament Sindh</span>
+                  </div>
+
+                  {/* LinkedIn */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '18px' }}>
+                    <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="#ffffff">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                        <rect x="2" y="9" width="4" height="12" />
+                        <circle cx="4" cy="4" r="2" />
+                      </svg>
+                    </div>
+                    <span className="pdf-contact-text" style={{ fontSize: '9.5px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', height: '18px', lineHeight: 1 }}>NYPSindh</span>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* CURVED WAVE DARK GREEN FOOTER BANNER WITH GOLD BORDER */}
+            <div style={{ position: 'relative', width: '100%', marginTop: 'auto', zIndex: 10 }}>
+              {/* Curved SVG Wave Top with Gold Border Stroke */}
+              <svg viewBox="0 0 540 22" style={{ display: 'block', width: '100%', height: '16px' }}>
+                <path d="M 0,22 Q 270,-8 540,22 Z" fill="#032e1e" />
+                <path d="M 0,22 Q 270,-8 540,22" fill="none" stroke="#d97706" strokeWidth="2.5" />
+              </svg>
+
+              {/* Dark Green Footer Banner Body */}
+              <div style={{ background: 'linear-gradient(135deg, #022c1e 0%, #064e3b 100%)', color: '#ffffff', padding: '5px 12px 7px 12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '10px', fontWeight: 900, letterSpacing: '2.5px', color: '#fbbf24', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  — Y O Y H &nbsp; L E A D I N G &nbsp; F U T U R E —
+                </div>
+                <div style={{ fontSize: '6.5px', fontWeight: 700, color: '#e2e8f0', letterSpacing: '0.4px', marginTop: '2px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  EMPOWERING YOUTH &nbsp;|&nbsp; STRENGTHENING SINDH &nbsp;|&nbsp; BUILDING A BRIGHTER TOMORROW
+                </div>
               </div>
             </div>
-          </div>
 
-        </div>
+          </div>
+        </div>    </div>
 
       </div>
 
