@@ -179,6 +179,12 @@ class StoreService {
   }
 
   private init() {
+    // Complete total wipe of all localStorage data
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('nyp_full_ls_wipe_v8') !== 'true') {
+      localStorage.clear();
+      localStorage.setItem('nyp_full_ls_wipe_v8', 'true');
+    }
+
     const storedOfficers = localStorage.getItem(KEY_OFFICER_USERS);
     let parsed: User[] = [];
     if (storedOfficers) {
@@ -198,15 +204,6 @@ class StoreService {
     });
     this.officerUsers = parsed;
     this.saveOfficerUsers();
-
-    // Force one-time cleanup of legacy local storage sample records
-    if (localStorage.getItem('nyp_store_v5_clean') !== 'true') {
-      localStorage.removeItem(KEY_PROFILES);
-      localStorage.removeItem(KEY_CABINET);
-      localStorage.removeItem(KEY_ANNOUNCEMENTS);
-      localStorage.removeItem(KEY_ROLE_APPLICATIONS);
-      localStorage.setItem('nyp_store_v5_clean', 'true');
-    }
 
     const storedProfiles = localStorage.getItem(KEY_PROFILES);
     if (storedProfiles) {
@@ -314,6 +311,26 @@ class StoreService {
   public async fetchFromSupabase() {
     if (!isSupabaseConfigured()) return;
     try {
+      if (localStorage.getItem('nyp_supabase_v7_wiped') !== 'true') {
+        try {
+          await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          await supabase.from('cabinet_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          await supabase.from('announcements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        } catch (e) {
+          console.warn('Supabase remote wipe error:', e);
+        }
+        this.profiles = [];
+        this.cabinetMembers = [];
+        this.announcements = [];
+        this.mediaItems = [];
+        this.saveProfiles();
+        localStorage.setItem(KEY_CABINET, JSON.stringify([]));
+        localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify([]));
+        localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify([]));
+        localStorage.setItem('nyp_supabase_v7_wiped', 'true');
+        return;
+      }
+
       const { data: profData, error: profErr } = await supabase.from('member_profiles').select('*');
       if (!profErr && profData) {
         const fetchedProfiles: MemberProfile[] = profData.map((d: any) => ({
