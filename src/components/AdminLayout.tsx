@@ -57,11 +57,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             
             {/* Left: Admin Brand with Prominent Logo */}
             <Link to="/admin/master" className="flex items-center space-x-3 sm:space-x-3.5 group shrink-0 py-1">
-              <img 
-                src="/nyp-logo.png" 
-                alt="NYP Sindh Emblem" 
-                className="h-12 sm:h-14 lg:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-              />
+              <div style={{ backgroundColor: '#ffffff' }} className="p-1 sm:p-1.5 rounded-md shadow-sm shrink-0 flex items-center justify-center">
+                <img 
+                  src="/nyp-logo.png" 
+                  alt="NYP Sindh Emblem" 
+                  className="h-10 sm:h-12 lg:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                />
+              </div>
               <div className="text-left flex flex-col justify-center">
                 <div className="flex items-center space-x-2">
                   <span className="admin-brand-title text-base sm:lg font-black tracking-tight text-slate-900 dark:text-white font-heading">

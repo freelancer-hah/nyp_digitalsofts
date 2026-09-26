@@ -575,12 +575,9 @@ export const MemberDashboard: React.FC = () => {
         const hasActiveRoleApp = (tier: RoleTier) => roleApplications.some((r) => r.roleTier === tier && r.status !== 'REJECTED');
         const showYouthMpa = !hasActiveRoleApp('YOUTH_MPA');
         const showYouthMna = !hasActiveRoleApp('YOUTH_MNA');
-        const showDivisional = !hasActiveRoleApp('DIVISIONAL_ROLE');
-        const showDistrict = !hasActiveRoleApp('DISTRICT_ROLE');
-        const showTaluka = !hasActiveRoleApp('TALUKA_ROLE');
         const showPhysicalCard = !hasActiveRoleApp('PHYSICAL_CARD');
 
-        const availableCardsCount = [showYouthMpa, showYouthMna, showDivisional, showDistrict, showTaluka, showPhysicalCard].filter(Boolean).length;
+        const availableCardsCount = [showYouthMpa, showYouthMna, showPhysicalCard].filter(Boolean).length;
 
         return (
           <div className="ui-card p-6 sm:p-8 space-y-6 shadow-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl">
@@ -588,7 +585,7 @@ export const MemberDashboard: React.FC = () => {
               <div>
                 <div className="inline-flex items-center space-x-1 text-xs font-black text-amber-500 uppercase tracking-widest mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>APPLY FOR HIGHER PARLIAMENTARY &amp; DIVISIONAL ROLES</span>
+                  <span>APPLY FOR HIGHER PARLIAMENTARY ROLES</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading">
                   Youth Representative Role Tier Applications
@@ -658,82 +655,7 @@ export const MemberDashboard: React.FC = () => {
                   </div>
                 )}
 
-                {/* 3. APPLY FOR DIVISIONAL ROLE */}
-                {showDivisional && (
-                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-300 border border-teal-300 dark:border-teal-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
-                          Divisional Level
-                        </span>
-                        <span className="text-sm font-black text-amber-500 font-mono">PKR 3,000</span>
-                      </div>
-                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR DIVISIONAL ROLE</h3>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                        Divisional Coordinator / Cabinet Executive managing all districts under your regional division.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleOpenRoleModal('DIVISIONAL_ROLE', 'Divisional Youth Coordinator', 3000)}
-                      className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
-                    >
-                      <span>Apply for Division</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
-                {/* 4. APPLY FOR DISTRICT ROLE */}
-                {showDistrict && (
-                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
-                          District Level
-                        </span>
-                        <span className="text-sm font-black text-amber-500 font-mono">PKR 2,000</span>
-                      </div>
-                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR DISTRICT ROLE</h3>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                        District Youth President / General Secretary organizing grassroots district-wide initiatives.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleOpenRoleModal('DISTRICT_ROLE', 'District Youth President', 2000)}
-                      className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
-                    >
-                      <span>Apply for District</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
-                {/* 5. APPLY FOR TALUKA ROLE */}
-                {showTaluka && (
-                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase">
-                          Taluka / Tehsil Level
-                        </span>
-                        <span className="text-sm font-black text-amber-500 font-mono">PKR 1,500</span>
-                      </div>
-                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">APPLY FOR TALUKA ROLE</h3>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                        Lead local youth chapter councils and outreach programs at your municipal/taluka level.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleOpenRoleModal('TALUKA_ROLE', 'Taluka Youth Coordinator', 1500)}
-                      className="w-full ui-btn-gold text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider flex items-center justify-center space-x-1 cursor-pointer"
-                    >
-                      <span>Apply for Taluka</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
-                {/* 6. APPLY FOR PHYSICAL EMBOSSED CARD */}
+                {/* 3. APPLY FOR PHYSICAL EMBOSSED CARD */}
                 {showPhysicalCard && (
                   <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between">
                     <div className="space-y-2">
@@ -743,7 +665,7 @@ export const MemberDashboard: React.FC = () => {
                         </span>
                         <span className="text-sm font-black text-amber-500 font-mono">PKR 1,000</span>
                       </div>
-                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">ORDER EXTRA PHYSICAL CARD</h3>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white font-heading">ORDER PHYSICAL CARD</h3>
                       <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         Receive a premium high-durability embossed plastic identity smart card delivered by courier.
                       </p>

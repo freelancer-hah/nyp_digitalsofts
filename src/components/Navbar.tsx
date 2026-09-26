@@ -40,11 +40,13 @@ export const Navbar: React.FC = () => {
           {/* Left Side: Brand Logo & Desktop Navigation Links grouped together */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3.5 group shrink-0 py-1">
-              <img 
-                src="/nyp-logo.png" 
-                alt="National Youth Parliament Sindh Logo" 
-                className="h-14 sm:h-16 lg:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-              />
+              <div style={{ backgroundColor: '#ffffff' }} className="p-1 sm:p-1.5 rounded-md shadow-sm shrink-0 flex items-center justify-center">
+                <img 
+                  src="/nyp-logo.png" 
+                  alt="National Youth Parliament Sindh Logo" 
+                  className="h-12 sm:h-14 lg:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                />
+              </div>
               <div className="flex flex-col justify-center select-none">
                 <div className="text-sm sm:text-base lg:text-lg font-black tracking-tight text-[#052818] dark:text-emerald-400 leading-tight font-heading group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors uppercase">
                   NATIONAL YOUTH PARLIAMENT
