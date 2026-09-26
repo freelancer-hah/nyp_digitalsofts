@@ -32,40 +32,13 @@ export const HomePage: React.FC = () => {
   const profile = currentUser ? store.getProfileByUserId(currentUser.id) : undefined;
   const hasApplied = Boolean(profile);
 
-  // Reference design news data fallback
-  const latestNews = [
-    {
-      id: 'news-1',
-      date: '05 Sep 2026',
-      title: 'Hyderabad Divisional Meeting Held at Royal Taj',
-      desc: 'Young leaders came together to strengthen NYP Sindh and advance youth engagement.',
-      image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&q=80&w=600'
-    },
-    {
-      id: 'news-2',
-      date: '06 Sep 2025',
-      title: 'NYP Sindh Pays Tribute on Defence Day',
-      desc: 'Remembering the courage and sacrifices of our heroes with parliamentary caucuses.',
-      image: 'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?auto=format&fit=crop&q=80&w=600'
-    },
-    {
-      id: 'news-3',
-      date: '30 Aug 2026',
-      title: 'NYP Sindh Cabinet Meeting Concludes Successfully',
-      desc: 'Productive discussions on upcoming initiatives and divisional bodies across Sindh.',
-      image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=600'
-    }
-  ];
-
-  const displayNews = announcementsList.length > 0
-    ? announcementsList.slice(0, 6).map((ann) => ({
-      id: ann.id,
-      date: ann.publishedAt,
-      title: ann.title,
-      desc: ann.content,
-      image: ann.bannerUrl || 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&q=80&w=600'
-    }))
-    : latestNews;
+  const displayNews = announcementsList.slice(0, 6).map((ann) => ({
+    id: ann.id,
+    date: ann.publishedAt,
+    title: ann.title,
+    desc: ann.content,
+    image: ann.bannerUrl || 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&q=80&w=600'
+  }));
 
   return (
     <div className="overflow-x-hidden bg-[#faf8f5] dark:bg-[#060b13] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
@@ -873,34 +846,41 @@ export const HomePage: React.FC = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayNews.map((news) => (
-              <article key={news.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition-all hover:-translate-y-1 flex flex-col">
-                <div className="h-44 overflow-hidden relative bg-slate-100 dark:bg-slate-800">
-                  <img src={news.image} alt={news.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
-                </div>
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                  <div>
-                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 block mb-1">
-                      {news.date}
-                    </span>
-                    <h4 className="font-bold text-sm text-[#052818] dark:text-white line-clamp-2 leading-snug">
-                      {news.title}
-                    </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1.5 leading-relaxed">
-                      {news.desc}
-                    </p>
+          {displayNews.length === 0 ? (
+            <div className="py-12 px-4 text-center border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 text-slate-500 text-xs">
+              <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">No Official Announcements Published Yet</p>
+              <p className="text-slate-400 mt-1">Check back soon for new updates and press releases from NYP Sindh.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayNews.map((news) => (
+                <article key={news.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition-all hover:-translate-y-1 flex flex-col">
+                  <div className="h-44 overflow-hidden relative bg-slate-100 dark:bg-slate-800">
+                    <img src={news.image} alt={news.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                   </div>
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                    <Link to="/announcements" className="hover:underline flex items-center space-x-1">
-                      <span>Read Full Release</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                    <div>
+                      <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 block mb-1">
+                        {news.date}
+                      </span>
+                      <h4 className="font-bold text-sm text-[#052818] dark:text-white line-clamp-2 leading-snug">
+                        {news.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1.5 leading-relaxed">
+                        {news.desc}
+                      </p>
+                    </div>
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                      <Link to="/announcements" className="hover:underline flex items-center space-x-1">
+                        <span>Read Full Release</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                </article>
+              ))}
+            </div>
+          )}
 
         </div>
       </section>
