@@ -179,12 +179,6 @@ class StoreService {
   }
 
   private init() {
-    // Complete total wipe of all localStorage data
-    if (typeof localStorage !== 'undefined' && localStorage.getItem('nyp_full_ls_wipe_v8') !== 'true') {
-      localStorage.clear();
-      localStorage.setItem('nyp_full_ls_wipe_v8', 'true');
-    }
-
     const storedOfficers = localStorage.getItem(KEY_OFFICER_USERS);
     let parsed: User[] = [];
     if (storedOfficers) {
@@ -254,10 +248,8 @@ class StoreService {
 
     const storedAnn = localStorage.getItem(KEY_ANNOUNCEMENTS);
     this.announcements = storedAnn ? JSON.parse(storedAnn) : [];
-    localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
 
     this.leadershipMessages = INITIAL_LEADERSHIP_MESSAGES;
-    localStorage.setItem(KEY_LEADERSHIP, JSON.stringify(this.leadershipMessages));
 
     const storedGoals = localStorage.getItem(KEY_WORKING_GOALS);
     this.workingGoals = storedGoals ? JSON.parse(storedGoals) : INITIAL_WORKING_GOALS;
@@ -311,26 +303,6 @@ class StoreService {
   public async fetchFromSupabase() {
     if (!isSupabaseConfigured()) return;
     try {
-      if (localStorage.getItem('nyp_supabase_v7_wiped') !== 'true') {
-        try {
-          await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-          await supabase.from('cabinet_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-          await supabase.from('announcements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        } catch (e) {
-          console.warn('Supabase remote wipe error:', e);
-        }
-        this.profiles = [];
-        this.cabinetMembers = [];
-        this.announcements = [];
-        this.mediaItems = [];
-        this.saveProfiles();
-        localStorage.setItem(KEY_CABINET, JSON.stringify([]));
-        localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify([]));
-        localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify([]));
-        localStorage.setItem('nyp_supabase_v7_wiped', 'true');
-        return;
-      }
-
       const { data: profData, error: profErr } = await supabase.from('member_profiles').select('*');
       if (!profErr && profData) {
         const fetchedProfiles: MemberProfile[] = profData.map((d: any) => ({
