@@ -38,20 +38,20 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-20 sm:h-24">
           
           {/* Left Side: Brand Logo & Desktop Navigation Links grouped together */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3.5 group shrink-0 py-1">
-              <div style={{ backgroundColor: '#ffffff' }} className="p-1 sm:p-1.5 rounded-md shadow-sm shrink-0 flex items-center justify-center">
+          <div className="flex items-center min-w-0 pr-2">
+            <Link to="/" className="flex items-center space-x-2 sm:space-x-3.5 group min-w-0 py-1">
+              <div style={{ backgroundColor: '#ffffff' }} className="p-1 sm:p-1.5 rounded-md shadow-xs shrink-0 flex items-center justify-center">
                 <img 
                   src="/nyp-logo.png" 
                   alt="National Youth Parliament Sindh Logo" 
-                  className="h-12 sm:h-14 lg:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                  className="h-10 sm:h-14 lg:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
                 />
               </div>
-              <div className="flex flex-col justify-center select-none">
-                <div className="text-sm sm:text-base lg:text-lg font-black tracking-tight text-[#052818] dark:text-emerald-400 leading-tight font-heading group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors uppercase">
+              <div className="flex flex-col justify-center select-none min-w-0">
+                <div className="text-xs min-[380px]:text-sm sm:text-base lg:text-lg font-black tracking-tight text-[#052818] dark:text-emerald-400 leading-tight font-heading group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors uppercase truncate sm:whitespace-normal">
                   NATIONAL YOUTH PARLIAMENT
                 </div>
-                <div className="text-[10px] sm:text-xs font-black text-[#c59b27] dark:text-amber-400 tracking-[0.32em] sm:tracking-[0.38em] uppercase font-heading text-center w-full mt-0.5">
+                <div className="text-[9px] sm:text-xs font-black text-[#c59b27] dark:text-amber-400 tracking-[0.22em] sm:tracking-[0.38em] uppercase font-heading text-center w-full mt-0.5">
                   — S I N D H —
                 </div>
               </div>
@@ -97,7 +97,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Right Action Buttons & CTA */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden lg:flex items-center space-x-3">
             
             {/* Search Icon */}
             <button
@@ -165,18 +165,30 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <div className="flex lg:hidden items-center space-x-2">
+          {/* Mobile Menu & Quick Action Toggle */}
+          <div className="flex lg:hidden items-center space-x-1 sm:space-x-2 shrink-0 ml-1.5 sm:ml-3">
             <button
               onClick={() => setSearchOpen(!searchOpen)}
-              className="p-2 text-slate-700 dark:text-slate-200 hover:text-[#059669] dark:hover:text-emerald-400"
+              className="p-2 text-slate-700 dark:text-slate-200 hover:text-[#059669] dark:hover:text-emerald-400 transition-colors rounded-lg cursor-pointer"
+              title="Search"
+              aria-label="Search website"
             >
               <Search className="w-5 h-5" />
             </button>
 
             <button
+              onClick={toggleTheme}
+              className="p-2 text-slate-700 dark:text-slate-200 hover:text-amber-500 transition-colors rounded-lg cursor-pointer"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
+            </button>
+
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-slate-700 dark:text-slate-200 hover:text-[#059669] dark:hover:text-emerald-400 rounded-lg"
+              className="p-2 text-slate-700 dark:text-slate-200 hover:text-[#059669] dark:hover:text-emerald-400 transition-colors rounded-lg cursor-pointer"
+              aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
