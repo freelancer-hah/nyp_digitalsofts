@@ -276,19 +276,14 @@ export const CmsManagerPage: React.FC = () => {
         {/* Top Header Row: Logo, Title, Subtext & Role Badge */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800/80">
           
-          {/* Logo & Title Block */}
-          <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 shrink-0 flex items-center justify-center overflow-hidden">
-              <img src="/nyp-logo.png" alt="NYP Sindh Logo" className="w-full h-full object-contain drop-shadow-md" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading tracking-tight leading-tight">
-                Website Content Management System (CMS)
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                Manage website announcements, news ticker bulletins, leadership messages, and program media gallery.
-              </p>
-            </div>
+          {/* Title Block */}
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading tracking-tight leading-tight">
+              Website Content Management System (CMS)
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+              Manage website announcements, news ticker bulletins, leadership messages, and program media gallery.
+            </p>
           </div>
 
           {/* Access Role Pill Badge */}
