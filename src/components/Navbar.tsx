@@ -38,20 +38,20 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-20 sm:h-24">
           
           {/* Left Side: Brand Logo & Desktop Navigation Links grouped together */}
-          <div className="flex items-center min-w-0 pr-2">
-            <Link to="/" className="flex items-center space-x-2 sm:space-x-3.5 group min-w-0 py-1">
+          <div className="flex items-center min-w-0">
+            <Link to="/" className="flex items-center space-x-2 sm:space-x-3 group py-1">
               <div style={{ backgroundColor: '#ffffff' }} className="p-1 sm:p-1.5 rounded-md shadow-xs shrink-0 flex items-center justify-center">
                 <img 
                   src="/nyp-logo.png" 
                   alt="National Youth Parliament Sindh Logo" 
-                  className="h-10 sm:h-14 lg:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                  className="h-9 min-[360px]:h-10 sm:h-14 lg:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
                 />
               </div>
-              <div className="flex flex-col justify-center select-none min-w-0">
-                <div className="text-xs min-[380px]:text-sm sm:text-base lg:text-lg font-black tracking-tight text-[#052818] dark:text-emerald-400 leading-tight font-heading group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors uppercase truncate sm:whitespace-normal">
+              <div className="flex flex-col justify-center select-none shrink-0">
+                <div className="text-[11px] min-[360px]:text-xs min-[400px]:text-sm sm:text-base lg:text-lg font-black tracking-tight text-[#052818] dark:text-emerald-400 leading-tight font-heading group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors uppercase whitespace-nowrap">
                   NATIONAL YOUTH PARLIAMENT
                 </div>
-                <div className="text-[9px] sm:text-xs font-black text-[#c59b27] dark:text-amber-400 tracking-[0.22em] sm:tracking-[0.38em] uppercase font-heading text-center w-full mt-0.5">
+                <div className="text-[8px] min-[360px]:text-[9px] sm:text-xs font-black text-[#c59b27] dark:text-amber-400 tracking-[0.2em] sm:tracking-[0.38em] uppercase font-heading text-center w-full mt-0.5 whitespace-nowrap">
                   — S I N D H —
                 </div>
               </div>
@@ -165,17 +165,8 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu & Quick Action Toggle */}
-          <div className="flex lg:hidden items-center space-x-1 sm:space-x-2 shrink-0 ml-1.5 sm:ml-3">
-            <button
-              onClick={() => setSearchOpen(!searchOpen)}
-              className="p-2 text-slate-700 dark:text-slate-200 hover:text-[#059669] dark:hover:text-emerald-400 transition-colors rounded-lg cursor-pointer"
-              title="Search"
-              aria-label="Search website"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
+          {/* Mobile Menu Controls */}
+          <div className="flex lg:hidden items-center space-x-1 shrink-0 ml-1">
             <button
               onClick={toggleTheme}
               className="p-2 text-slate-700 dark:text-slate-200 hover:text-amber-500 transition-colors rounded-lg cursor-pointer"
@@ -197,9 +188,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Search Bar Slide Out */}
+      {/* Desktop Search Bar Slide Out */}
       {searchOpen && (
-        <div className="bg-slate-50 dark:bg-slate-900 border-t border-b border-slate-200 dark:border-slate-800 py-3 px-4 animate-fade-in">
+        <div className="hidden lg:block bg-slate-50 dark:bg-slate-900 border-t border-b border-slate-200 dark:border-slate-800 py-3 px-4 animate-fade-in">
           <form onSubmit={handleSearchSubmit} className="max-w-3xl mx-auto flex items-center space-x-2">
             <input
               type="text"
@@ -221,7 +212,31 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white dark:bg-[#0b1320] border-b border-slate-200 dark:border-slate-800 px-5 pt-3 pb-6 space-y-3 text-left animate-fade-in font-sans">
+        <div className="lg:hidden bg-white dark:bg-[#0b1320] border-b border-slate-200 dark:border-slate-800 px-5 pt-4 pb-6 space-y-3 text-left animate-fade-in font-sans shadow-xl">
+          
+          {/* Mobile Search Input in Drawer */}
+          <form 
+            onSubmit={(e) => {
+              handleSearchSubmit(e);
+              setMobileMenuOpen(false);
+            }} 
+            className="relative mb-4"
+          >
+            <input
+              type="text"
+              placeholder="Search NYP news, cabinets, initiatives..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl pl-9 pr-20 py-2.5 text-xs focus:outline-none focus:border-emerald-600 transition-colors"
+            />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            <button
+              type="submit"
+              className="absolute right-1.5 top-1.5 bottom-1.5 bg-[#052818] text-amber-300 text-[11px] font-extrabold px-3 rounded-lg hover:bg-emerald-900 transition-colors cursor-pointer"
+            >
+              Search
+            </button>
+          </form>
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}
