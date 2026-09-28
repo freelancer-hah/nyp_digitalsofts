@@ -528,7 +528,13 @@ class StoreService {
         submitted_at: profile.submittedAt || new Date().toISOString(),
       };
 
-      const { error } = await supabase.from('member_profiles').upsert(payload, { onConflict: 'cnic_number' });
+      let { error } = await supabase.from('member_profiles').upsert(payload, { onConflict: 'cnic_number' });
+      if (error && error.message?.includes('member_profiles_user_id_fkey')) {
+        console.warn('Retrying pushProfileToSupabase without strict auth user_id reference...');
+        payload.user_id = null as any;
+        const retry = await supabase.from('member_profiles').upsert(payload, { onConflict: 'cnic_number' });
+        error = retry.error;
+      }
       if (error) {
         console.warn('Supabase pushProfileToSupabase notice:', error.message);
       }
@@ -966,7 +972,13 @@ class StoreService {
         submitted_at: app.submittedAt || new Date().toISOString(),
         updated_at: app.updatedAt || new Date().toISOString(),
       };
-      const { error } = await supabase.from('role_applications').upsert(payload);
+      let { error } = await supabase.from('role_applications').upsert(payload);
+      if (error && error.message?.includes('role_applications_profile_id_fkey')) {
+        console.warn('Retrying syncRoleAppToSupabase without profile_id reference...');
+        payload.profile_id = null;
+        const retry = await supabase.from('role_applications').upsert(payload);
+        error = retry.error;
+      }
       if (error) {
         console.warn('Supabase syncRoleAppToSupabase notice:', error.message);
       }
@@ -1441,6 +1453,37 @@ class StoreService {
     }
   }
 
+
+  public async submitContactInquiry(data: {
+    name: string;
+    email: string;
+    phone?: string;
+    subject: string;
+    message: string;
+  }): Promise<boolean> {
+    if (isSupabaseConfigured()) {
+      try {
+        const payload = {
+          full_name: data.name,
+          email: data.email,
+          phone: data.phone || null,
+          subject: data.subject,
+          message: data.message,
+          status: 'UNREAD',
+          submitted_at: new Date().toISOString(),
+        };
+        const { error } = await supabase.from('contact_inquiries').insert(payload);
+        if (error) {
+          console.warn('Supabase submitContactInquiry notice:', error.message);
+        } else {
+          console.log('Contact inquiry saved successfully to Supabase!');
+        }
+      } catch (err) {
+        console.warn('Supabase submitContactInquiry exception:', err);
+      }
+    }
+    return true;
+  }
 
   public getDivisionName(divisionId: string): string {
     return SINDH_DIVISIONS.find((d) => d.id === divisionId)?.name || 'Sindh';

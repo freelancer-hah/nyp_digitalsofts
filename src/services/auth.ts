@@ -3,14 +3,14 @@ import { store, normalizeCnic, formatCnic } from './store';
 import { User, MemberProfile, UserRole } from '../types';
 
 export function cnicToAuthEmail(cnicOrEmail: string): string {
-  if (!cnicOrEmail) return '';
+  if (!cnicOrEmail) return 'applicant@nypsindh.org.pk';
   const trimmed = cnicOrEmail.trim();
   if (trimmed.includes('@')) return trimmed; // Already an email
   const digits = trimmed.replace(/\D/g, '');
   if (digits.length >= 11) {
-    return `${digits}@auth.nypsindh.org.pk`;
+    return `cnic.${digits}@nypsindh.org.pk`;
   }
-  return `${trimmed.toLowerCase()}@auth.nypsindh.org.pk`;
+  return `user.${trimmed.toLowerCase()}@nypsindh.org.pk`;
 }
 
 export async function signUpMemberWithSupabaseAuth(data: {
@@ -22,8 +22,9 @@ export async function signUpMemberWithSupabaseAuth(data: {
   profileData: Partial<MemberProfile>;
 }): Promise<{ user: User; profile: MemberProfile } | { error: string }> {
   const cleanCnic = normalizeCnic(data.cnicNumber);
-  const authEmail = cnicToAuthEmail(cleanCnic);
+  const authEmail = (data.email && data.email.includes('@')) ? data.email.trim() : cnicToAuthEmail(cleanCnic);
   const password = data.password || 'pass123';
+  let registeredAuthId: string | undefined = undefined;
 
   if (isSupabaseConfigured()) {
     try {
@@ -43,17 +44,27 @@ export async function signUpMemberWithSupabaseAuth(data: {
         console.warn('Supabase Auth signUp notice:', authError.message);
       }
 
-      const authUserId = authData.user?.id;
-      if (authUserId) {
+      if (authData?.user?.id) {
+        registeredAuthId = authData.user.id;
         // Also sign in to active session
         await supabase.auth.signInWithPassword({
           email: authEmail,
           password: password,
         });
+      } else {
+        // If already registered or session exists
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user?.id) {
+          registeredAuthId = sessionData.session.user.id;
+        }
       }
     } catch (e) {
       console.warn('Supabase Auth signUp exception:', e);
     }
+  }
+
+  if (registeredAuthId) {
+    data.profileData.userId = registeredAuthId;
   }
 
   // Create/update local profile and store state

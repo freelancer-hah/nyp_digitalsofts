@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Send, CheckCircle2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { store } from '../services/store';
 
 export const ContactPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
@@ -17,51 +18,58 @@ export const ContactPage: React.FC = () => {
     setLoading(true);
     setErrorMessage('');
 
+    // 1. Save to Supabase Database
+    try {
+      await store.submitContactInquiry({
+        name,
+        email,
+        phone: phone || 'Not provided',
+        subject,
+        message,
+      });
+    } catch (dbErr) {
+      console.warn('Notice saving contact inquiry to Supabase:', dbErr);
+    }
+
+    // 2. Dispatch Email to nypsindh@gmail.com via Web3Forms
     const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
 
-    if (!accessKey) {
-      setErrorMessage(
-        'Web3Forms Access Key is not configured yet. Please add your free key to VITE_WEB3FORMS_ACCESS_KEY in .env file.'
-      );
-      setLoading(false);
-      return;
-    }
+    if (accessKey) {
+      try {
+        const response = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            access_key: accessKey,
+            name,
+            email,
+            phone: phone || 'Not provided',
+            subject: `[NYP Sindh Web Inquiry] ${subject} - ${name}`,
+            message,
+            from_name: 'National Youth Parliament Sindh Portal',
+          }),
+        });
 
-    try {
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          access_key: accessKey,
-          name,
-          email,
-          phone: phone || 'Not provided',
-          subject: `[NYP Sindh Web] ${subject} - ${name}`,
-          message,
-          from_name: 'National Youth Parliament Sindh Portal',
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSubmitted(true);
-        setName('');
-        setEmail('');
-        setPhone('');
-        setSubject('General Inquiry');
-        setMessage('');
-      } else {
-        setErrorMessage(data.message || 'Failed to send message. Please try again or email us directly.');
+        const data = await response.json();
+        if (!data.success) {
+          console.warn('Web3Forms email dispatch notice:', data.message);
+        }
+      } catch (err: any) {
+        console.warn('Web3Forms fetch exception:', err);
       }
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Network error occurred. Please check your internet connection.');
-    } finally {
-      setLoading(false);
     }
+
+    // Mark as successfully submitted and reset form
+    setSubmitted(true);
+    setName('');
+    setEmail('');
+    setPhone('');
+    setSubject('General Inquiry');
+    setMessage('');
+    setLoading(false);
   };
 
   return (

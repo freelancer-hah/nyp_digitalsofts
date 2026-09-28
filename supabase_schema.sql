@@ -315,3 +315,20 @@ ON CONFLICT (id) DO NOTHING;
 CREATE POLICY "Public read nyp-uploads" ON storage.objects FOR SELECT USING (bucket_id = 'nyp-uploads');
 CREATE POLICY "Public insert nyp-uploads" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'nyp-uploads');
 CREATE POLICY "Public update nyp-uploads" ON storage.objects FOR UPDATE USING (bucket_id = 'nyp-uploads');
+
+-- CONTACT INQUIRIES TABLE & POLICIES
+CREATE TABLE IF NOT EXISTS contact_inquiries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    full_name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    status TEXT DEFAULT 'UNREAD',
+    submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE contact_inquiries ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public insert contact_inquiries" ON contact_inquiries FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public read contact_inquiries" ON contact_inquiries FOR SELECT USING (true);
+
