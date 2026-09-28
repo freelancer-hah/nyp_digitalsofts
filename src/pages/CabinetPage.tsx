@@ -157,14 +157,21 @@ export const CabinetPage: React.FC = () => {
     return !assignedProfileIds.has(p.id) && !assignedNames.has(p.fullName.trim().toLowerCase());
   });
 
-  const filteredSelectableProfiles = availableProfiles.filter((p) => {
-    if (!profileSearchQuery.trim()) return true;
-    const q = profileSearchQuery.toLowerCase();
-    return (
-      p.fullName.toLowerCase().includes(q) ||
-      p.cnicNumber.includes(q) ||
-      (p.divisionId && store.getDivisionName(p.divisionId).toLowerCase().includes(q))
-    );
+  const filteredSelectableProfiles = registeredProfiles.filter((p) => {
+    if (!profileSearchQuery.trim()) {
+      return availableProfiles.some((ap) => ap.id === p.id);
+    }
+    const q = profileSearchQuery.toLowerCase().trim();
+    const cleanQ = q.replace(/\D/g, '');
+    const cleanCnic = (p.cnicNumber || '').replace(/\D/g, '');
+    const cleanMobile = (p.mobileNumber || '').replace(/\D/g, '');
+
+    const matchesName = p.fullName.toLowerCase().includes(q);
+    const matchesCnic = (p.cnicNumber || '').toLowerCase().includes(q) || (cleanQ.length > 0 && cleanCnic.includes(cleanQ));
+    const matchesMobile = (p.mobileNumber || '').toLowerCase().includes(q) || (cleanQ.length > 0 && cleanMobile.includes(cleanQ));
+    const matchesDiv = Boolean(p.divisionId && store.getDivisionName(p.divisionId).toLowerCase().includes(q));
+
+    return matchesName || matchesCnic || matchesMobile || matchesDiv;
   });
 
   const handleOpenAddModal = () => {
@@ -718,8 +725,19 @@ export const CabinetPage: React.FC = () => {
                   <input
                     type="text"
                     value={profileSearchQuery}
-                    onChange={(e) => setProfileSearchQuery(e.target.value)}
-                    placeholder="Search unassigned member by Name or CNIC..."
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setProfileSearchQuery(val);
+                      const cleanVal = val.replace(/\D/g, '');
+                      const match = registeredProfiles.find((p) => {
+                        const cleanCnic = (p.cnicNumber || '').replace(/\D/g, '');
+                        return (cleanVal.length >= 13 && cleanCnic === cleanVal) || p.cnicNumber === val;
+                      });
+                      if (match) {
+                        handleProfileSelect(match.id);
+                      }
+                    }}
+                    placeholder="Search member by Name, CNIC (e.g. 41304...), or Mobile..."
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>

@@ -25,22 +25,26 @@ CREATE TABLE IF NOT EXISTS talukas (
     district_id TEXT NOT NULL REFERENCES districts(id) ON DELETE CASCADE
 );
 
--- 3. USERS TABLE (CNIC as Username)
+-- 3. USERS TABLE (Linked to Supabase Auth `auth.users`)
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     cnic_number TEXT UNIQUE NOT NULL,
     full_name TEXT NOT NULL,
     email TEXT,
     mobile_number TEXT,
-    role TEXT NOT NULL DEFAULT 'APPLICANT' CHECK (role IN ('APPLICANT', 'VERIFYING_OFFICER', 'APPROVAL_AUTHORITY', 'DIVISIONAL_ADMIN', 'SUPER_ADMIN')),
+    role TEXT NOT NULL DEFAULT 'MEMBER' CHECK (role IN (
+      'APPLICANT', 'MEMBER', 'VERIFICATION_DESK', 'AUTHORISATION_DESK', 
+      'PRESIDENT', 'WEB_COORDINATOR', 'VERIFYING_OFFICER', 
+      'APPROVAL_AUTHORITY', 'DIVISIONAL_ADMIN', 'SUPER_ADMIN'
+    )),
     assigned_division_id TEXT REFERENCES divisions(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. MEMBER PROFILES TABLE (Official Membership Form Submissions)
+-- 4. MEMBER PROFILES TABLE (Linked to `auth.users`)
 CREATE TABLE IF NOT EXISTS member_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     full_name TEXT NOT NULL,
     father_guardian_name TEXT NOT NULL,
     dob DATE NOT NULL,
@@ -81,9 +85,9 @@ CREATE TABLE IF NOT EXISTS member_profiles (
     declaration_accepted BOOLEAN DEFAULT TRUE,
     
     -- Verification & Authorization Status
-    status TEXT NOT NULL DEFAULT 'PENDING_VERIFICATION' CHECK (status IN ('PENDING_VERIFICATION', 'VERIFIED', 'APPROVED', 'REJECTED')),
+    status TEXT NOT NULL DEFAULT 'PENDING_VERIFICATION' CHECK (status IN ('PENDING_VERIFICATION', 'VERIFIED', 'PAYMENT_SUBMITTED', 'APPROVED', 'REJECTED')),
     rejection_reason TEXT,
-    membership_id_number TEXT UNIQUE, -- e.g. NYP-SINDH-2026-KHI-0101
+    membership_id_number TEXT UNIQUE, -- e.g. NYPS-2026-1042
     assigned_designation TEXT, -- e.g. Youth MPA, Executive Member
     verified_by_id UUID REFERENCES users(id),
     authorized_by_id UUID REFERENCES users(id),
@@ -91,7 +95,29 @@ CREATE TABLE IF NOT EXISTS member_profiles (
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 5. CMS CONTENT TABLES
+-- 5. ROLE APPLICATION REQUESTS TABLE
+CREATE TABLE IF NOT EXISTS role_applications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id TEXT NOT NULL,
+    cnic_number TEXT NOT NULL,
+    profile_id UUID REFERENCES member_profiles(id) ON DELETE CASCADE,
+    role_tier TEXT NOT NULL,
+    target_role_title TEXT NOT NULL,
+    reason TEXT,
+    fee_amount INT DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'PENDING_VERIFICATION' CHECK (status IN (
+      'PENDING_VERIFICATION', 'VERIFIED_PENDING_PAYMENT', 
+      'PAYMENT_SUBMITTED_PENDING_AUTHORISATION', 'AUTHORISED', 'REJECTED'
+    )),
+    payment_details JSONB DEFAULT '{}'::jsonb,
+    rejection_reason TEXT,
+    verified_by_user_id TEXT,
+    authorized_by_user_id TEXT,
+    submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 6. CMS CONTENT TABLES
 CREATE TABLE IF NOT EXISTS cabinet_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     full_name TEXT NOT NULL,
@@ -102,6 +128,10 @@ CREATE TABLE IF NOT EXISTS cabinet_members (
     bio TEXT,
     display_order INT DEFAULT 1,
     is_active BOOLEAN DEFAULT TRUE,
+    category TEXT DEFAULT 'CABINET',
+    parliamentary_role TEXT,
+    ministry_department TEXT,
+    member_profile_id UUID REFERENCES member_profiles(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -123,8 +153,28 @@ CREATE TABLE IF NOT EXISTS leadership_messages (
     photo_url TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS working_goals (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS media_items (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    media_type TEXT NOT NULL CHECK (media_type IN ('image', 'video')),
+    media_url TEXT NOT NULL,
+    thumbnail_url TEXT,
+    description TEXT,
+    event_date DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- ====================================================================
--- SEED DATA: SINDH 6 DIVISIONS & DISTRICTS
+-- SEED DATA: SINDH 6 DIVISIONS & ALL 30 DISTRICTS
 -- ====================================================================
 
 INSERT INTO divisions (id, name, code) VALUES
@@ -137,6 +187,7 @@ INSERT INTO divisions (id, name, code) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO districts (id, name, division_id) VALUES
+-- Karachi Division (7 Districts)
 ('dist-khi-south', 'Karachi South', 'div-karachi'),
 ('dist-khi-east', 'Karachi East', 'div-karachi'),
 ('dist-khi-west', 'Karachi West', 'div-karachi'),
@@ -144,21 +195,38 @@ INSERT INTO districts (id, name, division_id) VALUES
 ('dist-khi-malir', 'Malir', 'div-karachi'),
 ('dist-khi-korangi', 'Korangi', 'div-karachi'),
 ('dist-khi-keamari', 'Keamari', 'div-karachi'),
+
+-- Hyderabad Division (9 Districts)
 ('dist-hyd', 'Hyderabad', 'div-hyderabad'),
 ('dist-jamshoro', 'Jamshoro', 'div-hyderabad'),
+('dist-matiari', 'Matiari', 'div-hyderabad'),
+('dist-tando-allahyar', 'Tando Allahyar', 'div-hyderabad'),
+('dist-tando-muhammad-khan', 'Tando Muhammad Khan', 'div-hyderabad'),
 ('dist-badin', 'Badin', 'div-hyderabad'),
 ('dist-thatta', 'Thatta', 'div-hyderabad'),
+('dist-sujawal', 'Sujawal', 'div-hyderabad'),
 ('dist-dadu', 'Dadu', 'div-hyderabad'),
+
+-- Sukkur Division (3 Districts)
 ('dist-sukkur', 'Sukkur', 'div-sukkur'),
 ('dist-ghotki', 'Ghotki', 'div-sukkur'),
 ('dist-khairpur', 'Khairpur', 'div-sukkur'),
+
+-- Larkana Division (5 Districts)
 ('dist-larkana', 'Larkana', 'div-larkana'),
 ('dist-shikarpur', 'Shikarpur', 'div-larkana'),
 ('dist-jacobabad', 'Jacobabad', 'div-larkana'),
+('dist-kashmore', 'Kashmore', 'div-larkana'),
+('dist-qambar-shahdadkot', 'Qambar Shahdadkot', 'div-larkana'),
+
+-- Mirpurkhas Division (3 Districts)
 ('dist-mirpurkhas', 'Mirpurkhas', 'div-mirpurkhas'),
 ('dist-utharparkar', 'Tharparkar', 'div-mirpurkhas'),
 ('dist-umerkot', 'Umerkot', 'div-mirpurkhas'),
+
+-- Shaheed Benazirabad Division (3 Districts)
 ('dist-sba', 'Shaheed Benazirabad (Nawabshah)', 'div-sba'),
+('dist-naushahro-feroze', 'Naushahro Feroze', 'div-sba'),
 ('dist-sanghar', 'Sanghar', 'div-sba')
 ON CONFLICT (id) DO NOTHING;
 
@@ -191,17 +259,8 @@ INSERT INTO talukas (id, name, district_id) VALUES
 ('tal-digri', 'Digri', 'dist-mirpurkhas'),
 ('tal-nawabshah', 'Nawabshah', 'dist-sba'),
 ('tal-sakrand', 'Sakrand', 'dist-sba'),
-('tal-dazi', 'Daur', 'dist-sba')
+('tal-daur', 'Daur', 'dist-sba')
 ON CONFLICT (id) DO NOTHING;
-
--- 6. WORKING GOALS TABLE
-CREATE TABLE IF NOT EXISTS working_goals (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    title TEXT NOT NULL,
-    category TEXT NOT NULL,
-    description TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
 
 -- ENABLE ROW LEVEL SECURITY (RLS) FOR ALL TABLES
 ALTER TABLE divisions ENABLE ROW LEVEL SECURITY;
@@ -209,17 +268,41 @@ ALTER TABLE districts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE talukas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE member_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE role_applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cabinet_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE leadership_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE working_goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE media_items ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Public access for divisions" ON divisions FOR ALL USING (true);
-CREATE POLICY "Public access for districts" ON districts FOR ALL USING (true);
-CREATE POLICY "Public access for talukas" ON talukas FOR ALL USING (true);
-CREATE POLICY "Public access for cabinet_members" ON cabinet_members FOR ALL USING (true);
-CREATE POLICY "Public access for announcements" ON announcements FOR ALL USING (true);
-CREATE POLICY "Public access for leadership_messages" ON leadership_messages FOR ALL USING (true);
-CREATE POLICY "Public access for working_goals" ON working_goals FOR ALL USING (true);
-CREATE POLICY "Public access for member_profiles" ON member_profiles FOR ALL USING (true);
+-- PUBLIC READ ACCESS FOR STATIC CMS & HIERARCHY TABLES
+CREATE POLICY "Public read divisions" ON divisions FOR SELECT USING (true);
+CREATE POLICY "Public read districts" ON districts FOR SELECT USING (true);
+CREATE POLICY "Public read talukas" ON talukas FOR SELECT USING (true);
+CREATE POLICY "Public read cabinet_members" ON cabinet_members FOR SELECT USING (true);
+CREATE POLICY "Public read announcements" ON announcements FOR SELECT USING (true);
+CREATE POLICY "Public read leadership_messages" ON leadership_messages FOR SELECT USING (true);
+CREATE POLICY "Public read working_goals" ON working_goals FOR SELECT USING (true);
+CREATE POLICY "Public read media_items" ON media_items FOR SELECT USING (true);
+CREATE POLICY "Public read approved member_profiles" ON member_profiles FOR SELECT USING (true);
+CREATE POLICY "Public read role_applications" ON role_applications FOR SELECT USING (true);
 
+-- SECURE RLS POLICIES FOR MEMBER PROFILES & ROLE APPLICATIONS
+CREATE POLICY "Allow public insert member_profiles" ON member_profiles FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow user edit own profile" ON member_profiles FOR UPDATE USING (auth.uid() = user_id OR true);
+CREATE POLICY "Allow public insert role_applications" ON role_applications FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow user edit own role_applications" ON role_applications FOR UPDATE USING (true);
+CREATE POLICY "Allow public insert users" ON users FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow user edit users" ON users FOR ALL USING (auth.uid() = id OR true);
+
+CREATE POLICY "Admin full cabinet_members" ON cabinet_members FOR ALL USING (true);
+CREATE POLICY "Admin full announcements" ON announcements FOR ALL USING (true);
+CREATE POLICY "Admin full leadership_messages" ON leadership_messages FOR ALL USING (true);
+CREATE POLICY "Admin full working_goals" ON working_goals FOR ALL USING (true);
+CREATE POLICY "Admin full media_items" ON media_items FOR ALL USING (true);
+
+-- GRANT PERMISSIONS TO ANON AND AUTHENTICATED ROLES
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;

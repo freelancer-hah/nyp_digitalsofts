@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { store, formatCnic, formatMobile, normalizeDob } from '../services/store';
+import { signUpMemberWithSupabaseAuth } from '../services/auth';
 import { uploadToCloudinary } from '../services/cloudinary';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS, SINDH_TALUKAS } from '../data/sindhHierarchy';
 import {
@@ -260,8 +261,13 @@ export const ApplicationPage: React.FC = () => {
 
     const cleanDob = normalizeDob(dobInput || dob);
 
-    await store.submitMemberProfile(
-      {
+    await signUpMemberWithSupabaseAuth({
+      cnicNumber,
+      fullName,
+      email,
+      mobileNumber,
+      password,
+      profileData: {
         userId: currentUser?.id || '',
         fullName,
         fatherGuardianName,
@@ -292,8 +298,7 @@ export const ApplicationPage: React.FC = () => {
         socialLinks: { facebook, twitter, instagram, linkedin },
         declarationAccepted,
       },
-      password
-    );
+    });
 
     navigate('/member/dashboard');
   };

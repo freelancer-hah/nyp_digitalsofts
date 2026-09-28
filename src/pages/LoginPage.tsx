@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { store, formatCnic } from '../services/store';
+import { signInWithSupabaseAuth } from '../services/auth';
 import { LogIn, AlertCircle, Shield, Lock } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
@@ -18,7 +19,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -27,17 +28,21 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    const res = store.loginUserByCnic(cnicNumber, password);
-    if (res.success && res.user) {
-      if (res.user.role === 'APPLICANT' || res.user.role === 'MEMBER') {
-        navigate('/member/dashboard');
-      } else {
-        if (res.user.role === 'VERIFICATION_DESK' || res.user.role === 'VERIFYING_OFFICER') navigate('/admin/verification');
-        else if (res.user.role === 'AUTHORISATION_DESK' || res.user.role === 'APPROVAL_AUTHORITY') navigate('/admin/approval');
-        else navigate('/admin/master');
+    try {
+      const res = await signInWithSupabaseAuth(cnicNumber, password);
+      if ('user' in res && res.user) {
+        if (res.user.role === 'APPLICANT' || res.user.role === 'MEMBER') {
+          navigate('/member/dashboard');
+        } else {
+          if (res.user.role === 'VERIFICATION_DESK' || res.user.role === 'VERIFYING_OFFICER') navigate('/admin/verification');
+          else if (res.user.role === 'AUTHORISATION_DESK' || res.user.role === 'APPROVAL_AUTHORITY') navigate('/admin/approval');
+          else navigate('/admin/master');
+        }
+      } else if ('error' in res) {
+        setError(res.error || 'Login failed');
       }
-    } else {
-      setError(res.error || 'Login failed');
+    } catch (err) {
+      setError('Login failed. Please check your details.');
     }
   };
 

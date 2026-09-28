@@ -377,22 +377,33 @@ class StoreService {
           }
         });
 
-        // Extract roleApplications from fetched profiles
-        profData.forEach((d: any) => {
-          if (d.social_links && Array.isArray(d.social_links.roleApplications)) {
-            d.social_links.roleApplications.forEach((remoteApp: RoleApplicationRequest) => {
-              if (remoteApp && remoteApp.id) {
-                const existingIdx = this.roleApplications.findIndex((r) => r.id === remoteApp.id);
-                if (existingIdx >= 0) {
-                  this.roleApplications[existingIdx] = remoteApp;
-                } else {
-                  this.roleApplications.unshift(remoteApp);
-                }
-              }
-            });
-          }
-        });
-        this.saveRoleApplications();
+        // Fetch role_applications from Supabase
+        const { data: roleAppData, error: roleAppErr } = await supabase.from('role_applications').select('*');
+        if (!roleAppErr && roleAppData && roleAppData.length > 0) {
+          const fetchedRoleApps: RoleApplicationRequest[] = roleAppData.map((d: any) => ({
+            id: d.id,
+            userId: d.user_id || d.userId,
+            cnicNumber: d.cnic_number || d.cnicNumber,
+            profileId: d.profile_id || d.profileId,
+            roleTier: d.role_tier || d.roleTier,
+            targetRoleTitle: d.target_role_title || d.targetRoleTitle,
+            reason: d.reason || '',
+            feeAmount: Number(d.fee_amount ?? d.feeAmount ?? 0),
+            status: d.status,
+            paymentDetails: d.payment_details || d.paymentDetails || undefined,
+            rejectionReason: d.rejection_reason || d.rejectionReason || undefined,
+            verifiedByUserId: d.verified_by_user_id || d.verifiedByUserId || undefined,
+            authorizedByUserId: d.authorized_by_user_id || d.authorizedByUserId || undefined,
+            submittedAt: d.submitted_at || d.submittedAt || new Date().toISOString(),
+            updatedAt: d.updated_at || d.updatedAt || new Date().toISOString(),
+          }));
+
+          const roleAppMap = new Map<string, RoleApplicationRequest>();
+          this.roleApplications.forEach((r) => roleAppMap.set(r.id, r));
+          fetchedRoleApps.forEach((r) => roleAppMap.set(r.id, r));
+          this.roleApplications = Array.from(roleAppMap.values());
+          this.saveRoleApplications();
+        }
       }
 
       // Fetch announcements from Supabase
@@ -469,9 +480,13 @@ class StoreService {
     if (!isSupabaseConfigured()) return;
     try {
       const cleanDob = normalizeDob(profile.dob);
+      const validUserId = isUuid(profile.userId) ? profile.userId : null;
+      const validVerifiedBy = isUuid(profile.verifiedByUserId) ? profile.verifiedByUserId : null;
+      const validAuthorizedBy = isUuid(profile.authorizedByUserId) ? profile.authorizedByUserId : null;
+
       const payload = {
         id: toValidUuid(profile.id),
-        user_id: null,
+        user_id: validUserId,
         full_name: profile.fullName,
         father_guardian_name: profile.fatherGuardianName,
         dob: cleanDob,
@@ -507,10 +522,16 @@ class StoreService {
         status: profile.status || 'APPROVED',
         membership_id_number: profile.membershipIdNumber || null,
         assigned_designation: profile.assignedDesignation || 'Youth Member',
+        verified_by_id: validVerifiedBy,
+        authorized_by_id: validAuthorizedBy,
         approval_date: profile.approvalDate ? profile.approvalDate : new Date().toISOString(),
         submitted_at: profile.submittedAt || new Date().toISOString(),
       };
-      await supabase.from('member_profiles').upsert(payload);
+
+      const { error } = await supabase.from('member_profiles').upsert(payload, { onConflict: 'cnic_number' });
+      if (error) {
+        console.warn('Supabase pushProfileToSupabase notice:', error.message);
+      }
     } catch (e) {
       console.warn('Supabase pushProfileToSupabase error:', e);
     }
@@ -926,22 +947,28 @@ class StoreService {
   private async syncRoleAppToSupabase(app: RoleApplicationRequest) {
     if (!isSupabaseConfigured()) return;
     try {
-      const profile = this.profiles.find((p) => p.id === app.profileId || isSameCnic(p.cnicNumber, app.cnicNumber));
-      if (profile) {
-        const userApps = this.roleApplications.filter(
-          (r) => r.profileId === profile.id || isSameCnic(r.cnicNumber, profile.cnicNumber)
-        );
-        const updatedSocialLinks = {
-          ...(profile.socialLinks || {}),
-          roleApplications: userApps,
-        };
-        profile.socialLinks = updatedSocialLinks;
-        this.saveProfiles();
-
-        await supabase.from('member_profiles').update({
-          social_links: updatedSocialLinks,
-          assigned_designation: profile.assignedDesignation || null,
-        }).eq('id', profile.id);
+      const validId = toValidUuid(app.id);
+      const validProfId = isUuid(app.profileId) ? app.profileId : null;
+      const payload = {
+        id: validId,
+        user_id: app.userId || 'usr-applicant',
+        cnic_number: normalizeCnic(app.cnicNumber),
+        profile_id: validProfId,
+        role_tier: app.roleTier,
+        target_role_title: app.targetRoleTitle,
+        reason: app.reason || '',
+        fee_amount: Number(app.feeAmount) || 0,
+        status: app.status,
+        payment_details: app.paymentDetails || {},
+        rejection_reason: app.rejectionReason || null,
+        verified_by_user_id: app.verifiedByUserId || null,
+        authorized_by_user_id: app.authorizedByUserId || null,
+        submitted_at: app.submittedAt || new Date().toISOString(),
+        updated_at: app.updatedAt || new Date().toISOString(),
+      };
+      const { error } = await supabase.from('role_applications').upsert(payload);
+      if (error) {
+        console.warn('Supabase syncRoleAppToSupabase notice:', error.message);
       }
     } catch (e) {
       console.warn('Supabase syncRoleAppToSupabase error:', e);
@@ -1076,14 +1103,41 @@ class StoreService {
 
   // --- CMS Content Management ---
   public getCabinetMembers(level?: 'PROVINCIAL' | 'DIVISIONAL', divisionId?: string): CabinetMember[] {
-    let list = this.cabinetMembers.filter((m) => m.isActive);
+    const cabinetList = [...this.cabinetMembers.filter((m) => m.isActive)];
+    const existingProfileIds = new Set(cabinetList.map((m) => m.memberProfileId).filter(Boolean));
+    const existingNames = new Set(cabinetList.map((m) => m.fullName.trim().toLowerCase()));
+
+    // Dynamically include APPROVED Member Profiles as division members / roster members
+    this.profiles.forEach((p) => {
+      if (p.status === 'APPROVED') {
+        const pKey = p.id;
+        const nameKey = p.fullName.trim().toLowerCase();
+        if (!existingProfileIds.has(pKey) && !existingNames.has(nameKey)) {
+          cabinetList.push({
+            id: p.id,
+            fullName: p.fullName,
+            designation: p.assignedDesignation || 'Youth Member',
+            cabinetLevel: p.divisionId ? 'DIVISIONAL' : 'PROVINCIAL',
+            divisionId: p.divisionId || 'div-karachi',
+            photoUrl: p.passportPhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+            bio: p.statementOfPurpose || `Active Member - ${p.assignedDesignation || 'Youth Member'}`,
+            displayOrder: 99,
+            isActive: true,
+            memberProfileId: p.id,
+            category: (p.assignedDesignation?.toLowerCase().includes('mpa') || p.assignedDesignation?.toLowerCase().includes('mna')) ? 'PARLIAMENTARIAN' : 'CABINET',
+          });
+        }
+      }
+    });
+
+    let list = cabinetList;
     if (level) {
       list = list.filter((m) => m.cabinetLevel === level);
     }
     if (divisionId) {
       list = list.filter((m) => m.divisionId === divisionId);
     }
-    return list.sort((a, b) => a.displayOrder - b.displayOrder);
+    return list.sort((a, b) => (Number(a.displayOrder) || 99) - (Number(b.displayOrder) || 99));
   }
 
   public async pushCabinetMemberToSupabase(member: CabinetMember) {
@@ -1357,12 +1411,34 @@ class StoreService {
     };
     this.mediaItems.unshift(newItem);
     localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
+
+    if (isSupabaseConfigured()) {
+      supabase.from('media_items').upsert({
+        id: newItem.id,
+        title: newItem.title,
+        category: newItem.category,
+        media_type: newItem.mediaType === 'VIDEO' ? 'video' : 'image',
+        media_url: newItem.mediaUrl,
+        description: newItem.description || null,
+        event_date: newItem.eventDate || null,
+        created_at: newItem.createdAt || new Date().toISOString(),
+      }).then(({ error }) => {
+        if (error) console.warn('Supabase addMediaItem notice:', error.message);
+      });
+    }
+
     return newItem;
   }
 
   public deleteMediaItem(id: string) {
     this.mediaItems = this.mediaItems.filter((m) => m.id !== id);
     localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
+
+    if (isSupabaseConfigured()) {
+      supabase.from('media_items').delete().eq('id', id).then(({ error }) => {
+        if (error) console.warn('Supabase deleteMediaItem notice:', error.message);
+      });
+    }
   }
 
 

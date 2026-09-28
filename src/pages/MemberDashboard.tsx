@@ -319,6 +319,10 @@ export const MemberDashboard: React.FC = () => {
   const currentDistricts = SINDH_DISTRICTS.filter((d) => d.divisionId === editFormData.divisionId);
   const currentTalukas = SINDH_TALUKAS.filter((t) => t.districtId === editFormData.districtId);
 
+  const hasVerifiedCardPayment = roleApplications.some(
+    (r) => r.status === 'AUTHORISED'
+  ) || Boolean(profile?.paymentDetails && profile?.status === 'APPROVED' && profile?.authorizedByUserId);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 text-left space-y-8 bg-slate-50 dark:bg-[#090e17] transition-colors">
       
@@ -376,8 +380,8 @@ export const MemberDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* 15 to 20 Days Physical Card Delivery Banner for Approved Members */}
-        {profile.status === 'APPROVED' && (
+        {/* 15 to 20 Days Physical Card Delivery Banner (Only shown when card application payment is verified/authorised) */}
+        {hasVerifiedCardPayment && (
           <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-amber-950 border-2 border-amber-400/70 p-5 rounded-2xl shadow-xl text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center space-x-3.5">
               <div className="w-12 h-12 rounded-xl bg-amber-400/20 border border-amber-400/50 flex items-center justify-center text-amber-400 shrink-0">
