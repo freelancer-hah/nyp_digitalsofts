@@ -306,3 +306,12 @@ GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+
+-- SUPABASE STORAGE BUCKET CREATION (nyp-uploads)
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('nyp-uploads', 'nyp-uploads', true) 
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Public read nyp-uploads" ON storage.objects FOR SELECT USING (bucket_id = 'nyp-uploads');
+CREATE POLICY "Public insert nyp-uploads" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'nyp-uploads');
+CREATE POLICY "Public update nyp-uploads" ON storage.objects FOR UPDATE USING (bucket_id = 'nyp-uploads');
