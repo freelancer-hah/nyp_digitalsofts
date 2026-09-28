@@ -480,7 +480,19 @@ class StoreService {
     if (!isSupabaseConfigured()) return;
     try {
       const cleanDob = normalizeDob(profile.dob);
-      const validUserId = isUuid(profile.userId) ? profile.userId : null;
+      let validUserId: string | null = null;
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const activeAuthId = sessionData?.session?.user?.id;
+        if (profile.userId && (profile.userId === activeAuthId || !isUuid(profile.userId))) {
+          validUserId = activeAuthId || null;
+        } else if (isUuid(profile.userId)) {
+          validUserId = profile.userId || null;
+        }
+      } catch (e) {
+        validUserId = null;
+      }
+
       const validVerifiedBy = isUuid(profile.verifiedByUserId) ? profile.verifiedByUserId : null;
       const validAuthorizedBy = isUuid(profile.authorizedByUserId) ? profile.authorizedByUserId : null;
 

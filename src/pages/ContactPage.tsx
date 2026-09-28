@@ -32,44 +32,49 @@ export const ContactPage: React.FC = () => {
     }
 
     // 2. Dispatch Email to nypsindh@gmail.com via Web3Forms
-    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '4778e419-11f9-469f-accb-a3ca7222c00d';
 
-    if (accessKey) {
-      try {
-        const response = await fetch('https://api.web3forms.com/submit', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            access_key: accessKey,
-            name,
-            email,
-            phone: phone || 'Not provided',
-            subject: `[NYP Sindh Web Inquiry] ${subject} - ${name}`,
-            message,
-            from_name: 'National Youth Parliament Sindh Portal',
-          }),
-        });
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          access_key: accessKey,
+          name,
+          email,
+          phone: phone || 'Not provided',
+          subject: `[NYP Sindh Web Inquiry] ${subject} - ${name}`,
+          message,
+          from_name: 'National Youth Parliament Sindh Portal',
+        }),
+      });
 
-        const data = await response.json();
-        if (!data.success) {
-          console.warn('Web3Forms email dispatch notice:', data.message);
-        }
-      } catch (err: any) {
-        console.warn('Web3Forms fetch exception:', err);
+      const data = await response.json();
+
+      if (data.success || response.ok) {
+        setSubmitted(true);
+        setName('');
+        setEmail('');
+        setPhone('');
+        setSubject('General Inquiry');
+        setMessage('');
+      } else {
+        setErrorMessage(data.message || 'Inquiry saved to Database, but email delivery notice returned an issue.');
       }
+    } catch (err: any) {
+      // Message is safely saved in Supabase
+      setSubmitted(true);
+      setName('');
+      setEmail('');
+      setPhone('');
+      setSubject('General Inquiry');
+      setMessage('');
+    } finally {
+      setLoading(false);
     }
-
-    // Mark as successfully submitted and reset form
-    setSubmitted(true);
-    setName('');
-    setEmail('');
-    setPhone('');
-    setSubject('General Inquiry');
-    setMessage('');
-    setLoading(false);
   };
 
   return (
