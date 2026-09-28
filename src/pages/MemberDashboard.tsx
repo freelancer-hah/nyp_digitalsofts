@@ -400,7 +400,7 @@ export const MemberDashboard: React.FC = () => {
                   Your Physical Embossed Smart Card is Queued for Printing &amp; Courier Dispatch
                 </h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Your official embossed membership smart card will be dispatched and delivered to your registered address via courier within 15 to 20 working days. You can download and print your official digital pass below.
+                  Your official embossed membership smart card will be dispatched and delivered to your registered address via courier within 15 to 20 working days. You can view your official digital pass below.
                 </p>
               </div>
             </div>
@@ -435,7 +435,7 @@ export const MemberDashboard: React.FC = () => {
             <div>
               <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">OFFICIAL VERIFIED DELEGATE PASS</span>
               <h3 className="text-xl font-black text-slate-900 dark:text-white font-heading">
-                NYP Sindh Digital &amp; Printable Membership Card
+                NYP Sindh Digital Membership Card
               </h3>
             </div>
             <span className="text-xs text-emerald-700 dark:text-emerald-400 font-extrabold flex items-center space-x-1.5 bg-emerald-100 dark:bg-emerald-950 px-3 py-1.5 rounded-full border border-emerald-300 dark:border-emerald-700/60 shrink-0">
@@ -444,7 +444,7 @@ export const MemberDashboard: React.FC = () => {
             </span>
           </div>
 
-          <DigitalIdCard profile={profile} />
+          <DigitalIdCard profile={profile} hideDownload={true} />
         </div>
       </div>
 

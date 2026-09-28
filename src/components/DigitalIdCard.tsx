@@ -8,6 +8,7 @@ import { SINDH_DIVISIONS, SINDH_DISTRICTS, SINDH_TALUKAS } from '../data/sindhHi
 
 interface Props {
   profile: MemberProfile;
+  hideDownload?: boolean;
 }
 
 function formatDateDDMMYYYY(rawDate?: string): string {
@@ -28,7 +29,7 @@ function formatDateDDMMYYYY(rawDate?: string): string {
   return `${day}/${month}/${year}`;
 }
 
-export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
+export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }) => {
   const frontCardRef = useRef<HTMLDivElement>(null);
   const backCardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -525,23 +526,25 @@ export const DigitalIdCard: React.FC<Props> = ({ profile }) => {
               <Printer className="w-4 h-4 text-amber-400" />
               <span>Print Both Sides</span>
             </button>
-            <button
-              onClick={handleDownloadPDF}
-              disabled={isGeneratingPdf}
-              className="flex items-center space-x-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-black shadow-lg transition-transform hover:scale-105 cursor-pointer uppercase tracking-wider"
-            >
-              {isGeneratingPdf ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                  <span>Generating PDF...</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  <span>Download Card PDF</span>
-                </>
-              )}
-            </button>
+            {!hideDownload && (
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPdf}
+                className="flex items-center space-x-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-black shadow-lg transition-transform hover:scale-105 cursor-pointer uppercase tracking-wider"
+              >
+                {isGeneratingPdf ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                    <span>Generating PDF...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    <span>Download Card PDF</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
