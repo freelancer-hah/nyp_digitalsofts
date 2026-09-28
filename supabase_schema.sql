@@ -276,29 +276,68 @@ ALTER TABLE working_goals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE media_items ENABLE ROW LEVEL SECURITY;
 
 -- PUBLIC READ ACCESS FOR STATIC CMS & HIERARCHY TABLES
+DROP POLICY IF EXISTS "Public read divisions" ON divisions;
 CREATE POLICY "Public read divisions" ON divisions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read districts" ON districts;
 CREATE POLICY "Public read districts" ON districts FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read talukas" ON talukas;
 CREATE POLICY "Public read talukas" ON talukas FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read cabinet_members" ON cabinet_members;
 CREATE POLICY "Public read cabinet_members" ON cabinet_members FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read announcements" ON announcements;
 CREATE POLICY "Public read announcements" ON announcements FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read leadership_messages" ON leadership_messages;
 CREATE POLICY "Public read leadership_messages" ON leadership_messages FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read working_goals" ON working_goals;
 CREATE POLICY "Public read working_goals" ON working_goals FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read media_items" ON media_items;
 CREATE POLICY "Public read media_items" ON media_items FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read approved member_profiles" ON member_profiles;
 CREATE POLICY "Public read approved member_profiles" ON member_profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read role_applications" ON role_applications;
 CREATE POLICY "Public read role_applications" ON role_applications FOR SELECT USING (true);
 
 -- SECURE RLS POLICIES FOR MEMBER PROFILES & ROLE APPLICATIONS
+DROP POLICY IF EXISTS "Allow public insert member_profiles" ON member_profiles;
 CREATE POLICY "Allow public insert member_profiles" ON member_profiles FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow user edit own profile" ON member_profiles;
 CREATE POLICY "Allow user edit own profile" ON member_profiles FOR UPDATE USING (auth.uid() = user_id OR true);
+
+DROP POLICY IF EXISTS "Allow public insert role_applications" ON role_applications;
 CREATE POLICY "Allow public insert role_applications" ON role_applications FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow user edit own role_applications" ON role_applications;
 CREATE POLICY "Allow user edit own role_applications" ON role_applications FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert users" ON users;
 CREATE POLICY "Allow public insert users" ON users FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow user edit users" ON users;
 CREATE POLICY "Allow user edit users" ON users FOR ALL USING (auth.uid() = id OR true);
 
+DROP POLICY IF EXISTS "Admin full cabinet_members" ON cabinet_members;
 CREATE POLICY "Admin full cabinet_members" ON cabinet_members FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Admin full announcements" ON announcements;
 CREATE POLICY "Admin full announcements" ON announcements FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Admin full leadership_messages" ON leadership_messages;
 CREATE POLICY "Admin full leadership_messages" ON leadership_messages FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Admin full working_goals" ON working_goals;
 CREATE POLICY "Admin full working_goals" ON working_goals FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Admin full media_items" ON media_items;
 CREATE POLICY "Admin full media_items" ON media_items FOR ALL USING (true);
 
 -- GRANT PERMISSIONS TO ANON AND AUTHENTICATED ROLES
@@ -312,8 +351,13 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('nyp-uploads', 'nyp-uploads', true) 
 ON CONFLICT (id) DO NOTHING;
 
+DROP POLICY IF EXISTS "Public read nyp-uploads" ON storage.objects;
 CREATE POLICY "Public read nyp-uploads" ON storage.objects FOR SELECT USING (bucket_id = 'nyp-uploads');
+
+DROP POLICY IF EXISTS "Public insert nyp-uploads" ON storage.objects;
 CREATE POLICY "Public insert nyp-uploads" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'nyp-uploads');
+
+DROP POLICY IF EXISTS "Public update nyp-uploads" ON storage.objects;
 CREATE POLICY "Public update nyp-uploads" ON storage.objects FOR UPDATE USING (bucket_id = 'nyp-uploads');
 
 -- CONTACT INQUIRIES TABLE & POLICIES
@@ -329,6 +373,10 @@ CREATE TABLE IF NOT EXISTS contact_inquiries (
 );
 
 ALTER TABLE contact_inquiries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public insert contact_inquiries" ON contact_inquiries;
 CREATE POLICY "Public insert contact_inquiries" ON contact_inquiries FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public read contact_inquiries" ON contact_inquiries;
 CREATE POLICY "Public read contact_inquiries" ON contact_inquiries FOR SELECT USING (true);
+
 
