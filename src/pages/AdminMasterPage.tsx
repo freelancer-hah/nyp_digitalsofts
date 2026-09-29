@@ -509,13 +509,13 @@ export const AdminMasterPage: React.FC = () => {
 
       {/* OFFICER & USER ACCESS CONTROL MODAL */}
       {showOfficerModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in">
+          <div className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[88vh] my-auto relative">
             
             {/* Modal Header */}
-            <div className="p-6 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+            <div className="p-6 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-900 border border-amber-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-purple-900 border border-amber-400 flex items-center justify-center shrink-0">
                   <ShieldAlert className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
@@ -525,14 +525,14 @@ export const AdminMasterPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowOfficerModal(false)}
-                className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition-colors cursor-pointer shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-6 text-xs text-left">
+            <div className="p-6 overflow-y-auto space-y-6 text-xs text-left flex-1 min-h-0 custom-scrollbar">
               
               {officerSuccessMsg && (
                 <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-200 rounded-xl flex items-center space-x-2 font-semibold">
