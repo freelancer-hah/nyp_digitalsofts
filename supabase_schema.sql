@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS talukas (
     district_id TEXT NOT NULL REFERENCES districts(id) ON DELETE CASCADE
 );
 
--- 3. USERS TABLE (Linked to Supabase Auth `auth.users`)
+-- 3. USERS TABLE
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     cnic_number TEXT UNIQUE NOT NULL,
     full_name TEXT NOT NULL,
     email TEXT,
@@ -319,11 +319,14 @@ CREATE POLICY "Allow public insert role_applications" ON role_applications FOR I
 DROP POLICY IF EXISTS "Allow user edit own role_applications" ON role_applications;
 CREATE POLICY "Allow user edit own role_applications" ON role_applications FOR UPDATE USING (true);
 
+DROP POLICY IF EXISTS "Public read users" ON users;
+CREATE POLICY "Public read users" ON users FOR SELECT USING (true);
+
 DROP POLICY IF EXISTS "Allow public insert users" ON users;
 CREATE POLICY "Allow public insert users" ON users FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow user edit users" ON users;
-CREATE POLICY "Allow user edit users" ON users FOR ALL USING (auth.uid() = id OR true);
+CREATE POLICY "Allow user edit users" ON users FOR ALL USING (true);
 
 DROP POLICY IF EXISTS "Admin full cabinet_members" ON cabinet_members;
 CREATE POLICY "Admin full cabinet_members" ON cabinet_members FOR ALL USING (true);
