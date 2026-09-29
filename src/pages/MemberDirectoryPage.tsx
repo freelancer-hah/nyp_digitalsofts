@@ -26,7 +26,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 import { store } from '../services/store';
 import { MemberProfile } from '../types';
@@ -51,6 +52,19 @@ export const MemberDirectoryPage: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [copiedAllPhones, setCopiedAllPhones] = useState(false);
+  const currentUser = store.getCurrentUser();
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'PRESIDENT' || currentUser?.role === 'WEB_COORDINATOR' || currentUser?.role === 'APPROVAL_AUTHORITY' || !currentUser?.role;
+
+  const handleDeleteProfile = async (e: React.MouseEvent, profileId: string, name: string) => {
+    e.stopPropagation();
+    if (confirm(`Are you sure you want to delete youth member profile "${name}"? This will also remove any Cabinet/Parliamentary assignments.`)) {
+      await store.deleteMemberProfile(profileId);
+      if (selectedProfile?.id === profileId) {
+        setSelectedProfile(null);
+      }
+      loadData();
+    }
+  };
 
   // Load profiles from store / remote
   const loadData = async () => {
@@ -755,6 +769,16 @@ export const MemberDirectoryPage: React.FC = () => {
                     <Eye className="w-3.5 h-3.5" />
                     <span>View</span>
                   </button>
+
+                  {isSuperAdmin && (
+                    <button
+                      onClick={(e) => handleDeleteProfile(e, member.id, member.fullName)}
+                      className="p-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-950 dark:hover:bg-rose-900 dark:text-rose-300 transition-colors"
+                      title="Delete Member Profile"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -844,16 +868,27 @@ export const MemberDirectoryPage: React.FC = () => {
                     </td>
 
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedProfile(member);
-                        }}
-                        className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center space-x-1"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Details</span>
-                      </button>
+                      <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProfile(member);
+                          }}
+                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center space-x-1"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Details</span>
+                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            onClick={(e) => handleDeleteProfile(e, member.id, member.fullName)}
+                            className="p-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-950 dark:hover:bg-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-800 rounded-lg transition-colors cursor-pointer"
+                            title="Delete Member Profile"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -899,13 +934,25 @@ export const MemberDirectoryPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setSelectedProfile(null)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
-                title="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                {isSuperAdmin && (
+                  <button
+                    onClick={(e) => handleDeleteProfile(e, selectedProfile.id, selectedProfile.fullName)}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1 shadow-sm cursor-pointer"
+                    title="Delete Member Profile"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Profile</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setSelectedProfile(null)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Scrollable Body */}

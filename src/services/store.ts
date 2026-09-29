@@ -360,15 +360,24 @@ class StoreService {
         // Merge fetched profiles with local profiles (never wipe out locally submitted profiles)
         const profileMap = new Map<string, MemberProfile>();
 
-        // 1. First add current local profiles
+        // 1. First add current local profiles (excluding removed ones)
         this.profiles.forEach((p) => {
-          const key = p.cnicNumber ? p.cnicNumber.replace(/\D/g, '') : p.id;
-          profileMap.set(key, p);
+          if (!this.removedCabinetIds.has(p.id)) {
+            const key = p.cnicNumber ? p.cnicNumber.replace(/\D/g, '') : p.id;
+            profileMap.set(key, p);
+          }
         });
 
-        // 2. Merge with fetched profiles
+        // 2. Merge with fetched profiles (filtering out removed ones)
         const remoteCnicSet = new Set<string>();
         fetchedProfiles.forEach((remoteProf) => {
+          if (this.removedCabinetIds.has(remoteProf.id)) {
+            if (isSupabaseConfigured()) {
+              supabase.from('member_profiles').delete().eq('id', remoteProf.id);
+            }
+            return;
+          }
+
           const key = remoteProf.cnicNumber ? remoteProf.cnicNumber.replace(/\D/g, '') : remoteProf.id;
           remoteCnicSet.add(key);
           const local = profileMap.get(key);
@@ -379,7 +388,7 @@ class StoreService {
           }
         });
 
-        this.profiles = Array.from(profileMap.values());
+        this.profiles = Array.from(profileMap.values()).filter((p) => !this.removedCabinetIds.has(p.id));
         this.saveProfiles();
 
         // 3. Background push any local profiles that are missing in Supabase
@@ -742,7 +751,7 @@ class StoreService {
 
   // --- Profile Submission & Management ---
   public getAllProfiles(): MemberProfile[] {
-    return this.profiles;
+    return this.profiles.filter((p) => !this.removedCabinetIds.has(p.id));
   }
 
   public getProfileByUserId(userIdOrCnic?: string): MemberProfile | undefined {
@@ -965,6 +974,9 @@ class StoreService {
     const profile = this.profiles.find((p) => p.id === profileId);
     this.profiles = this.profiles.filter((p) => p.id !== profileId);
     this.saveProfiles();
+
+    // Also delete associated Cabinet Member / Parliamentarian record & add to blacklist
+    this.deleteCabinetMember(profileId);
 
     if (isSupabaseConfigured() && profile) {
       try {
@@ -1394,8 +1406,38 @@ class StoreService {
     const matchingProfile = this.profiles.find(
       (p) => p.id === id || (targetMember && (p.id === targetMember.memberProfileId || p.fullName.trim().toLowerCase() === targetMember.fullName.trim().toLowerCase()))
     );
+
     if (matchingProfile) {
       this.removedCabinetIds.add(matchingProfile.id);
+      this.profiles = this.profiles.filter((p) => p.id !== matchingProfile.id);
+      this.saveProfiles();
+
+      if (isSupabaseConfigured()) {
+        try {
+          supabase.from('member_profiles').delete().eq('id', matchingProfile.id).then(({ error }) => {
+            if (error) console.warn('Supabase delete profile notice:', error.message);
+          });
+        } catch (e) {
+          console.warn('Supabase delete profile error:', e);
+        }
+      }
+    }
+
+    const directProfile = this.profiles.find((p) => p.id === id);
+    if (directProfile) {
+      this.removedCabinetIds.add(directProfile.id);
+      this.profiles = this.profiles.filter((p) => p.id !== id);
+      this.saveProfiles();
+
+      if (isSupabaseConfigured()) {
+        try {
+          supabase.from('member_profiles').delete().eq('id', id).then(({ error }) => {
+            if (error) console.warn('Supabase delete profile notice:', error.message);
+          });
+        } catch (e) {
+          console.warn('Supabase delete profile error:', e);
+        }
+      }
     }
 
     this.cabinetMembers = this.cabinetMembers.filter(
