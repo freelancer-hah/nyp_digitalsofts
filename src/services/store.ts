@@ -989,6 +989,7 @@ class StoreService {
         console.warn('Supabase clear all profiles notice:', e);
       }
     }
+    this.notifyListeners();
     return true;
   }
 
