@@ -456,6 +456,44 @@ class StoreService {
         }));
         localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
       }
+
+      // Sync users from Supabase and auto-seed initial Super Admin
+      try {
+        const { data: userData, error: userErr } = await supabase.from('users').select('*');
+        if (!userErr && userData) {
+          userData.forEach((u: any) => {
+            const matchedIdx = this.officerUsers.findIndex((off) => off.id === u.id || isSameCnic(off.cnicNumber, u.cnic_number));
+            if (matchedIdx >= 0) {
+              this.officerUsers[matchedIdx] = {
+                ...this.officerUsers[matchedIdx],
+                id: u.id,
+                fullName: u.full_name || this.officerUsers[matchedIdx].fullName,
+                email: u.email || this.officerUsers[matchedIdx].email,
+                role: u.role || this.officerUsers[matchedIdx].role,
+              };
+            } else if (u.role && u.role !== 'MEMBER') {
+              this.officerUsers.push({
+                id: u.id,
+                username: u.email ? u.email.split('@')[0] : u.cnic_number,
+                cnicNumber: u.cnic_number,
+                fullName: u.full_name,
+                email: u.email,
+                mobileNumber: u.mobile_number,
+                role: u.role,
+                createdAt: u.created_at,
+              });
+            }
+          });
+          this.saveOfficerUsers();
+        }
+
+        INITIAL_OFFICER_USERS.forEach((off) => {
+          this.pushOfficerToSupabase(off);
+        });
+      } catch (e) {
+        console.warn('Supabase users table sync notice:', e);
+      }
+
       this.notifyListeners();
     } catch (e) {
       console.warn('Supabase fetch notice:', e);
@@ -533,11 +571,50 @@ class StoreService {
         const retry = await supabase.from('member_profiles').upsert(payload, { onConflict: 'cnic_number' });
         error = retry.error;
       }
+
+      // Also sync user record to Supabase `users` table
+      try {
+        const userUuid = (validUserId && isUuid(validUserId)) ? validUserId : toValidUuid(profile.id);
+        await supabase.from('users').upsert({
+          id: userUuid,
+          cnic_number: normalizeCnic(profile.cnicNumber),
+          full_name: profile.fullName,
+          email: profile.email,
+          mobile_number: profile.mobileNumber,
+          role: 'MEMBER',
+          created_at: profile.submittedAt || new Date().toISOString(),
+        }, { onConflict: 'cnic_number' });
+      } catch (e) {
+        console.warn('Supabase users table sync notice:', e);
+      }
+
       if (error) {
         console.warn('Supabase pushProfileToSupabase notice:', error.message);
       }
     } catch (e) {
       console.warn('Supabase pushProfileToSupabase error:', e);
+    }
+  }
+
+  public async pushOfficerToSupabase(user: User) {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const validId = isUuid(user.id) ? user.id : toValidUuid(user.id || generateUuid());
+      const userPayload = {
+        id: validId,
+        cnic_number: normalizeCnic(user.cnicNumber || '41304-0000000-0'),
+        full_name: user.fullName,
+        email: user.email,
+        mobile_number: user.mobileNumber,
+        role: user.role,
+        created_at: user.createdAt || new Date().toISOString(),
+      };
+      const { error } = await supabase.from('users').upsert(userPayload, { onConflict: 'cnic_number' });
+      if (error) {
+        console.warn('Supabase pushOfficerToSupabase notice:', error.message);
+      }
+    } catch (e) {
+      console.warn('Supabase pushOfficerToSupabase error:', e);
     }
   }
 
@@ -583,11 +660,14 @@ class StoreService {
   public addOfficerUser(data: Omit<User, 'id' | 'createdAt'>): User {
     const newOfficer: User = {
       ...data,
-      id: `usr-off-${Date.now()}`,
+      id: generateUuid(),
       createdAt: new Date().toISOString(),
     };
     this.officerUsers.unshift(newOfficer);
     this.saveOfficerUsers();
+    if (isSupabaseConfigured()) {
+      this.pushOfficerToSupabase(newOfficer);
+    }
     return newOfficer;
   }
 
