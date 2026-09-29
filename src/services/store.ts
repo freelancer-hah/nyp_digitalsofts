@@ -173,7 +173,22 @@ class StoreService {
   private officerUsers: User[] = INITIAL_OFFICER_USERS;
   private roleApplications: RoleApplicationRequest[] = [];
   private removedCabinetIds: Set<string> = new Set();
+  private listeners: Set<() => void> = new Set();
 
+  public subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  public notifyListeners() {
+    this.listeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (e) {
+        console.warn('Store listener error:', e);
+      }
+    });
+  }
 
   constructor() {
     this.init();
@@ -466,6 +481,7 @@ class StoreService {
         }));
         localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
       }
+      this.notifyListeners();
     } catch (e) {
       console.warn('Supabase fetch notice:', e);
     }
