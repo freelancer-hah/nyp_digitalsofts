@@ -18,6 +18,7 @@ const KEY_WORKING_GOALS = 'nyp_sindh_working_goals';
 const KEY_MEDIA_ITEMS = 'nyp_sindh_media_items';
 const KEY_OFFICER_USERS = 'nyp_sindh_officer_users';
 const KEY_ROLE_APPLICATIONS = 'nyp_sindh_role_applications';
+const KEY_REMOVED_CABINET = 'nyp_sindh_removed_cabinet_ids';
 
 
 export function normalizeDob(dobStr?: string): string {
@@ -171,6 +172,7 @@ class StoreService {
   private mediaItems: MediaItem[] = INITIAL_MEDIA_ITEMS;
   private officerUsers: User[] = INITIAL_OFFICER_USERS;
   private roleApplications: RoleApplicationRequest[] = [];
+  private removedCabinetIds: Set<string> = new Set();
 
 
   constructor() {
@@ -246,6 +248,15 @@ class StoreService {
     const storedCabinet = localStorage.getItem(KEY_CABINET);
     this.cabinetMembers = storedCabinet ? JSON.parse(storedCabinet) : [];
 
+    const storedRemovedCab = localStorage.getItem(KEY_REMOVED_CABINET);
+    if (storedRemovedCab) {
+      try {
+        this.removedCabinetIds = new Set(JSON.parse(storedRemovedCab));
+      } catch (e) {
+        this.removedCabinetIds = new Set();
+      }
+    }
+
     const storedAnn = localStorage.getItem(KEY_ANNOUNCEMENTS);
     this.announcements = storedAnn ? JSON.parse(storedAnn) : [];
 
@@ -262,6 +273,7 @@ class StoreService {
   public async clearAllData(): Promise<boolean> {
     localStorage.removeItem(KEY_PROFILES);
     localStorage.removeItem(KEY_CABINET);
+    localStorage.removeItem(KEY_REMOVED_CABINET);
     localStorage.removeItem(KEY_ANNOUNCEMENTS);
     localStorage.removeItem(KEY_ROLE_APPLICATIONS);
 
@@ -272,6 +284,7 @@ class StoreService {
 
     this.profiles = [];
     this.cabinetMembers = [];
+    this.removedCabinetIds = new Set();
     this.announcements = [];
     localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
     this.roleApplications = [];
@@ -427,7 +440,15 @@ class StoreService {
       // Fetch cabinet_members from Supabase
       const { data: cabData, error: cabErr } = await supabase.from('cabinet_members').select('*');
       if (!cabErr && cabData && cabData.length > 0) {
-        const fetchedCabinet: CabinetMember[] = cabData.map((d: any) => ({
+        const validCabData = cabData.filter((d: any) => {
+          const isRemoved = this.removedCabinetIds.has(d.id) || (d.member_profile_id && this.removedCabinetIds.has(d.member_profile_id));
+          if (isRemoved) {
+            this.deleteCabinetMemberFromSupabase(d.id);
+          }
+          return !isRemoved;
+        });
+
+        const fetchedCabinet: CabinetMember[] = validCabData.map((d: any) => ({
           id: d.id,
           fullName: d.full_name || d.fullName || 'Member',
           designation: d.designation || 'Youth Parliamentarian',
@@ -444,7 +465,11 @@ class StoreService {
         }));
 
         const cabMap = new Map<string, CabinetMember>();
-        this.cabinetMembers.forEach((m) => cabMap.set(m.id, m));
+        this.cabinetMembers.forEach((m) => {
+          if (!this.removedCabinetIds.has(m.id) && (!m.memberProfileId || !this.removedCabinetIds.has(m.memberProfileId))) {
+            cabMap.set(m.id, m);
+          }
+        });
         const remoteIds = new Set<string>();
         fetchedCabinet.forEach((m) => {
           remoteIds.add(m.id);
@@ -456,7 +481,9 @@ class StoreService {
           }
         });
 
-        this.cabinetMembers = Array.from(cabMap.values());
+        this.cabinetMembers = Array.from(cabMap.values()).filter((m) =>
+          !this.removedCabinetIds.has(m.id) && (!m.memberProfileId || !this.removedCabinetIds.has(m.memberProfileId))
+        );
         localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
 
         // Push any local members not yet in Supabase
@@ -468,7 +495,9 @@ class StoreService {
       } else if (!cabErr && cabData && cabData.length === 0 && this.cabinetMembers.length > 0) {
         // Table is empty in Supabase, push all existing cabinet members
         this.cabinetMembers.forEach((m) => {
-          this.pushCabinetMemberToSupabase(m);
+          if (!this.removedCabinetIds.has(m.id) && (!m.memberProfileId || !this.removedCabinetIds.has(m.memberProfileId))) {
+            this.pushCabinetMemberToSupabase(m);
+          }
         });
       }
     } catch (e) {
@@ -1127,13 +1156,19 @@ class StoreService {
 
   // --- CMS Content Management ---
   public getCabinetMembers(level?: 'PROVINCIAL' | 'DIVISIONAL', divisionId?: string): CabinetMember[] {
-    const cabinetList = [...this.cabinetMembers.filter((m) => m.isActive)];
+    const cabinetList = [
+      ...this.cabinetMembers.filter((m) => 
+        m.isActive && 
+        !this.removedCabinetIds.has(m.id) && 
+        (!m.memberProfileId || !this.removedCabinetIds.has(m.memberProfileId))
+      )
+    ];
     const existingProfileIds = new Set(cabinetList.map((m) => m.memberProfileId).filter(Boolean));
     const existingNames = new Set(cabinetList.map((m) => m.fullName.trim().toLowerCase()));
 
-    // Dynamically include APPROVED Member Profiles as division members / roster members
+    // Dynamically include APPROVED Member Profiles as division members / roster members (UNLESS REMOVED)
     this.profiles.forEach((p) => {
-      if (p.status === 'APPROVED') {
+      if (p.status === 'APPROVED' && !this.removedCabinetIds.has(p.id)) {
         const pKey = p.id;
         const nameKey = p.fullName.trim().toLowerCase();
         if (!existingProfileIds.has(pKey) && !existingNames.has(nameKey)) {
@@ -1202,6 +1237,12 @@ class StoreService {
 
   public addCabinetMember(data: Omit<CabinetMember, 'id'>): CabinetMember {
     const newMemberId = generateUuid();
+    this.removedCabinetIds.delete(newMemberId);
+    if (data.memberProfileId) {
+      this.removedCabinetIds.delete(data.memberProfileId);
+    }
+    localStorage.setItem(KEY_REMOVED_CABINET, JSON.stringify(Array.from(this.removedCabinetIds)));
+
     const newMember: CabinetMember = {
       ...data,
       id: newMemberId,
@@ -1341,9 +1382,38 @@ class StoreService {
   }
 
   public deleteCabinetMember(id: string) {
-    this.cabinetMembers = this.cabinetMembers.filter((m) => m.id !== id);
+    const targetMember = this.cabinetMembers.find((m) => m.id === id || m.memberProfileId === id);
+    this.removedCabinetIds.add(id);
+    if (targetMember?.id) {
+      this.removedCabinetIds.add(targetMember.id);
+    }
+    if (targetMember?.memberProfileId) {
+      this.removedCabinetIds.add(targetMember.memberProfileId);
+    }
+
+    const matchingProfile = this.profiles.find(
+      (p) => p.id === id || (targetMember && (p.id === targetMember.memberProfileId || p.fullName.trim().toLowerCase() === targetMember.fullName.trim().toLowerCase()))
+    );
+    if (matchingProfile) {
+      this.removedCabinetIds.add(matchingProfile.id);
+    }
+
+    this.cabinetMembers = this.cabinetMembers.filter(
+      (m) => m.id !== id && m.memberProfileId !== id && (!matchingProfile || m.memberProfileId !== matchingProfile.id)
+    );
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+    localStorage.setItem(KEY_REMOVED_CABINET, JSON.stringify(Array.from(this.removedCabinetIds)));
+
     this.deleteCabinetMemberFromSupabase(id);
+    if (targetMember?.id && targetMember.id !== id) {
+      this.deleteCabinetMemberFromSupabase(targetMember.id);
+    }
+    if (targetMember?.memberProfileId && targetMember.memberProfileId !== id) {
+      this.deleteCabinetMemberFromSupabase(targetMember.memberProfileId);
+    }
+    if (matchingProfile?.id && matchingProfile.id !== id && matchingProfile.id !== targetMember?.memberProfileId) {
+      this.deleteCabinetMemberFromSupabase(matchingProfile.id);
+    }
   }
 
   public getAnnouncements(): Announcement[] {
