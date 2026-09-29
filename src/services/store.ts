@@ -113,7 +113,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'president@nypsindh.org.pk',
     mobileNumber: '0333-7612564',
     role: 'PRESIDENT',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PRESIDENT_PASSWORD) || 'NYPSindh#2026!President',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PRESIDENT_PASSWORD) || '',
     createdAt: new Date().toISOString(),
   },
   {
@@ -124,7 +124,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'admin@nypsindh.org.pk',
     mobileNumber: '0333-7612564',
     role: 'SUPER_ADMIN',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || 'NYPSindh#2026!SuperAdmin',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || '',
     createdAt: new Date().toISOString(),
   },
   {
@@ -135,7 +135,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'coordinator@nypsindh.org.pk',
     mobileNumber: '0300-3333333',
     role: 'WEB_COORDINATOR',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_COORDINATOR_PASSWORD) || 'NYPSindh#2026!Coordinator',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_COORDINATOR_PASSWORD) || '',
     createdAt: new Date().toISOString(),
   },
   {
@@ -146,7 +146,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'verifier@nypsindh.org.pk',
     mobileNumber: '0300-1111111',
     role: 'VERIFICATION_DESK',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_VERIFIER_PASSWORD) || 'NYPSindh#2026!Verifier',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_VERIFIER_PASSWORD) || '',
     createdAt: new Date().toISOString(),
   },
   {
@@ -157,7 +157,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'authoriser@nypsindh.org.pk',
     mobileNumber: '0300-2222222',
     role: 'AUTHORISATION_DESK',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AUTHORISER_PASSWORD) || 'NYPSindh#2026!Authoriser',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AUTHORISER_PASSWORD) || '',
     createdAt: new Date().toISOString(),
   },
 ];
@@ -229,7 +229,11 @@ class StoreService {
       if (idx === -1) {
         parsed.unshift({ ...def });
       } else {
-        parsed[idx] = { ...parsed[idx], ...def };
+        parsed[idx] = { 
+          ...parsed[idx], 
+          ...def,
+          password: def.password 
+        };
       }
     });
     this.officerUsers = parsed;

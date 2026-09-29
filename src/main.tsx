@@ -5,12 +5,12 @@ import App from './App.tsx'
 import { ThemeProvider } from './context/ThemeContext'
 
 // Force instant global wipe of all previous browser local storage cache
-if (typeof window !== 'undefined' && localStorage.getItem('nyp_total_wipe_v100') !== 'true') {
+if (typeof window !== 'undefined' && localStorage.getItem('nyp_total_wipe_v101') !== 'true') {
   try {
     localStorage.clear();
     sessionStorage.clear();
   } catch (e) {}
-  localStorage.setItem('nyp_total_wipe_v100', 'true');
+  localStorage.setItem('nyp_total_wipe_v101', 'true');
 }
 
 createRoot(document.getElementById('root')!).render(
