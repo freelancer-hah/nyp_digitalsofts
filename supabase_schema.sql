@@ -379,4 +379,17 @@ CREATE POLICY "Public insert contact_inquiries" ON contact_inquiries FOR INSERT 
 DROP POLICY IF EXISTS "Public read contact_inquiries" ON contact_inquiries;
 CREATE POLICY "Public read contact_inquiries" ON contact_inquiries FOR SELECT USING (true);
 
+-- 10. INITIAL SEED SUPER ADMIN ACCOUNT
+-- Username: admin@nypsindh | Password: nypsindh123456
+INSERT INTO users (id, cnic_number, full_name, email, role, created_at)
+VALUES (
+    '00000000-0000-0000-0000-000000000001',
+    '41304-0000000-0',
+    'Executive Super Admin Desk',
+    'admin@nypsindh.org.pk',
+    'SUPER_ADMIN',
+    NOW()
+)
+ON CONFLICT (cnic_number) DO UPDATE SET role = 'SUPER_ADMIN';
+
 

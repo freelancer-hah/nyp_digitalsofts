@@ -106,58 +106,14 @@ export function isSameCnic(c1?: string, c2?: string): boolean {
 
 const INITIAL_OFFICER_USERS: User[] = [
   {
-    id: 'usr-president',
-    username: 'president',
-    cnicNumber: '41304-0000000-1',
-    fullName: 'President Abdul Rehman Halepoto',
-    email: 'president@nypsindh.org.pk',
-    mobileNumber: '0333-7612564',
-    role: 'PRESIDENT',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PRESIDENT_PASSWORD) || '',
-    createdAt: new Date().toISOString(),
-  },
-  {
     id: 'usr-superadmin',
-    username: 'admin',
+    username: 'admin@nypsindh',
     cnicNumber: '41304-0000000-0',
     fullName: 'Executive Super Admin Desk',
     email: 'admin@nypsindh.org.pk',
     mobileNumber: '0333-7612564',
     role: 'SUPER_ADMIN',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || '',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'usr-coordinator',
-    username: 'coordinator',
-    cnicNumber: '41304-3333333-3',
-    fullName: 'Web Coordinator - NYP Sindh',
-    email: 'coordinator@nypsindh.org.pk',
-    mobileNumber: '0300-3333333',
-    role: 'WEB_COORDINATOR',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_COORDINATOR_PASSWORD) || '',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'usr-verifier',
-    username: 'verifier',
-    cnicNumber: '41304-1111111-1',
-    fullName: 'Verification Desk Officer',
-    email: 'verifier@nypsindh.org.pk',
-    mobileNumber: '0300-1111111',
-    role: 'VERIFICATION_DESK',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_VERIFIER_PASSWORD) || '',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'usr-authoriser',
-    username: 'authoriser',
-    cnicNumber: '41304-2222222-2',
-    fullName: 'Authorisation Desk Authority',
-    email: 'authoriser@nypsindh.org.pk',
-    mobileNumber: '0300-2222222',
-    role: 'AUTHORISATION_DESK',
-    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AUTHORISER_PASSWORD) || '',
+    password: 'nypsindh123456',
     createdAt: new Date().toISOString(),
   },
 ];
@@ -658,7 +614,7 @@ class StoreService {
         (uCnic && (uCnic === rawInput || isSameCnic(uCnic, rawInput))) ||
         (uEmail && uEmail === lowerInput) ||
         (cleanDigits && cleanDigits.length >= 10 && uCnic.replace(/\D/g, '') === cleanDigits) ||
-        (lowerInput === 'admin' && (u.username === 'admin' || u.role === 'SUPER_ADMIN' || u.id === 'usr-superadmin')) ||
+        ((lowerInput === 'admin@nypsindh' || lowerInput === 'admin' || lowerInput === 'admin@nypsindh.org.pk') && (u.role === 'SUPER_ADMIN' || u.id === 'usr-superadmin')) ||
         (lowerInput === 'president' && (u.username === 'president' || u.role === 'PRESIDENT' || u.id === 'usr-president')) ||
         (lowerInput === 'coordinator' && (u.username === 'coordinator' || u.role === 'WEB_COORDINATOR' || u.id === 'usr-coordinator')) ||
         (lowerInput === 'verifier' && (u.username === 'verifier' || u.role === 'VERIFICATION_DESK' || u.id === 'usr-verifier')) ||
