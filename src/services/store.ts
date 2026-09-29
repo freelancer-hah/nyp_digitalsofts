@@ -972,15 +972,32 @@ class StoreService {
 
   public async deleteMemberProfile(profileId: string): Promise<boolean> {
     const profile = this.profiles.find((p) => p.id === profileId);
+    this.removedCabinetIds.add(profileId);
+    if (profile) {
+      this.removedCabinetIds.add(profile.id);
+    }
     this.profiles = this.profiles.filter((p) => p.id !== profileId);
     this.saveProfiles();
 
     // Also delete associated Cabinet Member / Parliamentarian record & add to blacklist
     this.deleteCabinetMember(profileId);
 
+    localStorage.setItem(KEY_REMOVED_CABINET, JSON.stringify(Array.from(this.removedCabinetIds)));
+
     if (isSupabaseConfigured() && profile) {
       try {
+        const validId = toValidUuid(profile.id);
         await supabase.from('member_profiles').delete().eq('id', profile.id);
+        if (validId !== profile.id) {
+          await supabase.from('member_profiles').delete().eq('id', validId);
+        }
+        if (profile.fullName) {
+          await supabase.from('member_profiles').delete().ilike('full_name', profile.fullName.trim());
+          await supabase.from('cabinet_members').delete().ilike('full_name', profile.fullName.trim());
+        }
+        if (profile.cnicNumber) {
+          await supabase.from('member_profiles').delete().eq('cnic_number', profile.cnicNumber.trim());
+        }
       } catch (e) {
         console.warn('Supabase delete profile notice:', e);
       }
@@ -1236,11 +1253,16 @@ class StoreService {
     }
   }
 
-  public async deleteCabinetMemberFromSupabase(id: string) {
+  public async deleteCabinetMemberFromSupabase(id: string, fullName?: string) {
     if (!isSupabaseConfigured()) return;
     try {
-      if (isUuid(id)) {
-        await supabase.from('cabinet_members').delete().eq('id', id);
+      await supabase.from('cabinet_members').delete().eq('id', id);
+      const validId = toValidUuid(id);
+      if (validId !== id) {
+        await supabase.from('cabinet_members').delete().eq('id', validId);
+      }
+      if (fullName) {
+        await supabase.from('cabinet_members').delete().ilike('full_name', fullName.trim());
       }
     } catch (e) {
       console.warn('Supabase deleteCabinetMember notice:', e);
@@ -1446,15 +1468,16 @@ class StoreService {
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
     localStorage.setItem(KEY_REMOVED_CABINET, JSON.stringify(Array.from(this.removedCabinetIds)));
 
-    this.deleteCabinetMemberFromSupabase(id);
+    const fullNameToDelete = targetMember?.fullName || matchingProfile?.fullName || directProfile?.fullName;
+    this.deleteCabinetMemberFromSupabase(id, fullNameToDelete);
     if (targetMember?.id && targetMember.id !== id) {
-      this.deleteCabinetMemberFromSupabase(targetMember.id);
+      this.deleteCabinetMemberFromSupabase(targetMember.id, fullNameToDelete);
     }
     if (targetMember?.memberProfileId && targetMember.memberProfileId !== id) {
-      this.deleteCabinetMemberFromSupabase(targetMember.memberProfileId);
+      this.deleteCabinetMemberFromSupabase(targetMember.memberProfileId, fullNameToDelete);
     }
     if (matchingProfile?.id && matchingProfile.id !== id && matchingProfile.id !== targetMember?.memberProfileId) {
-      this.deleteCabinetMemberFromSupabase(matchingProfile.id);
+      this.deleteCabinetMemberFromSupabase(matchingProfile.id, fullNameToDelete);
     }
   }
 
