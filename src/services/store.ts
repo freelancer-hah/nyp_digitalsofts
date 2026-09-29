@@ -594,12 +594,17 @@ class StoreService {
     }
   }
 
-  public async pushOfficerToSupabase(user: User) {
-    if (!isSupabaseConfigured()) return;
+  public async pushOfficerToSupabase(user: User): Promise<{ success: boolean; error?: string }> {
+    if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
     try {
       const validId = isUuid(user.id) ? user.id : toValidUuid(user.id || generateUuid());
       const rawCnic = (user.cnicNumber && user.cnicNumber.trim()) ? user.cnicNumber.trim() : (user.username || user.id);
-      const cleanCnic = normalizeCnic(rawCnic) || rawCnic || `OFFICER-${validId}`;
+      let cleanCnic = normalizeCnic(rawCnic) || rawCnic || `OFFICER-${validId}`;
+
+      // Prevent CNIC collision on placeholder
+      if (cleanCnic === '41304-0000000-0' && user.role !== 'SUPER_ADMIN' && user.username !== 'admin@nypsindh') {
+        cleanCnic = `OFF-${validId.replace(/-/g, '').slice(0, 10)}`;
+      }
 
       const userPayload = {
         id: validId,
@@ -610,24 +615,53 @@ class StoreService {
         role: user.role,
         created_at: user.createdAt || new Date().toISOString(),
       };
-      const { error } = await supabase.from('users').upsert(userPayload, { onConflict: 'id' });
+
+      // Strategy 1: Upsert on cnic_number
+      let { error } = await supabase.from('users').upsert(userPayload, { onConflict: 'cnic_number' });
+
+      // Strategy 2: Upsert on id
       if (error) {
-        console.warn('Supabase pushOfficerToSupabase notice:', error.message);
+        console.warn('Supabase upsert on cnic_number notice:', error.message, 'retrying on id...');
+        const retry = await supabase.from('users').upsert(userPayload, { onConflict: 'id' });
+        error = retry.error;
       }
-    } catch (e) {
-      console.warn('Supabase pushOfficerToSupabase error:', e);
+
+      // Strategy 3: Insert without specifying fixed ID if foreign key constraint exists
+      if (error && (error.message?.includes('foreign key') || error.message?.includes('users_id_fkey'))) {
+        console.warn('Retrying insert without fixed UUID to bypass foreign key constraint...');
+        const { id, ...payloadWithoutId } = userPayload;
+        const retry = await supabase.from('users').insert(payloadWithoutId);
+        error = retry.error;
+      }
+
+      if (error) {
+        console.error('Supabase pushOfficerToSupabase error:', error.message, error);
+        return { success: false, error: error.message };
+      }
+
+      console.log(`Successfully synced officer ${user.fullName} (${cleanCnic}) to Supabase users table.`);
+      return { success: true };
+    } catch (e: any) {
+      console.error('Supabase pushOfficerToSupabase exception:', e);
+      return { success: false, error: e?.message || 'Unknown error' };
     }
   }
 
-  public async pushAllOfficersToSupabase() {
-    if (!isSupabaseConfigured()) return;
-    try {
-      for (const off of this.officerUsers) {
-        await this.pushOfficerToSupabase(off);
-      }
-    } catch (e) {
-      console.warn('pushAllOfficersToSupabase error:', e);
+  public async pushAllOfficersToSupabase(): Promise<{ success: boolean; syncedCount: number; errors: string[] }> {
+    if (!isSupabaseConfigured()) {
+      return { success: false, syncedCount: 0, errors: ['Supabase connection is not configured.'] };
     }
+    const errors: string[] = [];
+    let syncedCount = 0;
+    for (const off of this.officerUsers) {
+      const res = await this.pushOfficerToSupabase(off);
+      if (res.success) {
+        syncedCount++;
+      } else if (res.error) {
+        errors.push(`${off.fullName} (${off.cnicNumber || off.username}): ${res.error}`);
+      }
+    }
+    return { success: errors.length === 0, syncedCount, errors };
   }
 
   private saveProfiles() {
@@ -683,9 +717,24 @@ class StoreService {
     return newOfficer;
   }
 
-  public deleteOfficerUser(id: string) {
+  public async deleteOfficerUser(id: string) {
+    const officerToDelete = this.officerUsers.find((u) => u.id === id);
     this.officerUsers = this.officerUsers.filter((u) => u.id !== id);
     this.saveOfficerUsers();
+    this.notifyListeners();
+
+    if (isSupabaseConfigured()) {
+      try {
+        if (id) {
+          await supabase.from('users').delete().eq('id', id);
+        }
+        if (officerToDelete?.cnicNumber) {
+          await supabase.from('users').delete().eq('cnic_number', officerToDelete.cnicNumber);
+        }
+      } catch (e) {
+        console.warn('Delete officer from Supabase notice:', e);
+      }
+    }
   }
 
   public loginUserByCnic(cnicNumber: string, passwordInput?: string): { success: boolean; user?: User; error?: string } {
