@@ -1051,178 +1051,35 @@ export const MemberDashboard: React.FC = () => {
             </div>
 
             <form onSubmit={handleCreateRoleApplication} className="space-y-4 text-xs">
-              {/* Fee & Payment Account Banner */}
-              <div className="bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-950 text-white p-4 rounded-2xl space-y-3 border border-amber-400/40 shadow-inner">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-amber-300 block uppercase font-bold">Official Role Verification Fee</span>
-                  <span className="text-xl font-black font-mono text-amber-400">PKR {selectedRoleModal.fee}</span>
-                </div>
-                
-                <div className="pt-2 text-[11px] text-emerald-100 space-y-2 border-t border-emerald-800/80">
-                  {/* Faysal Bank Card */}
-                  <div className="p-3 rounded-xl bg-black/30 border border-emerald-700/60 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-amber-300 text-xs">🏦 Faysal Bank</span>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard('PK07FAYS3542567000003492', 'role_iban')}
-                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-amber-200 transition-colors flex items-center space-x-1 cursor-pointer"
-                        title="Copy IBAN"
-                      >
-                        {copiedField === 'role_iban' ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
-                        <span>{copiedField === 'role_iban' ? 'Copied' : 'Copy IBAN'}</span>
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
-                      <p>• <strong>Title:</strong> <span className="font-bold text-white">QAISAR</span></p>
-                      <p>• <strong>Branch:</strong> <span className="text-white">IBB MATLI</span></p>
-                    </div>
-                    <p className="pt-0.5">
-                      • <strong>IBAN:</strong> <span className="font-mono font-black text-amber-300 tracking-wider select-all">PK07FAYS3542567000003492</span>
-                    </p>
-                  </div>
-
-                  {/* JazzCash Card */}
-                  <div className="p-3 rounded-xl bg-black/30 border border-emerald-700/60 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-amber-300 text-xs">📱 JazzCash</span>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard('03043664842', 'role_jazz')}
-                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-amber-200 transition-colors flex items-center space-x-1 cursor-pointer"
-                        title="Copy JazzCash Number"
-                      >
-                        {copiedField === 'role_jazz' ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
-                        <span>{copiedField === 'role_jazz' ? 'Copied' : 'Copy Number'}</span>
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
-                      <p>• <strong>Account / Mobile:</strong> <span className="font-mono font-black text-amber-300 tracking-wider select-all">03043664842</span></p>
-                      <p>• <strong>Title:</strong> <span className="font-bold text-white">QAISAR</span></p>
-                    </div>
-                  </div>
-                </div>
+              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 p-4 rounded-2xl space-y-1 text-amber-900 dark:text-amber-200">
+                <span className="text-[10px] font-black uppercase tracking-wider block text-amber-600 dark:text-amber-400">Step 1: Verification Desk Approval</span>
+                <p className="text-xs font-medium leading-relaxed">
+                  Submit your post title and statement of purpose for verification. Once verified by Verification Desk, you will receive payment details in your portal to submit payment and upload receipt proof for final authorisation.
+                </p>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Target Role Designation *</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Target Role Designation / Post *</label>
                 <input
                   type="text"
                   required
                   value={targetRoleTitle}
                   onChange={(e) => setTargetRoleTitle(e.target.value)}
+                  placeholder="e.g. Youth MPA, Executive Member, District Coordinator"
                   className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Statement / Motivation for this Role *</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Statement of Purpose / Why are you applying for this position? *</label>
                 <textarea
                   required
-                  rows={2}
+                  rows={3}
                   value={roleReason}
                   onChange={(e) => setRoleReason(e.target.value)}
-                  placeholder="Why are you applying for this position and how will you contribute to NYP Sindh?"
+                  placeholder="Explain why you are applying for this post and how you intend to contribute to NYP Sindh..."
                   className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Payment Method</label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
-                  >
-                    <option value="JazzCash">JazzCash (03043664842 - QAISAR)</option>
-                    <option value="Bank Transfer">Faysal Bank (IBAN: PK07FAYS3542567000003492 - QAISAR)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Transaction ID / Ref #</label>
-                  <input
-                    type="text"
-                    value={transactionId}
-                    onChange={(e) => setTransactionId(e.target.value)}
-                    placeholder="e.g. 09823746152"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Picture Proof Upload */}
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Payment Proof Slip / Screenshot (Authoriser Verification)
-                </label>
-                
-                {paymentProofUrl ? (
-                  <div className="border-2 border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40 p-2.5 rounded-2xl flex items-center justify-between gap-3">
-                    <div className="flex items-center space-x-3 min-w-0">
-                      <img
-                        src={paymentProofUrl}
-                        alt="Payment Receipt Proof"
-                        className="w-12 h-12 object-cover rounded-xl border border-emerald-400 shrink-0 shadow-sm"
-                      />
-                      <div className="min-w-0">
-                        <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          Payment Slip Attached
-                        </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block">
-                          Authoriser will verify and update your card role
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentProofUrl('')}
-                      className="px-3 py-1 bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300 rounded-xl text-[10px] font-bold cursor-pointer transition-colors"
-                    >
-                      Change
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <label className={`border-2 border-dashed rounded-2xl p-3 flex flex-col items-center justify-center cursor-pointer transition-all ${
-                      isUploadingProof
-                        ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/20'
-                        : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500 bg-slate-50 dark:bg-slate-950 hover:bg-emerald-50/30'
-                    }`}>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        disabled={isUploadingProof}
-                        onChange={handleRoleProofUpload}
-                      />
-                      {isUploadingProof ? (
-                        <div className="flex flex-col items-center space-y-1 text-amber-500 py-1">
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          <span className="text-xs font-bold">Uploading receipt image...</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center space-y-0.5 text-slate-500 dark:text-slate-400 py-1 text-center">
-                          <Upload className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mb-0.5" />
-                          <span className="text-xs font-bold text-slate-900 dark:text-white">
-                            Upload Payment Slip / Screenshot
-                          </span>
-                          <span className="text-[10px] text-slate-500">
-                            Receipt photo for fast authoriser approval
-                          </span>
-                        </div>
-                      )}
-                    </label>
-                    {proofUploadError && (
-                      <p className="text-rose-500 text-[11px] font-bold mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5" />
-                        <span>{proofUploadError}</span>
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="pt-2 flex items-center justify-end space-x-3">
@@ -1235,13 +1092,13 @@ export const MemberDashboard: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isUploadingProof}
-                  className="ui-btn-gold text-slate-950 font-black px-6 py-2.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-lg disabled:opacity-50"
+                  className="ui-btn-gold text-slate-950 font-black px-6 py-2.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-lg"
                 >
-                  SUBMIT ROLE APPLICATION &amp; PROOF
+                  SUBMIT TO VERIFICATION DESK
                 </button>
               </div>
             </form>
+
           </div>
         </div>
       )}

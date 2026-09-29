@@ -518,15 +518,15 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
             <span>Official Horizontal Membership ID Card (Landscape Design)</span>
           </div>
 
-          <div className="flex items-center space-x-2 shrink-0">
-            <button
-              onClick={handlePrint}
-              className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
-            >
-              <Printer className="w-4 h-4 text-amber-400" />
-              <span>Print Both Sides</span>
-            </button>
-            {!hideDownload && (
+          {!hideDownload && (
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                onClick={handlePrint}
+                className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
+              >
+                <Printer className="w-4 h-4 text-amber-400" />
+                <span>Print Both Sides</span>
+              </button>
               <button
                 onClick={handleDownloadPDF}
                 disabled={isGeneratingPdf}
@@ -544,8 +544,9 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
                   </>
                 )}
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
         </div>
 
         {/* View Mode Switcher Tabs */}
