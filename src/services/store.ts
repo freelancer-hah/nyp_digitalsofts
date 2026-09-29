@@ -178,6 +178,25 @@ class StoreService {
   constructor() {
     this.init();
     this.fetchFromSupabase();
+    this.setupRealtimeSubscriptions();
+  }
+
+  private setupRealtimeSubscriptions() {
+    if (!isSupabaseConfigured()) return;
+    try {
+      supabase
+        .channel('public-db-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public' },
+          () => {
+            this.fetchFromSupabase();
+          }
+        )
+        .subscribe();
+    } catch (e) {
+      console.warn('Realtime subscription notice:', e);
+    }
   }
 
   private init() {
@@ -276,6 +295,7 @@ class StoreService {
     localStorage.removeItem(KEY_REMOVED_CABINET);
     localStorage.removeItem(KEY_ANNOUNCEMENTS);
     localStorage.removeItem(KEY_ROLE_APPLICATIONS);
+    localStorage.removeItem(KEY_MEDIA_ITEMS);
 
     if (this.currentUser && (this.currentUser.role === 'MEMBER' || this.currentUser.role === 'APPLICANT')) {
       this.currentUser = null;
@@ -286,7 +306,9 @@ class StoreService {
     this.cabinetMembers = [];
     this.removedCabinetIds = new Set();
     this.announcements = [];
+    this.mediaItems = [];
     localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
+    localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
     this.roleApplications = [];
 
     this.officerUsers = INITIAL_OFFICER_USERS;
@@ -297,6 +319,7 @@ class StoreService {
         await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabase.from('cabinet_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabase.from('announcements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('role_applications').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       } catch (e) {
         console.warn('Supabase clear data notice:', e);
       }
@@ -357,52 +380,14 @@ class StoreService {
           submittedAt: d.submitted_at || new Date().toISOString(),
         }));
 
-        // Merge fetched profiles with local profiles (never wipe out locally submitted profiles)
-        const profileMap = new Map<string, MemberProfile>();
-
-        // 1. First add current local profiles (excluding removed ones)
-        this.profiles.forEach((p) => {
-          if (!this.removedCabinetIds.has(p.id)) {
-            const key = p.cnicNumber ? p.cnicNumber.replace(/\D/g, '') : p.id;
-            profileMap.set(key, p);
-          }
-        });
-
-        // 2. Merge with fetched profiles (filtering out removed ones)
-        const remoteCnicSet = new Set<string>();
-        fetchedProfiles.forEach((remoteProf) => {
-          if (this.removedCabinetIds.has(remoteProf.id)) {
-            if (isSupabaseConfigured()) {
-              supabase.from('member_profiles').delete().eq('id', remoteProf.id);
-            }
-            return;
-          }
-
-          const key = remoteProf.cnicNumber ? remoteProf.cnicNumber.replace(/\D/g, '') : remoteProf.id;
-          remoteCnicSet.add(key);
-          const local = profileMap.get(key);
-          if (local) {
-            profileMap.set(key, { ...local, ...remoteProf });
-          } else {
-            profileMap.set(key, remoteProf);
-          }
-        });
-
-        this.profiles = Array.from(profileMap.values()).filter((p) => !this.removedCabinetIds.has(p.id));
+        // Supabase is single source of truth for profiles
+        this.profiles = fetchedProfiles.filter((p) => !this.removedCabinetIds.has(p.id));
         this.saveProfiles();
-
-        // 3. Background push any local profiles that are missing in Supabase
-        this.profiles.forEach((localProf) => {
-          const key = localProf.cnicNumber ? localProf.cnicNumber.replace(/\D/g, '') : localProf.id;
-          if (!remoteCnicSet.has(key)) {
-            this.pushProfileToSupabase(localProf);
-          }
-        });
 
         // Fetch role_applications from Supabase
         const { data: roleAppData, error: roleAppErr } = await supabase.from('role_applications').select('*');
-        if (!roleAppErr && roleAppData && roleAppData.length > 0) {
-          const fetchedRoleApps: RoleApplicationRequest[] = roleAppData.map((d: any) => ({
+        if (!roleAppErr && roleAppData) {
+          this.roleApplications = roleAppData.map((d: any) => ({
             id: d.id,
             userId: d.user_id || d.userId,
             cnicNumber: d.cnic_number || d.cnicNumber,
@@ -419,19 +404,14 @@ class StoreService {
             submittedAt: d.submitted_at || d.submittedAt || new Date().toISOString(),
             updatedAt: d.updated_at || d.updatedAt || new Date().toISOString(),
           }));
-
-          const roleAppMap = new Map<string, RoleApplicationRequest>();
-          this.roleApplications.forEach((r) => roleAppMap.set(r.id, r));
-          fetchedRoleApps.forEach((r) => roleAppMap.set(r.id, r));
-          this.roleApplications = Array.from(roleAppMap.values());
           this.saveRoleApplications();
         }
       }
 
       // Fetch announcements from Supabase
       const { data: annData, error: annErr } = await supabase.from('announcements').select('*');
-      if (!annErr && annData && annData.length > 0) {
-        const fetchedAnnouncements: Announcement[] = annData.map((d: any) => ({
+      if (!annErr && annData) {
+        this.announcements = annData.map((d: any) => ({
           id: d.id,
           title: d.title,
           content: d.content,
@@ -439,16 +419,12 @@ class StoreService {
           bannerUrl: d.banner_url || d.bannerUrl,
           isActive: d.is_active ?? d.isActive ?? true,
         }));
-        const annMap = new Map<string, Announcement>();
-        this.announcements.forEach((a) => annMap.set(a.id, a));
-        fetchedAnnouncements.forEach((a) => annMap.set(a.id, a));
-        this.announcements = Array.from(annMap.values());
         localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
       }
 
       // Fetch cabinet_members from Supabase
       const { data: cabData, error: cabErr } = await supabase.from('cabinet_members').select('*');
-      if (!cabErr && cabData && cabData.length > 0) {
+      if (!cabErr && cabData) {
         const validCabData = cabData.filter((d: any) => {
           const isRemoved = this.removedCabinetIds.has(d.id) || (d.member_profile_id && this.removedCabinetIds.has(d.member_profile_id));
           if (isRemoved) {
@@ -457,7 +433,7 @@ class StoreService {
           return !isRemoved;
         });
 
-        const fetchedCabinet: CabinetMember[] = validCabData.map((d: any) => ({
+        this.cabinetMembers = validCabData.map((d: any) => ({
           id: d.id,
           fullName: d.full_name || d.fullName || 'Member',
           designation: d.designation || 'Youth Parliamentarian',
@@ -472,42 +448,7 @@ class StoreService {
           parliamentaryRole: d.parliamentary_role || undefined,
           ministryDepartment: d.ministry_department || undefined,
         }));
-
-        const cabMap = new Map<string, CabinetMember>();
-        this.cabinetMembers.forEach((m) => {
-          if (!this.removedCabinetIds.has(m.id) && (!m.memberProfileId || !this.removedCabinetIds.has(m.memberProfileId))) {
-            cabMap.set(m.id, m);
-          }
-        });
-        const remoteIds = new Set<string>();
-        fetchedCabinet.forEach((m) => {
-          remoteIds.add(m.id);
-          const local = cabMap.get(m.id);
-          if (local) {
-            cabMap.set(m.id, { ...local, ...m });
-          } else {
-            cabMap.set(m.id, m);
-          }
-        });
-
-        this.cabinetMembers = Array.from(cabMap.values()).filter((m) =>
-          !this.removedCabinetIds.has(m.id) && (!m.memberProfileId || !this.removedCabinetIds.has(m.memberProfileId))
-        );
         localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
-
-        // Push any local members not yet in Supabase
-        this.cabinetMembers.forEach((localMember) => {
-          if (!remoteIds.has(localMember.id)) {
-            this.pushCabinetMemberToSupabase(localMember);
-          }
-        });
-      } else if (!cabErr && cabData && cabData.length === 0 && this.cabinetMembers.length > 0) {
-        // Table is empty in Supabase, push all existing cabinet members
-        this.cabinetMembers.forEach((m) => {
-          if (!this.removedCabinetIds.has(m.id) && (!m.memberProfileId || !this.removedCabinetIds.has(m.memberProfileId))) {
-            this.pushCabinetMemberToSupabase(m);
-          }
-        });
       }
     } catch (e) {
       console.warn('Supabase fetch notice:', e);
