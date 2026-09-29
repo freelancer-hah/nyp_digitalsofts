@@ -32,7 +32,7 @@ export const ContactPage: React.FC = () => {
     }
 
     // 2. Dispatch Email to nypsindh@gmail.com via Web3Forms
-    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '228ed6ca-70e8-413f-81b3-3d5932a1c451';
 
     try {
       const response = await fetch('https://api.web3forms.com/submit', {
