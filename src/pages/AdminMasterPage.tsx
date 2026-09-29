@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { store } from '../services/store';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS } from '../data/sindhHierarchy';
 import { MemberProfile, User, UserRole } from '../types';
-import { Printer, Filter, FileSpreadsheet, Layout, Users, Trash2, X, Plus, UserPlus, CheckCircle2, Lock, Unlock, ShieldAlert, Edit3, Award } from 'lucide-react';
+import { Printer, Filter, FileSpreadsheet, Layout, Users, Trash2, X, Plus, UserPlus, CheckCircle2, Lock, Unlock, ShieldAlert, Edit3, Award, RefreshCw } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { DigitalIdCard } from '../components/DigitalIdCard';
 
@@ -109,7 +109,21 @@ export const AdminMasterPage: React.FC = () => {
     window.print();
   };
 
-  const handleCreateOfficer = (e: React.FormEvent) => {
+  const [isSyncingUsers, setIsSyncingUsers] = useState<boolean>(false);
+
+  const handleSyncUsersToDb = async () => {
+    setIsSyncingUsers(true);
+    const res = await store.pushAllOfficersToSupabase();
+    setIsSyncingUsers(false);
+    if (res.success) {
+      setOfficerSuccessMsg(`Successfully synced ${res.syncedCount} user account(s) to Supabase database!`);
+      setTimeout(() => setOfficerSuccessMsg(''), 5000);
+    } else {
+      alert(`Sync completed:\n- Synced: ${res.syncedCount} user(s)\n- Errors:\n${res.errors.join('\n')}\n\nNote: If Supabase blocked inserts, please execute the SQL script in your Supabase SQL Editor.`);
+    }
+  };
+
+  const handleCreateOfficer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFullName || !newCnic) return;
 
@@ -123,13 +137,20 @@ export const AdminMasterPage: React.FC = () => {
     });
 
     setOfficers(store.getOfficerUsers());
-    setOfficerSuccessMsg(`Officer account for "${created.fullName}" created successfully!`);
+    setOfficerSuccessMsg(`Officer account for "${created.fullName}" created successfully! Syncing to database...`);
     setNewFullName('');
     setNewCnic('');
     setNewEmail('');
     setNewMobile('');
 
-    setTimeout(() => setOfficerSuccessMsg(''), 4000);
+    const res = await store.pushOfficerToSupabase(created);
+    if (res.success) {
+      setOfficerSuccessMsg(`Officer account for "${created.fullName}" created and saved to database!`);
+    } else {
+      setOfficerSuccessMsg(`Officer created locally. (Database notice: ${res.error || 'Check SQL policies'})`);
+    }
+
+    setTimeout(() => setOfficerSuccessMsg(''), 5000);
   };
 
   const handleToggleBlock = (userId: string) => {
@@ -624,7 +645,18 @@ export const AdminMasterPage: React.FC = () => {
 
               {/* Table: Active Officers & Block/Unblock Access */}
               <div className="space-y-3">
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm font-heading">User Accounts & Access Control ({officers.length})</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm font-heading">User Accounts & Access Control ({officers.length})</h3>
+                  <button
+                    type="button"
+                    onClick={handleSyncUsersToDb}
+                    disabled={isSyncingUsers}
+                    className="bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5 shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncingUsers ? 'animate-spin' : ''}`} />
+                    <span>{isSyncingUsers ? 'Syncing...' : 'Sync All Users to Database'}</span>
+                  </button>
+                </div>
                 <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-100 text-slate-600 dark:bg-slate-950 dark:text-slate-400 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">

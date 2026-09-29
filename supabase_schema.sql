@@ -41,6 +41,9 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Drop foreign key constraint if existing in old schema to allow client custom IDs
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_id_fkey;
+
 -- 4. MEMBER PROFILES TABLE (Linked to `auth.users`)
 CREATE TABLE IF NOT EXISTS member_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
