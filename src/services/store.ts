@@ -487,9 +487,7 @@ class StoreService {
           this.saveOfficerUsers();
         }
 
-        INITIAL_OFFICER_USERS.forEach((off) => {
-          this.pushOfficerToSupabase(off);
-        });
+        await this.pushAllOfficersToSupabase();
       } catch (e) {
         console.warn('Supabase users table sync notice:', e);
       }
@@ -600,21 +598,35 @@ class StoreService {
     if (!isSupabaseConfigured()) return;
     try {
       const validId = isUuid(user.id) ? user.id : toValidUuid(user.id || generateUuid());
+      const rawCnic = (user.cnicNumber && user.cnicNumber.trim()) ? user.cnicNumber.trim() : (user.username || user.id);
+      const cleanCnic = normalizeCnic(rawCnic) || rawCnic || `OFFICER-${validId}`;
+
       const userPayload = {
         id: validId,
-        cnic_number: normalizeCnic(user.cnicNumber || '41304-0000000-0'),
-        full_name: user.fullName,
-        email: user.email,
-        mobile_number: user.mobileNumber,
+        cnic_number: cleanCnic,
+        full_name: user.fullName || user.username || 'Officer User',
+        email: user.email || `${(user.username || 'officer').toLowerCase()}@nypsindh.org.pk`,
+        mobile_number: user.mobileNumber || '0300-0000000',
         role: user.role,
         created_at: user.createdAt || new Date().toISOString(),
       };
-      const { error } = await supabase.from('users').upsert(userPayload, { onConflict: 'cnic_number' });
+      const { error } = await supabase.from('users').upsert(userPayload, { onConflict: 'id' });
       if (error) {
         console.warn('Supabase pushOfficerToSupabase notice:', error.message);
       }
     } catch (e) {
       console.warn('Supabase pushOfficerToSupabase error:', e);
+    }
+  }
+
+  public async pushAllOfficersToSupabase() {
+    if (!isSupabaseConfigured()) return;
+    try {
+      for (const off of this.officerUsers) {
+        await this.pushOfficerToSupabase(off);
+      }
+    } catch (e) {
+      console.warn('pushAllOfficersToSupabase error:', e);
     }
   }
 
