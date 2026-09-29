@@ -450,6 +450,22 @@ class StoreService {
         }));
         localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
       }
+
+      // Fetch media_items from Supabase
+      const { data: mediaData, error: mediaErr } = await supabase.from('media_items').select('*');
+      if (!mediaErr && mediaData) {
+        this.mediaItems = mediaData.map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          category: d.category || 'Event',
+          mediaType: d.media_type === 'video' ? 'VIDEO' : 'IMAGE',
+          mediaUrl: d.media_url || d.mediaUrl || '',
+          description: d.description || undefined,
+          eventDate: d.event_date || d.eventDate || undefined,
+          createdAt: d.created_at || d.createdAt || new Date().toISOString(),
+        }));
+        localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
+      }
     } catch (e) {
       console.warn('Supabase fetch notice:', e);
     }
