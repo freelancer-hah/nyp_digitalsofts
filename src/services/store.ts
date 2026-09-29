@@ -113,7 +113,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'president@nypsindh.org.pk',
     mobileNumber: '0333-7612564',
     role: 'PRESIDENT',
-    password: 'president123',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PRESIDENT_PASSWORD) || 'NYPSindh#2026!President',
     createdAt: new Date().toISOString(),
   },
   {
@@ -124,7 +124,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'admin@nypsindh.org.pk',
     mobileNumber: '0333-7612564',
     role: 'SUPER_ADMIN',
-    password: 'admin123',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || 'NYPSindh#2026!SuperAdmin',
     createdAt: new Date().toISOString(),
   },
   {
@@ -135,7 +135,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'coordinator@nypsindh.org.pk',
     mobileNumber: '0300-3333333',
     role: 'WEB_COORDINATOR',
-    password: 'coordinator123',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_COORDINATOR_PASSWORD) || 'NYPSindh#2026!Coordinator',
     createdAt: new Date().toISOString(),
   },
   {
@@ -146,7 +146,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'verifier@nypsindh.org.pk',
     mobileNumber: '0300-1111111',
     role: 'VERIFICATION_DESK',
-    password: 'verifier123',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_VERIFIER_PASSWORD) || 'NYPSindh#2026!Verifier',
     createdAt: new Date().toISOString(),
   },
   {
@@ -157,7 +157,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'authoriser@nypsindh.org.pk',
     mobileNumber: '0300-2222222',
     role: 'AUTHORISATION_DESK',
-    password: 'authoriser123',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_AUTHORISER_PASSWORD) || 'NYPSindh#2026!Authoriser',
     createdAt: new Date().toISOString(),
   },
 ];
@@ -396,7 +396,15 @@ class StoreService {
         }));
 
         // Supabase is single source of truth for profiles
-        this.profiles = fetchedProfiles.filter((p) => !this.removedCabinetIds.has(p.id));
+        this.profiles = fetchedProfiles.filter((p) => {
+          const normCnic = normalizeCnic(p.cnicNumber);
+          const isRemoved =
+            this.removedCabinetIds.has(p.id) ||
+            (normCnic && this.removedCabinetIds.has(normCnic)) ||
+            (p.cnicNumber && this.removedCabinetIds.has(p.cnicNumber.trim())) ||
+            (p.fullName && this.removedCabinetIds.has(p.fullName.trim()));
+          return !isRemoved;
+        });
         this.saveProfiles();
 
         // Fetch role_applications from Supabase
@@ -441,9 +449,16 @@ class StoreService {
       const { data: cabData, error: cabErr } = await supabase.from('cabinet_members').select('*');
       if (!cabErr && cabData) {
         const validCabData = cabData.filter((d: any) => {
-          const isRemoved = this.removedCabinetIds.has(d.id) || (d.member_profile_id && this.removedCabinetIds.has(d.member_profile_id));
+          const normCnic = d.cnic_number ? normalizeCnic(d.cnic_number) : '';
+          const fullName = d.full_name ? d.full_name.trim() : '';
+          const isRemoved =
+            this.removedCabinetIds.has(d.id) ||
+            (d.member_profile_id && this.removedCabinetIds.has(d.member_profile_id)) ||
+            (normCnic && this.removedCabinetIds.has(normCnic)) ||
+            (d.cnic_number && this.removedCabinetIds.has(d.cnic_number)) ||
+            (fullName && this.removedCabinetIds.has(fullName));
           if (isRemoved) {
-            this.deleteCabinetMemberFromSupabase(d.id);
+            this.deleteCabinetMemberFromSupabase(d.id, fullName);
           }
           return !isRemoved;
         });
@@ -665,16 +680,7 @@ class StoreService {
         return { success: false, error: 'Password is required. Please enter your password.' };
       }
 
-      const validPasswords = [
-        officer.password ? officer.password.trim() : '',
-        officer.id === 'usr-superadmin' || officer.role === 'SUPER_ADMIN' || lowerInput === 'admin' ? 'admin123' : '',
-        officer.id === 'usr-president' || officer.role === 'PRESIDENT' || lowerInput === 'president' ? 'president123' : '',
-        officer.id === 'usr-coordinator' || officer.role === 'WEB_COORDINATOR' || lowerInput === 'coordinator' ? 'coordinator123' : '',
-        officer.id === 'usr-verifier' || officer.role === 'VERIFICATION_DESK' || lowerInput === 'verifier' ? 'verifier123' : '',
-        officer.id === 'usr-authoriser' || officer.role === 'AUTHORISATION_DESK' || lowerInput === 'authoriser' ? 'authoriser123' : '',
-      ].filter(Boolean);
-
-      const isPassValid = validPasswords.includes(providedPassword);
+      const isPassValid = Boolean(officer.password && officer.password.trim() === providedPassword.trim());
 
       if (!isPassValid) {
         return { success: false, error: 'Invalid password. Please check your credentials.' };
@@ -689,7 +695,7 @@ class StoreService {
     const existingProfile = this.profiles.find((p) => isSameCnic(p.cnicNumber, rawInput));
     if (existingProfile) {
       const storedPassword = (existingProfile.socialLinks as any)?.password;
-      const isMemberPassValid = !storedPassword || !providedPassword || storedPassword.trim() === providedPassword || providedPassword === 'pass123';
+      const isMemberPassValid = Boolean(storedPassword && providedPassword && storedPassword.trim() === providedPassword.trim());
 
       if (isMemberPassValid) {
         const user: User = {
@@ -699,7 +705,7 @@ class StoreService {
           email: existingProfile.email,
           mobileNumber: existingProfile.mobileNumber,
           role: 'MEMBER',
-          password: storedPassword || providedPassword || 'pass123',
+          password: storedPassword || providedPassword,
           createdAt: existingProfile.submittedAt,
         };
         this.currentUser = user;
@@ -779,7 +785,7 @@ class StoreService {
       userId: validUserId,
       socialLinks: {
         ...(data.socialLinks || {}),
-        password: password || 'pass123',
+        password: password || '',
       },
     };
 
@@ -824,7 +830,7 @@ class StoreService {
       email: newProfile.email,
       mobileNumber: newProfile.mobileNumber,
       role: 'MEMBER',
-      password: password || 'pass123',
+      password: password || '',
       createdAt: newProfile.submittedAt,
     };
     this.currentUser = currentUserState;
@@ -944,37 +950,87 @@ class StoreService {
   }
 
   public async deleteMemberProfile(profileId: string): Promise<boolean> {
-    const profile = this.profiles.find((p) => p.id === profileId);
+    const profile = this.profiles.find(
+      (p) => p.id === profileId || (p.cnicNumber && p.cnicNumber === profileId)
+    );
+
     this.removedCabinetIds.add(profileId);
     if (profile) {
-      this.removedCabinetIds.add(profile.id);
+      if (profile.id) this.removedCabinetIds.add(profile.id);
+      if (profile.cnicNumber) {
+        this.removedCabinetIds.add(profile.cnicNumber);
+        const norm = normalizeCnic(profile.cnicNumber);
+        if (norm) this.removedCabinetIds.add(norm);
+      }
+      if (profile.fullName) {
+        this.removedCabinetIds.add(profile.fullName.trim());
+      }
     }
-    this.profiles = this.profiles.filter((p) => p.id !== profileId);
+
+    this.profiles = this.profiles.filter((p) => {
+      if (p.id === profileId) return false;
+      if (profile) {
+        if (p.id === profile.id) return false;
+        if (profile.cnicNumber && normalizeCnic(p.cnicNumber) === normalizeCnic(profile.cnicNumber)) return false;
+        if (profile.fullName && p.fullName.trim().toLowerCase() === profile.fullName.trim().toLowerCase()) return false;
+      }
+      return true;
+    });
     this.saveProfiles();
 
-    // Also delete associated Cabinet Member / Parliamentarian record & add to blacklist
+    // Delete associated cabinet member from state
     this.deleteCabinetMember(profileId);
 
     localStorage.setItem(KEY_REMOVED_CABINET, JSON.stringify(Array.from(this.removedCabinetIds)));
 
-    if (isSupabaseConfigured() && profile) {
+    if (isSupabaseConfigured()) {
       try {
-        const validId = toValidUuid(profile.id);
-        await supabase.from('member_profiles').delete().eq('id', profile.id);
-        if (validId !== profile.id) {
+        const cnic = profile?.cnicNumber ? profile.cnicNumber.trim() : null;
+        const normCnic = cnic ? normalizeCnic(cnic) : null;
+        const fullName = profile?.fullName ? profile.fullName.trim() : null;
+
+        // 1. Delete dependent tables FIRST to prevent Foreign Key constraints
+        if (cnic) {
+          await supabase.from('role_applications').delete().eq('applicant_cnic', cnic);
+          await supabase.from('role_applications').delete().eq('cnic_number', cnic);
+          if (normCnic && normCnic !== cnic) {
+            await supabase.from('role_applications').delete().eq('applicant_cnic', normCnic);
+          }
+          await supabase.from('cabinet_members').delete().eq('cnic_number', cnic);
+        }
+        if (fullName) {
+          await supabase.from('cabinet_members').delete().ilike('full_name', fullName);
+          await supabase.from('role_applications').delete().ilike('full_name', fullName);
+        }
+        await supabase.from('cabinet_members').delete().eq('member_profile_id', profileId);
+        if (profile?.id) {
+          await supabase.from('cabinet_members').delete().eq('member_profile_id', profile.id);
+        }
+
+        // 2. Delete member profile records
+        await supabase.from('member_profiles').delete().eq('id', profileId);
+        if (profile?.id && profile.id !== profileId) {
+          await supabase.from('member_profiles').delete().eq('id', profile.id);
+        }
+        const validId = toValidUuid(profileId);
+        if (validId !== profileId) {
           await supabase.from('member_profiles').delete().eq('id', validId);
         }
-        if (profile.fullName) {
-          await supabase.from('member_profiles').delete().ilike('full_name', profile.fullName.trim());
-          await supabase.from('cabinet_members').delete().ilike('full_name', profile.fullName.trim());
+        if (cnic) {
+          await supabase.from('member_profiles').delete().eq('cnic_number', cnic);
+          if (normCnic && normCnic !== cnic) {
+            await supabase.from('member_profiles').delete().eq('cnic_number', normCnic);
+          }
         }
-        if (profile.cnicNumber) {
-          await supabase.from('member_profiles').delete().eq('cnic_number', profile.cnicNumber.trim());
+        if (fullName) {
+          await supabase.from('member_profiles').delete().ilike('full_name', fullName);
         }
       } catch (e) {
         console.warn('Supabase delete profile notice:', e);
       }
     }
+
+    this.notifyListeners();
     return true;
   }
 
@@ -984,6 +1040,8 @@ class StoreService {
 
     if (isSupabaseConfigured()) {
       try {
+        await supabase.from('role_applications').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('cabinet_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       } catch (e) {
         console.warn('Supabase clear all profiles notice:', e);

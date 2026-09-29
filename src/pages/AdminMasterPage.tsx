@@ -30,7 +30,7 @@ export const AdminMasterPage: React.FC = () => {
   const [newFullName, setNewFullName] = useState<string>('');
   const [newCnic, setNewCnic] = useState<string>('');
   const [newRole, setNewRole] = useState<UserRole>('VERIFICATION_DESK');
-  const [newPassword, setNewPassword] = useState<string>('pass123');
+  const [newPassword, setNewPassword] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
   const [newMobile, setNewMobile] = useState<string>('');
   const [officerSuccessMsg, setOfficerSuccessMsg] = useState<string>('');

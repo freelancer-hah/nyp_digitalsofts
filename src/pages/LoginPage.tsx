@@ -82,7 +82,7 @@ export const LoginPage: React.FC = () => {
               required
               value={cnicNumber}
               onChange={(e) => handleCnicChange(e.target.value)}
-              placeholder="e.g. 41101-1234567-1 or admin"
+              placeholder="e.g. 41101-1234567-1"
               maxLength={30}
               className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white font-mono text-xs font-bold focus:border-emerald-600 outline-none"
             />

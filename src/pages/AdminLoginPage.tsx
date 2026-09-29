@@ -90,7 +90,7 @@ export const AdminLoginPage: React.FC = () => {
                 required
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
-                placeholder="e.g. president, coordinator, verifier, authoriser"
+                placeholder="Enter Admin Username or Official CNIC"
                 className="w-full bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-950 dark:border-slate-700 dark:text-white rounded-xl px-3.5 py-2.5 text-xs font-bold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
               />
             </div>

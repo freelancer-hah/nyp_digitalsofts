@@ -23,7 +23,7 @@ export async function signUpMemberWithSupabaseAuth(data: {
 }): Promise<{ user: User; profile: MemberProfile } | { error: string }> {
   const cleanCnic = normalizeCnic(data.cnicNumber);
   const authEmail = (data.email && data.email.includes('@')) ? data.email.trim() : cnicToAuthEmail(cleanCnic);
-  const password = data.password || 'pass123';
+  const password = data.password || '';
   let registeredAuthId: string | undefined = undefined;
 
   if (isSupabaseConfigured()) {
