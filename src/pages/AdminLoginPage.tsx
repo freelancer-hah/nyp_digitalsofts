@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { store } from '../services/store';
+import { isSupabaseConfigured } from '../services/supabaseClient';
 import { ShieldCheck, LogIn, AlertCircle, ArrowLeft, KeyRound, Lock } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
@@ -10,7 +11,7 @@ export const AdminLoginPage: React.FC = () => {
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -24,7 +25,12 @@ export const AdminLoginPage: React.FC = () => {
       return;
     }
 
-    const res = store.loginUserByCnic(usernameInput, passwordInput);
+    let res = store.loginUserByCnic(usernameInput, passwordInput);
+    if (!res.success && isSupabaseConfigured()) {
+      await store.fetchFromSupabase(true);
+      res = store.loginUserByCnic(usernameInput, passwordInput);
+    }
+
     if (res.success && res.user) {
       if (res.user.role === 'MEMBER' || res.user.role === 'APPLICANT') {
         setError('This portal is restricted for Administrative Officers. Please use Public Member Login.');

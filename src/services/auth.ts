@@ -107,7 +107,12 @@ export async function signInWithSupabaseAuth(
     }
   }
 
-  const localRes = store.loginUserByCnic(cnicOrEmail, passwordInput);
+  let localRes = store.loginUserByCnic(cnicOrEmail, passwordInput);
+  if (!localRes.success && isSupabaseConfigured()) {
+    await store.fetchFromSupabase(true);
+    localRes = store.loginUserByCnic(cnicOrEmail, passwordInput);
+  }
+
   if (localRes.success && localRes.user) {
     const prof = store.getProfileByUserId(localRes.user.id || localRes.user.cnicNumber);
     return { user: localRes.user, profile: prof };

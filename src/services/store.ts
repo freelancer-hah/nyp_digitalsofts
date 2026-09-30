@@ -366,14 +366,17 @@ class StoreService {
     localStorage.setItem(KEY_ROLE_APPLICATIONS, JSON.stringify(this.roleApplications));
   }
 
-  public async fetchFromSupabase() {
-    if (!isSupabaseConfigured() || this.isFetchingFromSupabase) return;
+  public async fetchFromSupabase(force = false) {
+    if (!isSupabaseConfigured()) return;
+    if (this.isFetchingFromSupabase && !force) return;
 
     const now = Date.now();
-    if (now - this.lastFetchAt < 3000) return;
-    if (this.failCount > 0) {
-      const backoff = Math.min(60000, 5000 * Math.pow(2, this.failCount - 1));
-      if (now - this.lastFetchFailedAt < backoff) return;
+    if (!force) {
+      if (now - this.lastFetchAt < 3000) return;
+      if (this.failCount > 0) {
+        const backoff = Math.min(60000, 5000 * Math.pow(2, this.failCount - 1));
+        if (now - this.lastFetchFailedAt < backoff) return;
+      }
     }
 
     this.isFetchingFromSupabase = true;
