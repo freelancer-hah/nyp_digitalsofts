@@ -86,39 +86,31 @@ export async function signUpMemberWithSupabaseAuth(data: {
 }
 
 export async function signInWithSupabaseAuth(
-  cnicOrEmail: string,
+  identifier: string,
   passwordInput: string
 ): Promise<{ user: User; profile?: MemberProfile } | { error: string }> {
-  const cleanCnic = normalizeCnic(cnicOrEmail);
-  const authEmail = cnicToAuthEmail(cnicOrEmail);
-
-  if (isSupabaseConfigured()) {
-    try {
-      const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
-        email: authEmail,
-        password: passwordInput,
-      });
-
-      if (!authErr && authData?.user) {
-        console.log('Supabase Auth signIn successful for:', authData.user.email);
-      }
-    } catch (e) {
-      console.warn('Supabase Auth signIn notice:', e);
-    }
-  }
-
-  let localRes = store.loginUserByCnic(cnicOrEmail, passwordInput);
-  if (!localRes.success && isSupabaseConfigured()) {
-    await store.fetchFromSupabase(true);
-    localRes = store.loginUserByCnic(cnicOrEmail, passwordInput);
-  }
-
+  // 1. Local officer/admin check
+  const localRes = store.loginUserByCnic(identifier, passwordInput);
   if (localRes.success && localRes.user) {
     const prof = store.getProfileByUserId(localRes.user.id || localRes.user.cnicNumber);
     return { user: localRes.user, profile: prof };
-  } else {
-    return { error: localRes.error || 'Invalid CNIC or password.' };
   }
+
+  // 2. Cloud officer RPC check
+  const cloudOfficer = await store.loginOfficerCloud(identifier, passwordInput);
+  if (cloudOfficer) {
+    const prof = store.getProfileByUserId(cloudOfficer.id || cloudOfficer.cnicNumber);
+    return { user: cloudOfficer, profile: prof };
+  }
+
+  // 3. Cloud member RPC check
+  const memberRes = await store.loginMember(identifier, passwordInput);
+  if (memberRes.success && memberRes.user) {
+    const prof = store.getProfileByUserId(memberRes.user.id || memberRes.user.cnicNumber);
+    return { user: memberRes.user, profile: prof };
+  }
+
+  return { error: memberRes.error || 'Login nahi ho saka.' };
 }
 
 export async function signOutSupabaseAuth() {

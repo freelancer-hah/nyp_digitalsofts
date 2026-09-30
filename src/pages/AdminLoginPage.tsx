@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { store } from '../services/store';
-import { isSupabaseConfigured } from '../services/supabaseClient';
+import { signInWithSupabaseAuth } from '../services/auth';
 import { ShieldCheck, LogIn, AlertCircle, ArrowLeft, KeyRound, Lock } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
@@ -10,6 +10,7 @@ export const AdminLoginPage: React.FC = () => {
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,26 +26,28 @@ export const AdminLoginPage: React.FC = () => {
       return;
     }
 
-    let res = store.loginUserByCnic(usernameInput, passwordInput);
-    if (!res.success && isSupabaseConfigured()) {
-      await store.fetchFromSupabase(true);
-      res = store.loginUserByCnic(usernameInput, passwordInput);
-    }
-
-    if (res.success && res.user) {
-      if (res.user.role === 'MEMBER' || res.user.role === 'APPLICANT') {
-        setError('This portal is restricted for Administrative Officers. Please use Public Member Login.');
-      } else if (res.user.role === 'VERIFICATION_DESK' || res.user.role === 'VERIFYING_OFFICER') {
-        navigate('/admin/verification');
-      } else if (res.user.role === 'AUTHORISATION_DESK' || res.user.role === 'APPROVAL_AUTHORITY') {
-        navigate('/admin/approval');
-      } else if (res.user.role === 'WEB_COORDINATOR') {
-        navigate('/admin/cms');
-      } else {
-        navigate('/admin/master');
+    setLoading(true);
+    try {
+      const res = await signInWithSupabaseAuth(usernameInput, passwordInput);
+      if ('user' in res && res.user) {
+        if (res.user.role === 'MEMBER' || res.user.role === 'APPLICANT') {
+          setError('This portal is restricted for Administrative Officers. Please use Public Member Login.');
+        } else if (res.user.role === 'VERIFICATION_DESK' || res.user.role === 'VERIFYING_OFFICER') {
+          navigate('/admin/verification');
+        } else if (res.user.role === 'AUTHORISATION_DESK' || res.user.role === 'APPROVAL_AUTHORITY') {
+          navigate('/admin/approval');
+        } else if (res.user.role === 'WEB_COORDINATOR') {
+          navigate('/admin/cms');
+        } else {
+          navigate('/admin/master');
+        }
+      } else if ('error' in res) {
+        setError(res.error || 'Invalid Administrative Credentials');
       }
-    } else {
-      setError(res.error || 'Invalid Administrative Credentials');
+    } catch (err) {
+      setError('Invalid Administrative Credentials');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,10 +121,11 @@ export const AdminLoginPage: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full bg-[#052818] hover:bg-[#073822] text-amber-300 font-black text-xs py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider hover:scale-[1.01]"
+              disabled={loading}
+              className="w-full bg-[#052818] hover:bg-[#073822] text-amber-300 font-black text-xs py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <LogIn className="w-4 h-4 text-amber-300" />
-              <span>ACCESS EXECUTIVE DESK</span>
+              <span>{loading ? 'Please wait...' : 'ACCESS EXECUTIVE DESK'}</span>
             </button>
           </form>
 

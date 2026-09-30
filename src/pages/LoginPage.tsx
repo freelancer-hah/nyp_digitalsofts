@@ -18,6 +18,7 @@ export const LoginPage: React.FC = () => {
   const [cnicNumber, setCnicNumber] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +34,7 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const res = await signInWithSupabaseAuth(cnicNumber, password);
       if ('user' in res && res.user) {
@@ -48,6 +50,8 @@ export const LoginPage: React.FC = () => {
       }
     } catch (err) {
       setError('Login failed. Please check your details.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,10 +116,11 @@ export const LoginPage: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-[#052818] hover:bg-[#073822] text-amber-300 font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider mt-1 hover:scale-[1.01]"
+            disabled={loading}
+            className="w-full bg-[#052818] hover:bg-[#073822] text-amber-300 font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider mt-1 hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogIn className="w-4 h-4 text-amber-300" />
-            <span>LOG IN WITH CNIC</span>
+            <span>{loading ? 'Please wait...' : 'LOG IN WITH CNIC'}</span>
           </button>
         </form>
 

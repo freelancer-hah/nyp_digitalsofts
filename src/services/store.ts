@@ -398,44 +398,7 @@ class StoreService {
         return;
       }
       if (profData) {
-        const fetchedProfiles: MemberProfile[] = profData.map((d: any) => ({
-          id: d.id,
-          userId: d.user_id || d.id,
-          fullName: d.full_name,
-          fatherGuardianName: d.father_guardian_name,
-          dob: d.dob,
-          gender: d.gender,
-          cnicNumber: normalizeCnic(d.cnic_number),
-          bloodGroup: d.blood_group,
-          mobileNumber: d.mobile_number,
-          email: d.email,
-          passportPhotoUrl: d.passport_photo_url,
-          residentialAddress: d.residential_address,
-          cityTown: d.city_town,
-          province: d.province || 'Sindh',
-          divisionId: d.division_id,
-          districtId: d.district_id,
-          talukaId: d.taluka_id,
-          qualification: d.qualification,
-          institutionName: d.institution_name,
-          profession: d.profession,
-          organizationName: d.organization_name,
-          preferredDepartment: d.preferred_department,
-          statementOfPurpose: d.statement_of_purpose,
-          skills: Array.isArray(d.skills) ? d.skills : [],
-          areasOfInterest: Array.isArray(d.areas_of_interest) ? d.areas_of_interest : [],
-          previousExperience: d.previous_experience,
-          priorAffiliations: d.prior_affiliations,
-          socialLinks: d.social_links || {},
-          paymentDetails: d.social_links?.paymentDetails || undefined,
-          declarationAccepted: d.declaration_accepted ?? true,
-          status: (d.social_links?.actualStatus === 'PENDING_VERIFICATION' || d.status === 'PENDING_VERIFICATION' || !d.status) ? 'APPROVED' : ((d.social_links?.actualStatus as ApplicationStatus) || d.status),
-          rejectionReason: d.rejection_reason,
-          membershipIdNumber: d.membership_id_number || `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-          assignedDesignation: (!d.assigned_designation || d.assigned_designation === 'Applicant') ? 'Youth Member' : d.assigned_designation,
-          approvalDate: d.approval_date || d.submitted_at || new Date().toISOString(),
-          submittedAt: d.submitted_at || new Date().toISOString(),
-        }));
+        const fetchedProfiles: MemberProfile[] = profData.map((d: any) => this.mapProfileRow(d));
 
         // Supabase is single source of truth for profiles
         this.profiles = fetchedProfiles.filter((p) => {
@@ -594,6 +557,48 @@ class StoreService {
     }
   }
 
+  private mapProfileRow(d: any): MemberProfile {
+    if (!d) return {} as MemberProfile;
+    return {
+      id: d.id,
+      userId: d.user_id || d.id,
+      fullName: d.full_name,
+      fatherGuardianName: d.father_guardian_name,
+      dob: d.dob,
+      gender: d.gender,
+      cnicNumber: normalizeCnic(d.cnic_number),
+      bloodGroup: d.blood_group,
+      mobileNumber: d.mobile_number,
+      email: d.email,
+      passportPhotoUrl: d.passport_photo_url,
+      residentialAddress: d.residential_address,
+      cityTown: d.city_town,
+      province: d.province || 'Sindh',
+      divisionId: d.division_id,
+      districtId: d.district_id,
+      talukaId: d.taluka_id,
+      qualification: d.qualification,
+      institutionName: d.institution_name,
+      profession: d.profession,
+      organizationName: d.organization_name,
+      preferredDepartment: d.preferred_department,
+      statementOfPurpose: d.statement_of_purpose,
+      skills: Array.isArray(d.skills) ? d.skills : [],
+      areasOfInterest: Array.isArray(d.areas_of_interest) ? d.areas_of_interest : [],
+      previousExperience: d.previous_experience,
+      priorAffiliations: d.prior_affiliations,
+      socialLinks: d.social_links || {},
+      paymentDetails: d.social_links?.paymentDetails || undefined,
+      declarationAccepted: d.declaration_accepted ?? true,
+      status: (d.social_links?.actualStatus === 'PENDING_VERIFICATION' || d.status === 'PENDING_VERIFICATION' || !d.status) ? 'APPROVED' : ((d.social_links?.actualStatus as ApplicationStatus) || d.status),
+      rejectionReason: d.rejection_reason,
+      membershipIdNumber: d.membership_id_number || `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      assignedDesignation: (!d.assigned_designation || d.assigned_designation === 'Applicant') ? 'Youth Member' : d.assigned_designation,
+      approvalDate: d.approval_date || d.submitted_at || new Date().toISOString(),
+      submittedAt: d.submitted_at || new Date().toISOString(),
+    };
+  }
+
   public async pushProfileToSupabase(profile: MemberProfile) {
     if (!isSupabaseConfigured()) return;
     try {
@@ -745,22 +750,8 @@ class StoreService {
       const rawCnic = (user.cnicNumber && user.cnicNumber.trim()) ? user.cnicNumber.trim() : (user.username || user.id);
       let cleanCnic = normalizeCnic(rawCnic) || rawCnic || `OFFICER-${validId}`;
 
-      // Prevent CNIC collision on placeholder
-      if (cleanCnic === '41304-0000000-0' && user.role !== 'SUPER_ADMIN' && user.username !== 'admin@nypsindh') {
-        cleanCnic = `OFF-${validId.replace(/-/g, '').slice(0, 10)}`;
-      }
-
-      // 1. Check if user already exists in Supabase by cnic_number or id
-      const { data: existingUsers } = await supabase
-        .from('users')
-        .select('id, cnic_number')
-        .or(`cnic_number.eq.${cleanCnic},id.eq.${validId}`);
-
-      const existingByCnic = existingUsers?.find(u => u.cnic_number === cleanCnic);
-      const existingById = existingUsers?.find(u => u.id === validId);
-      const targetId = existingByCnic?.id || existingById?.id || validId;
-
-      const userPayload = {
+      const payload: any = {
+        id: validId,
         cnic_number: cleanCnic,
         full_name: user.fullName || user.username || 'Officer User',
         email: user.email || `${(user.username || 'officer').toLowerCase()}@nypsindh.org.pk`,
@@ -768,49 +759,79 @@ class StoreService {
         role: user.role,
         created_at: user.createdAt || new Date().toISOString(),
       };
+      if (user.password) payload.new_password = user.password;
 
-      let error: any = null;
-
-      if (existingByCnic || existingById) {
-        // Record exists: update attributes without modifying the primary key id
-        const res = await supabase
-          .from('users')
-          .update({
-            cnic_number: cleanCnic,
-            full_name: userPayload.full_name,
-            email: userPayload.email,
-            mobile_number: userPayload.mobile_number,
-            role: userPayload.role,
-          })
-          .eq('id', targetId);
-        error = res.error;
+      const { data: byCnic } = await supabase.from('users').select('id').eq('cnic_number', cleanCnic).maybeSingle();
+      let error: any;
+      if (byCnic) {
+        const { id, ...rest } = payload;
+        ({ error } = await supabase.from('users').update(rest).eq('id', byCnic.id));
       } else {
-        // Record does not exist: insert new row
-        const res = await supabase.from('users').insert({
-          id: targetId,
-          ...userPayload
-        });
-        error = res.error;
-      }
-
-      // Fallback Strategy: Upsert if initial operation had issue
-      if (error) {
-        console.warn('Supabase primary attempt notice:', error.message, 'Trying upsert fallback...');
-        const retry = await supabase.from('users').upsert({ id: targetId, ...userPayload }, { onConflict: 'cnic_number' });
-        error = retry.error;
+        const { data: byId } = await supabase.from('users').select('id').eq('id', validId).maybeSingle();
+        if (byId) ({ error } = await supabase.from('users').update(payload).eq('id', validId));
+        else ({ error } = await supabase.from('users').insert(payload));
       }
 
       if (error) {
-        console.error('Supabase pushOfficerToSupabase error:', error.message, error);
+        console.error('PUSH FAILED', { id: validId, cnic: cleanCnic }, error.message);
         return { success: false, error: error.message };
       }
-
-      console.log(`Successfully synced officer ${user.fullName} (${cleanCnic}) to Supabase users table.`);
       return { success: true };
     } catch (e: any) {
-      console.error('Supabase pushOfficerToSupabase exception:', e);
       return { success: false, error: e?.message || 'Unknown error' };
     }
+  }
+
+  public async loginOfficerCloud(identifier: string, password: string): Promise<User | null> {
+    if (!isSupabaseConfigured()) return null;
+    const { data, error } = await supabase.rpc('user_login', {
+      p_identifier: identifier.trim(),
+      p_password: password.trim(),
+    });
+    if (error || !data || data.error) return null;
+    const u = data.user;
+    if (!u) return null;
+    const officer: User = {
+      id: u.id,
+      username: u.email ? u.email.split('@')[0] : u.cnic_number,
+      cnicNumber: u.cnic_number,
+      fullName: u.full_name,
+      email: u.email,
+      mobileNumber: u.mobile_number,
+      role: u.role,
+      createdAt: u.created_at,
+    };
+    this.currentUser = officer;
+    this.saveCurrentUser();
+    return officer;
+  }
+
+  public async loginMember(cnic: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
+    if (!cnic?.trim() || !password?.trim()) return { success: false, error: 'CNIC aur password dono zaroori hain.' };
+    const { data, error } = await supabase.rpc('member_login', { p_cnic: cnic.trim(), p_password: password.trim() });
+    if (error) return { success: false, error: 'Server se rabta nahi ho saka. Dobara koshish karein.' };
+    if (data?.error === 'not_found') return { success: false, error: 'Is CNIC ka account nahi mila.' };
+    if (data?.error === 'invalid_password') return { success: false, error: 'Password ghalat hai.' };
+
+    if (data && data.profile) {
+      const p = this.mapProfileRow(data.profile);
+      if (!this.profiles.some((x) => x.id === p.id)) this.profiles.unshift(p);
+      this.saveProfiles();
+
+      const user: User = {
+        id: p.userId || p.id,
+        cnicNumber: p.cnicNumber,
+        fullName: p.fullName,
+        email: p.email,
+        mobileNumber: p.mobileNumber,
+        role: 'MEMBER',
+        createdAt: p.submittedAt,
+      };
+      this.currentUser = user;
+      this.saveCurrentUser();
+      return { success: true, user };
+    }
+    return { success: false, error: 'Login nahi ho saka.' };
   }
 
   public async pushAllOfficersToSupabase(force = false): Promise<{ success: boolean; syncedCount: number; errors: string[] }> {
@@ -969,47 +990,7 @@ class StoreService {
       return { success: true, user: officer };
     }
 
-    // 2. Check Member Profile
-    const existingProfile = this.profiles.find((p) => isSameCnic(p.cnicNumber, rawInput));
-    if (existingProfile) {
-      if (!providedPassword) {
-        return { success: false, error: 'Password is required. Please enter your account password.' };
-      }
-
-      const storedPassword = (existingProfile.socialLinks as any)?.password;
-      const isMemberPassValid = storedPassword 
-        ? storedPassword.trim() === providedPassword.trim() 
-        : providedPassword.trim().length >= 1;
-
-      if (isMemberPassValid) {
-        if (!storedPassword) {
-          if (!existingProfile.socialLinks) existingProfile.socialLinks = {};
-          (existingProfile.socialLinks as any).password = providedPassword.trim();
-          this.saveProfiles();
-        }
-        const user: User = {
-          id: existingProfile.userId || existingProfile.id,
-          cnicNumber: existingProfile.cnicNumber,
-          fullName: existingProfile.fullName,
-          email: existingProfile.email,
-          mobileNumber: existingProfile.mobileNumber,
-          role: 'MEMBER',
-          password: storedPassword || providedPassword.trim(),
-          createdAt: existingProfile.submittedAt,
-        };
-        this.currentUser = user;
-        this.saveCurrentUser();
-        return { success: true, user };
-      } else {
-        return { success: false, error: 'Invalid password. Please enter the correct password for this CNIC.' };
-      }
-    }
-
-    // 3. Not found
-    return { 
-      success: false, 
-      error: 'Account not found. Please check your username/CNIC or register as a new member.' 
-    };
+    return { success: false, error: 'not_found' };
   }
 
   public logoutUser() {
@@ -1074,7 +1055,6 @@ class StoreService {
       userId: validUserId,
       socialLinks: {
         ...(data.socialLinks || {}),
-        password: password || '',
       },
     };
 
@@ -1119,7 +1099,6 @@ class StoreService {
       email: newProfile.email,
       mobileNumber: newProfile.mobileNumber,
       role: 'MEMBER',
-      password: password || '',
       createdAt: newProfile.submittedAt,
     };
     this.currentUser = currentUserState;
