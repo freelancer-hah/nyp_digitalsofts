@@ -106,6 +106,17 @@ export function isSameCnic(c1?: string, c2?: string): boolean {
 
 const INITIAL_OFFICER_USERS: User[] = [
   {
+    id: 'usr-admin-33105',
+    username: '33105-7853093-1',
+    cnicNumber: '33105-7853093-1',
+    fullName: 'Executive Super Admin',
+    email: 'admin@nypsindh.org.pk',
+    mobileNumber: '0333-7612564',
+    role: 'SUPER_ADMIN',
+    password: 'admin@nypsindh12345',
+    createdAt: new Date().toISOString(),
+  },
+  {
     id: 'usr-superadmin',
     username: 'admin@nypsindh',
     cnicNumber: '41304-0000000-0',
