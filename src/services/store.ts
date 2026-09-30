@@ -303,6 +303,30 @@ class StoreService {
     return true;
   }
 
+  public async clearAllMemberProfiles(): Promise<boolean> {
+    localStorage.removeItem(KEY_PROFILES);
+    localStorage.removeItem(KEY_CABINET);
+    localStorage.removeItem(KEY_REMOVED_CABINET);
+
+    this.profiles = [];
+    this.cabinetMembers = [];
+    this.removedCabinetIds = new Set();
+    this.saveProfiles();
+    localStorage.setItem(KEY_CABINET, JSON.stringify([]));
+    localStorage.removeItem(KEY_REMOVED_CABINET);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('cabinet_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      } catch (e) {
+        console.warn('Supabase clearAllMemberProfiles notice:', e);
+      }
+    }
+
+    return true;
+  }
+
   private saveOfficerUsers() {
     localStorage.setItem(KEY_OFFICER_USERS, JSON.stringify(this.officerUsers));
   }
@@ -795,10 +819,21 @@ class StoreService {
     // 2. Check Member Profile
     const existingProfile = this.profiles.find((p) => isSameCnic(p.cnicNumber, rawInput));
     if (existingProfile) {
+      if (!providedPassword) {
+        return { success: false, error: 'Password is required. Please enter your account password.' };
+      }
+
       const storedPassword = (existingProfile.socialLinks as any)?.password;
-      const isMemberPassValid = Boolean(storedPassword && providedPassword && storedPassword.trim() === providedPassword.trim());
+      const isMemberPassValid = storedPassword 
+        ? storedPassword.trim() === providedPassword.trim() 
+        : providedPassword.trim().length >= 1;
 
       if (isMemberPassValid) {
+        if (!storedPassword) {
+          if (!existingProfile.socialLinks) existingProfile.socialLinks = {};
+          (existingProfile.socialLinks as any).password = providedPassword.trim();
+          this.saveProfiles();
+        }
         const user: User = {
           id: existingProfile.userId || existingProfile.id,
           cnicNumber: existingProfile.cnicNumber,
@@ -806,14 +841,14 @@ class StoreService {
           email: existingProfile.email,
           mobileNumber: existingProfile.mobileNumber,
           role: 'MEMBER',
-          password: storedPassword || providedPassword,
+          password: storedPassword || providedPassword.trim(),
           createdAt: existingProfile.submittedAt,
         };
         this.currentUser = user;
         this.saveCurrentUser();
         return { success: true, user };
       } else {
-        return { success: false, error: 'Invalid password. Please enter the password you set during registration.' };
+        return { success: false, error: 'Invalid password. Please enter the correct password for this CNIC.' };
       }
     }
 

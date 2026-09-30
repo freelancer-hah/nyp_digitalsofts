@@ -28,6 +28,11 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    if (!password) {
+      setError('Please enter your password. Both CNIC and Password are required.');
+      return;
+    }
+
     try {
       const res = await signInWithSupabaseAuth(cnicNumber, password);
       if ('user' in res && res.user) {
@@ -61,8 +66,8 @@ export const LoginPage: React.FC = () => {
           <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center mx-auto overflow-hidden">
             <img src="/nyp-logo.png" alt="NYP Sindh Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading">Sign In Portal</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Enter your CNIC or Username and Password to access your portal.</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-heading">Member CNIC Portal</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Enter your 13-digit CNIC Number and Password to access your profile & digital ID card.</p>
         </div>
 
         {error && (
@@ -72,10 +77,10 @@ export const LoginPage: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-3 text-xs">
+        <form onSubmit={handleLogin} className="space-y-3.5 text-xs">
           <div>
             <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
-              CNIC Number or Username *
+              CNIC Number (13-Digits) *
             </label>
             <input
               type="text"
@@ -83,8 +88,8 @@ export const LoginPage: React.FC = () => {
               value={cnicNumber}
               onChange={(e) => handleCnicChange(e.target.value)}
               placeholder="e.g. 41101-1234567-1"
-              maxLength={30}
-              className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white font-mono text-xs font-bold focus:border-emerald-600 outline-none"
+              maxLength={15}
+              className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white font-mono text-sm font-black focus:border-emerald-600 outline-none shadow-2xs tracking-wider"
             />
           </div>
 
@@ -98,7 +103,7 @@ export const LoginPage: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
+                placeholder="Enter your password"
                 className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-2.5 text-slate-900 dark:text-white text-xs font-medium focus:border-emerald-600 outline-none"
               />
               <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
@@ -110,7 +115,7 @@ export const LoginPage: React.FC = () => {
             className="w-full bg-[#052818] hover:bg-[#073822] text-amber-300 font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider mt-1 hover:scale-[1.01]"
           >
             <LogIn className="w-4 h-4 text-amber-300" />
-            <span>LOG IN TO MEMBER DASHBOARD</span>
+            <span>LOG IN WITH CNIC</span>
           </button>
         </form>
 

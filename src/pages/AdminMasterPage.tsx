@@ -301,6 +301,14 @@ export const AdminMasterPage: React.FC = () => {
             <Printer className="w-4 h-4 text-amber-300" />
             <span>Print All Approved Cards</span>
           </button>
+
+          <button
+            onClick={handleClearAllMemberRecords}
+            className="bg-rose-950/80 hover:bg-rose-900 border border-rose-700/80 text-rose-200 font-bold text-xs px-4 py-3 rounded-xl transition-colors flex items-center space-x-2 shadow-sm cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4 text-rose-400" />
+            <span>Wipe All Members Data</span>
+          </button>
         </div>
       </div>
 
