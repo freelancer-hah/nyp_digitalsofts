@@ -784,26 +784,81 @@ class StoreService {
 
   public async loginOfficerCloud(identifier: string, password: string): Promise<User | null> {
     if (!isSupabaseConfigured()) return null;
-    const { data, error } = await supabase.rpc('user_login', {
-      p_identifier: identifier.trim(),
-      p_password: password.trim(),
-    });
-    if (error || !data || data.error) return null;
-    const u = data.user;
-    if (!u) return null;
-    const officer: User = {
-      id: u.id,
-      username: u.email ? u.email.split('@')[0] : u.cnic_number,
-      cnicNumber: u.cnic_number,
-      fullName: u.full_name,
-      email: u.email,
-      mobileNumber: u.mobile_number,
-      role: u.role,
-      createdAt: u.created_at,
-    };
-    this.currentUser = officer;
-    this.saveCurrentUser();
-    return officer;
+    try {
+      const cleanInput = identifier.trim();
+      const cleanPass = password.trim();
+      let targetEmail = cleanInput;
+
+      // Resolve email from public.users table if input is CNIC
+      if (!cleanInput.includes('@')) {
+        const normCnic = normalizeCnic(cleanInput);
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('email, id, cnic_number, full_name, role, created_at, mobile_number')
+          .or(`cnic_number.eq.${normCnic},cnic_number.eq.${cleanInput}`)
+          .maybeSingle();
+
+        if (dbUser?.email) {
+          targetEmail = dbUser.email;
+        }
+      }
+
+      // Try Supabase Auth signInWithPassword
+      if (targetEmail.includes('@')) {
+        const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
+          email: targetEmail,
+          password: cleanPass,
+        });
+
+        if (!authErr && authData?.user) {
+          const { data: u } = await supabase
+            .from('users')
+            .select('*')
+            .or(`email.eq.${targetEmail},id.eq.${authData.user.id}`)
+            .maybeSingle();
+
+          const officer: User = {
+            id: u?.id || authData.user.id,
+            username: u?.email ? u.email.split('@')[0] : (u?.cnic_number || cleanInput),
+            cnicNumber: u?.cnic_number || cleanInput,
+            fullName: u?.full_name || (authData.user.user_metadata?.full_name as string) || 'Executive Officer',
+            email: u?.email || targetEmail,
+            mobileNumber: u?.mobile_number || '',
+            role: (u?.role as UserRole) || 'SUPER_ADMIN',
+            createdAt: u?.created_at || authData.user.created_at,
+          };
+          this.currentUser = officer;
+          this.saveCurrentUser();
+          return officer;
+        }
+      }
+
+      // Fallback: RPC user_login if configured on database
+      const { data, error } = await supabase.rpc('user_login', {
+        p_identifier: cleanInput,
+        p_password: cleanPass,
+      });
+
+      if (!error && data && !data.error && data.user) {
+        const u = data.user;
+        const officer: User = {
+          id: u.id,
+          username: u.email ? u.email.split('@')[0] : u.cnic_number,
+          cnicNumber: u.cnic_number,
+          fullName: u.full_name,
+          email: u.email,
+          mobileNumber: u.mobile_number,
+          role: u.role,
+          createdAt: u.created_at,
+        };
+        this.currentUser = officer;
+        this.saveCurrentUser();
+        return officer;
+      }
+    } catch (e) {
+      console.warn('loginOfficerCloud exception:', e);
+    }
+    return null;
   }
 
   public async loginMember(cnic: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
