@@ -113,7 +113,7 @@ export const AdminMasterPage: React.FC = () => {
 
   const handleSyncUsersToDb = async () => {
     setIsSyncingUsers(true);
-    const res = await store.pushAllOfficersToSupabase();
+    const res = await store.pushAllOfficersToSupabase(true);
     setIsSyncingUsers(false);
     if (res.success) {
       setOfficerSuccessMsg(`Successfully synced ${res.syncedCount} user account(s) to Supabase database!`);
