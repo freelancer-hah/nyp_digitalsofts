@@ -22,6 +22,7 @@ export const AdminMasterPage: React.FC = () => {
   useEffect(() => {
     store.fetchFromSupabase().then(() => {
       setProfiles([...store.getAllProfiles()]);
+      setOfficers([...store.getOfficerUsers()]);
     });
   }, []);
 
@@ -699,7 +700,7 @@ export const AdminMasterPage: React.FC = () => {
                             )}
                           </td>
                           <td className="p-3 text-right space-x-2">
-                            {off.id !== currentUser?.id && (
+                            {off.id !== currentUser?.id && off.cnicNumber !== currentUser?.cnicNumber ? (
                               <>
                                 <button
                                   onClick={() => handleToggleBlock(off.id)}
@@ -722,6 +723,10 @@ export const AdminMasterPage: React.FC = () => {
                                   <span>Remove</span>
                                 </button>
                               </>
+                            ) : (
+                              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800">
+                                Current Session
+                              </span>
                             )}
                           </td>
                         </tr>
