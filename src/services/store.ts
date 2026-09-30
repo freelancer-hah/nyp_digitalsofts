@@ -189,38 +189,20 @@ class StoreService {
   }
 
   private init() {
-    const storedOfficers = localStorage.getItem(KEY_OFFICER_USERS);
-    let parsed: User[] = [];
-    if (storedOfficers) {
-      try {
-        parsed = JSON.parse(storedOfficers);
-      } catch (e) {
-        parsed = [];
+    if (isSupabaseConfigured()) {
+      this.officerUsers = [...INITIAL_OFFICER_USERS];
+    } else {
+      const storedOfficers = localStorage.getItem(KEY_OFFICER_USERS);
+      let parsed: User[] = [];
+      if (storedOfficers) {
+        try {
+          parsed = JSON.parse(storedOfficers);
+        } catch (e) {
+          parsed = [];
+        }
       }
+      this.officerUsers = parsed.length > 0 ? parsed : [...INITIAL_OFFICER_USERS];
     }
-    // Restore stored officers and merge with INITIAL_OFFICER_USERS ensuring initial Super Admin exists
-    const officerMap = new Map<string, User>();
-    (parsed || []).forEach((u) => {
-      const key = u.cnicNumber || u.id || u.username || '';
-      if (key) {
-        officerMap.set(key, u);
-      }
-    });
-    INITIAL_OFFICER_USERS.forEach((initOff) => {
-      const key = initOff.cnicNumber || initOff.id;
-      const existing = officerMap.get(key) || officerMap.get(initOff.id);
-      if (existing) {
-        officerMap.set(key, {
-          ...existing,
-          ...initOff,
-          password: initOff.password || existing.password,
-        });
-      } else {
-        officerMap.set(key, initOff);
-      }
-    });
-    this.officerUsers = Array.from(officerMap.values());
-    this.saveOfficerUsers();
 
     const storedProfiles = localStorage.getItem(KEY_PROFILES);
     if (storedProfiles) {
@@ -499,36 +481,35 @@ class StoreService {
         localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
       }
 
-      // Sync users from Supabase and auto-seed initial Super Admin
+      // Sync users from Supabase - Supabase is the strict single source of truth for Officers
       try {
         const { data: userData, error: userErr } = await supabase.from('users').select('*');
         if (!userErr && userData) {
-          userData.forEach((u: any) => {
-            const matchedIdx = this.officerUsers.findIndex((off) => off.id === u.id || isSameCnic(off.cnicNumber, u.cnic_number));
-            if (matchedIdx >= 0) {
-              const existingPass = this.officerUsers[matchedIdx].password;
-              this.officerUsers[matchedIdx] = {
-                ...this.officerUsers[matchedIdx],
-                id: u.id,
-                fullName: u.full_name || this.officerUsers[matchedIdx].fullName,
-                email: u.email || this.officerUsers[matchedIdx].email,
-                role: u.role || this.officerUsers[matchedIdx].role,
-                password: existingPass || INITIAL_OFFICER_USERS.find((io) => io.role === u.role)?.password || ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || ''),
-              };
-            } else if (u.role && u.role !== 'MEMBER') {
-              this.officerUsers.push({
+          const dbOfficers: User[] = userData
+            .filter((u: any) => u.role && u.role !== 'MEMBER')
+            .map((u: any) => {
+              const matchedLocal = this.officerUsers.find((off) => off.id === u.id || isSameCnic(off.cnicNumber, u.cnic_number));
+              return {
                 id: u.id,
                 username: u.email ? u.email.split('@')[0] : u.cnic_number,
                 cnicNumber: u.cnic_number,
-                fullName: u.full_name,
-                email: u.email,
-                mobileNumber: u.mobile_number,
-                role: u.role,
-                password: INITIAL_OFFICER_USERS.find((io) => io.role === u.role)?.password || ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || ''),
+                fullName: u.full_name || 'Officer',
+                email: u.email || '',
+                mobileNumber: u.mobile_number || '',
+                role: u.role as UserRole,
+                password: u.password || matchedLocal?.password || INITIAL_OFFICER_USERS.find((io) => io.role === u.role)?.password || 'nypsindh123456',
                 createdAt: u.created_at,
-              });
+              };
+            });
+
+          // Ensure Initial Super Admin is present if missing from DB query
+          INITIAL_OFFICER_USERS.forEach((initOff) => {
+            if (!dbOfficers.some((o) => isSameCnic(o.cnicNumber, initOff.cnicNumber) || o.id === initOff.id)) {
+              dbOfficers.unshift(initOff);
             }
           });
+
+          this.officerUsers = dbOfficers;
           this.saveOfficerUsers();
         }
       } catch (e) {
