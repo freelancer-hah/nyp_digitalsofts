@@ -66,9 +66,9 @@ CREATE TABLE IF NOT EXISTS member_profiles (
     residential_address TEXT NOT NULL,
     city_town TEXT NOT NULL,
     province TEXT DEFAULT 'Sindh',
-    division_id TEXT NOT NULL REFERENCES divisions(id),
-    district_id TEXT NOT NULL REFERENCES districts(id),
-    taluka_id TEXT REFERENCES talukas(id),
+    division_id TEXT NOT NULL,
+    district_id TEXT NOT NULL,
+    taluka_id TEXT,
     
     -- Academic & Career
     qualification TEXT NOT NULL,
@@ -101,6 +101,11 @@ CREATE TABLE IF NOT EXISTS member_profiles (
     approval_date DATE,
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Ensure location FK constraints are dropped to support all Sindh districts & talukas
+ALTER TABLE member_profiles DROP CONSTRAINT IF EXISTS member_profiles_taluka_id_fkey;
+ALTER TABLE member_profiles DROP CONSTRAINT IF EXISTS member_profiles_district_id_fkey;
+ALTER TABLE member_profiles DROP CONSTRAINT IF EXISTS member_profiles_division_id_fkey;
 
 -- 5. ROLE APPLICATION REQUESTS TABLE
 CREATE TABLE IF NOT EXISTS role_applications (

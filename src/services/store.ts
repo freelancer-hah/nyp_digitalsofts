@@ -682,16 +682,18 @@ class StoreService {
       if (existingProfByCnic || existingProfById) {
         const res = await supabase.from('member_profiles').update(payload).eq('id', targetProfId);
         error = res.error;
-        if (error && error.message?.includes('member_profiles_user_id_fkey')) {
-          payload.user_id = null as any;
+        if (error && error.message?.includes('fkey')) {
+          if (error.message.includes('user_id')) payload.user_id = null as any;
+          if (error.message.includes('taluka_id')) payload.taluka_id = null as any;
           const retry = await supabase.from('member_profiles').update(payload).eq('id', targetProfId);
           error = retry.error;
         }
       } else {
         const res = await supabase.from('member_profiles').insert(payload);
         error = res.error;
-        if (error && error.message?.includes('member_profiles_user_id_fkey')) {
-          payload.user_id = null as any;
+        if (error && error.message?.includes('fkey')) {
+          if (error.message.includes('user_id')) payload.user_id = null as any;
+          if (error.message.includes('taluka_id')) payload.taluka_id = null as any;
           const retry = await supabase.from('member_profiles').insert(payload);
           error = retry.error;
         }
