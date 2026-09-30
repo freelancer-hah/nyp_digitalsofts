@@ -787,53 +787,8 @@ class StoreService {
     try {
       const cleanInput = identifier.trim();
       const cleanPass = password.trim();
-      let targetEmail = cleanInput;
 
-      // Resolve email from public.users table if input is CNIC
-      if (!cleanInput.includes('@')) {
-        const normCnic = normalizeCnic(cleanInput);
-        const { data: dbUser } = await supabase
-          .from('users')
-          .select('email, id, cnic_number, full_name, role, created_at, mobile_number')
-          .or(`cnic_number.eq.${normCnic},cnic_number.eq.${cleanInput}`)
-          .maybeSingle();
-
-        if (dbUser?.email) {
-          targetEmail = dbUser.email;
-        }
-      }
-
-      // Try Supabase Auth signInWithPassword
-      if (targetEmail.includes('@')) {
-        const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
-          email: targetEmail,
-          password: cleanPass,
-        });
-
-        if (!authErr && authData?.user) {
-          const { data: u } = await supabase
-            .from('users')
-            .select('*')
-            .or(`email.eq.${targetEmail},id.eq.${authData.user.id}`)
-            .maybeSingle();
-
-          const officer: User = {
-            id: u?.id || authData.user.id,
-            username: u?.email ? u.email.split('@')[0] : (u?.cnic_number || cleanInput),
-            cnicNumber: u?.cnic_number || cleanInput,
-            fullName: u?.full_name || (authData.user.user_metadata?.full_name as string) || 'Executive Officer',
-            email: u?.email || targetEmail,
-            mobileNumber: u?.mobile_number || '',
-            role: (u?.role as UserRole) || 'SUPER_ADMIN',
-            createdAt: u?.created_at || authData.user.created_at,
-          };
-          this.currentUser = officer;
-          this.saveCurrentUser();
-          return officer;
-        }
-      }
-
-      // 1. Try RPC user_login
+      // 1. Try RPC user_login (Fastest & direct DB security procedure)
       const { data, error } = await supabase.rpc('user_login', {
         p_identifier: cleanInput,
         p_password: cleanPass,
@@ -866,8 +821,8 @@ class StoreService {
 
       if (dbUser) {
         const passMatch = Boolean(
-          !dbUser.password ||
-          dbUser.password === cleanPass ||
+          !dbUser.password || 
+          dbUser.password === cleanPass || 
           cleanPass === 'nypsindh123456' ||
           (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD && cleanPass === import.meta.env.VITE_SUPERADMIN_PASSWORD)
         );
@@ -882,6 +837,34 @@ class StoreService {
             mobileNumber: dbUser.mobile_number,
             role: dbUser.role as UserRole,
             createdAt: dbUser.created_at,
+          };
+          this.currentUser = officer;
+          this.saveCurrentUser();
+          return officer;
+        }
+      }
+
+      // 3. Fallback: Try Supabase Auth signInWithPassword if target is email
+      let targetEmail = cleanInput;
+      if (!cleanInput.includes('@') && dbUser?.email) {
+        targetEmail = dbUser.email;
+      }
+      if (targetEmail.includes('@')) {
+        const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
+          email: targetEmail,
+          password: cleanPass,
+        });
+
+        if (!authErr && authData?.user) {
+          const officer: User = {
+            id: dbUser?.id || authData.user.id,
+            username: dbUser?.email ? dbUser.email.split('@')[0] : (dbUser?.cnic_number || cleanInput),
+            cnicNumber: dbUser?.cnic_number || cleanInput,
+            fullName: dbUser?.full_name || (authData.user.user_metadata?.full_name as string) || 'Executive Officer',
+            email: dbUser?.email || targetEmail,
+            mobileNumber: dbUser?.mobile_number || '',
+            role: (dbUser?.role as UserRole) || 'SUPER_ADMIN',
+            createdAt: dbUser?.created_at || authData.user.created_at,
           };
           this.currentUser = officer;
           this.saveCurrentUser();
