@@ -115,18 +115,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     role: 'SUPER_ADMIN',
     password: 'admin@nypsindh12345',
     createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'usr-superadmin',
-    username: 'admin@nypsindh',
-    cnicNumber: '41304-0000000-0',
-    fullName: 'Executive Super Admin Desk',
-    email: 'admin@nypsindh.org.pk',
-    mobileNumber: '0333-7612564',
-    role: 'SUPER_ADMIN',
-    password: 'nypsindh123456',
-    createdAt: new Date().toISOString(),
-  },
+  }
 ];
 
 class StoreService {
@@ -191,19 +180,7 @@ class StoreService {
         parsed = [];
       }
     }
-    INITIAL_OFFICER_USERS.forEach((def) => {
-      const idx = parsed.findIndex((u) => u.id === def.id || u.username === def.username);
-      if (idx === -1) {
-        parsed.unshift({ ...def });
-      } else {
-        parsed[idx] = { 
-          ...parsed[idx], 
-          ...def,
-          password: def.password 
-        };
-      }
-    });
-    this.officerUsers = parsed;
+    this.officerUsers = INITIAL_OFFICER_USERS;
     this.saveOfficerUsers();
 
     const storedProfiles = localStorage.getItem(KEY_PROFILES);
