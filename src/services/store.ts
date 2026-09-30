@@ -699,44 +699,6 @@ class StoreService {
         }
       }
 
-      // Also sync user record to Supabase `users` table
-      try {
-        const userUuid = (validUserId && isUuid(validUserId)) ? validUserId : toValidUuid(profile.id);
-        const normCnic = normalizeCnic(profile.cnicNumber);
-
-        // Check if user exists by CNIC or ID
-        const { data: existingUsers } = await supabase
-          .from('users')
-          .select('id, cnic_number')
-          .or(`cnic_number.eq.${normCnic},id.eq.${userUuid}`);
-
-        const existingByCnic = existingUsers?.find(u => u.cnic_number === normCnic);
-        const existingById = existingUsers?.find(u => u.id === userUuid);
-        const targetId = existingByCnic?.id || existingById?.id || userUuid;
-
-        if (existingByCnic || existingById) {
-          await supabase.from('users').update({
-            cnic_number: normCnic,
-            full_name: profile.fullName,
-            email: profile.email,
-            mobile_number: profile.mobileNumber,
-            role: 'MEMBER',
-          }).eq('id', targetId);
-        } else {
-          await supabase.from('users').insert({
-            id: targetId,
-            cnic_number: normCnic,
-            full_name: profile.fullName,
-            email: profile.email,
-            mobile_number: profile.mobileNumber,
-            role: 'MEMBER',
-            created_at: profile.submittedAt || new Date().toISOString(),
-          });
-        }
-      } catch (e) {
-        console.warn('Supabase users table sync notice:', e);
-      }
-
       if (error) {
         console.warn('Supabase pushProfileToSupabase notice:', error.message);
       }
