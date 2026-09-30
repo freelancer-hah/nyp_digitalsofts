@@ -89,28 +89,29 @@ export async function signInWithSupabaseAuth(
   identifier: string,
   passwordInput: string
 ): Promise<{ user: User; profile?: MemberProfile } | { error: string }> {
-  // 1. Local officer/admin check
+  // 1. Prioritize Cloud Authentication (Supabase Cloud DB / Auth) when configured
+  if (isSupabaseConfigured()) {
+    const cloudOfficer = await store.loginOfficerCloud(identifier, passwordInput);
+    if (cloudOfficer) {
+      const prof = store.getProfileByUserId(cloudOfficer.id || cloudOfficer.cnicNumber);
+      return { user: cloudOfficer, profile: prof };
+    }
+
+    const memberRes = await store.loginMember(identifier, passwordInput);
+    if (memberRes.success && memberRes.user) {
+      const prof = store.getProfileByUserId(memberRes.user.id || memberRes.user.cnicNumber);
+      return { user: memberRes.user, profile: prof };
+    }
+  }
+
+  // 2. Local fallback check using environment variables (VITE_SUPERADMIN_PASSWORD etc.)
   const localRes = store.loginUserByCnic(identifier, passwordInput);
   if (localRes.success && localRes.user) {
     const prof = store.getProfileByUserId(localRes.user.id || localRes.user.cnicNumber);
     return { user: localRes.user, profile: prof };
   }
 
-  // 2. Cloud officer RPC check
-  const cloudOfficer = await store.loginOfficerCloud(identifier, passwordInput);
-  if (cloudOfficer) {
-    const prof = store.getProfileByUserId(cloudOfficer.id || cloudOfficer.cnicNumber);
-    return { user: cloudOfficer, profile: prof };
-  }
-
-  // 3. Cloud member RPC check
-  const memberRes = await store.loginMember(identifier, passwordInput);
-  if (memberRes.success && memberRes.user) {
-    const prof = store.getProfileByUserId(memberRes.user.id || memberRes.user.cnicNumber);
-    return { user: memberRes.user, profile: prof };
-  }
-
-  return { error: memberRes.error || 'Login nahi ho saka.' };
+  return { error: 'Invalid CNIC or password. Please check your credentials.' };
 }
 
 export async function signOutSupabaseAuth() {

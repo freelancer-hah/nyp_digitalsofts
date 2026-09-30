@@ -8,6 +8,7 @@ import * as XLSX from 'xlsx';
 import { DigitalIdCard } from '../components/DigitalIdCard';
 
 export const AdminMasterPage: React.FC = () => {
+  const currentUser = store.getCurrentUser();
   const [profiles, setProfiles] = useState<MemberProfile[]>(store.getAllProfiles());
   const [selectedDivision, setSelectedDivision] = useState<string>('ALL');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('ALL');

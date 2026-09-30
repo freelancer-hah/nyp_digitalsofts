@@ -114,7 +114,7 @@ const INITIAL_OFFICER_USERS: User[] = [
     email: 'admin@nypsindh.org.pk',
     mobileNumber: '0333-7612564',
     role: 'SUPER_ADMIN',
-    password: 'admin@nypsindh123456',
+    password: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || '',
     createdAt: new Date().toISOString(),
   }
 ];
@@ -513,7 +513,7 @@ class StoreService {
                 fullName: u.full_name || this.officerUsers[matchedIdx].fullName,
                 email: u.email || this.officerUsers[matchedIdx].email,
                 role: u.role || this.officerUsers[matchedIdx].role,
-                password: existingPass || INITIAL_OFFICER_USERS.find((io) => io.role === u.role)?.password || 'admin@nypsindh123456',
+                password: existingPass || INITIAL_OFFICER_USERS.find((io) => io.role === u.role)?.password || ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || ''),
               };
             } else if (u.role && u.role !== 'MEMBER') {
               this.officerUsers.push({
@@ -524,7 +524,7 @@ class StoreService {
                 email: u.email,
                 mobileNumber: u.mobile_number,
                 role: u.role,
-                password: INITIAL_OFFICER_USERS.find((io) => io.role === u.role)?.password || 'admin@nypsindh123456',
+                password: INITIAL_OFFICER_USERS.find((io) => io.role === u.role)?.password || ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || ''),
                 createdAt: u.created_at,
               });
             }
@@ -972,13 +972,14 @@ class StoreService {
         return { success: false, error: 'Password is required. Please enter your password.' };
       }
 
-      const defaultPass = INITIAL_OFFICER_USERS.find((io) => io.role === officer.role || io.id === officer.id)?.password || 'admin@nypsindh123456';
+      const defaultPass = INITIAL_OFFICER_USERS.find((io) => io.role === officer.role || io.id === officer.id)?.password || '';
       const expectedPassword = officer.password || defaultPass;
       const cleanProvidedPass = providedPassword.trim();
+      const envSuperPass = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPERADMIN_PASSWORD) || '';
       const isPassValid = Boolean(
-        cleanProvidedPass === expectedPassword.trim() ||
+        (expectedPassword && cleanProvidedPass === expectedPassword.trim()) ||
         (officer.password && officer.password.trim() === cleanProvidedPass) ||
-        (cleanProvidedPass === 'admin@nypsindh123456' && (officer.role === 'SUPER_ADMIN' || officer.username === '33105-7853093-7'))
+        (envSuperPass && cleanProvidedPass === envSuperPass.trim() && (officer.role === 'SUPER_ADMIN' || officer.cnicNumber?.includes('33105-7853093-7')))
       );
 
       if (!isPassValid) {
