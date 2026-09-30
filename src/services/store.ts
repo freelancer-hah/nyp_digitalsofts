@@ -655,26 +655,74 @@ class StoreService {
         submitted_at: profile.submittedAt || new Date().toISOString(),
       };
 
-      let { error } = await supabase.from('member_profiles').upsert(payload, { onConflict: 'cnic_number' });
-      if (error && error.message?.includes('member_profiles_user_id_fkey')) {
-        console.warn('Retrying pushProfileToSupabase without strict auth user_id reference...');
-        payload.user_id = null as any;
-        const retry = await supabase.from('member_profiles').upsert(payload, { onConflict: 'cnic_number' });
-        error = retry.error;
+      const normCnic = normalizeCnic(profile.cnicNumber);
+      const validProfileId = toValidUuid(profile.id);
+
+      // Check if profile exists in Supabase member_profiles
+      const { data: existingProfs } = await supabase
+        .from('member_profiles')
+        .select('id, cnic_number')
+        .or(`cnic_number.eq.${normCnic},id.eq.${validProfileId}`);
+
+      const existingProfByCnic = existingProfs?.find(p => p.cnic_number === normCnic);
+      const existingProfById = existingProfs?.find(p => p.id === validProfileId);
+      const targetProfId = existingProfByCnic?.id || existingProfById?.id || validProfileId;
+
+      payload.id = targetProfId;
+
+      let error: any = null;
+      if (existingProfByCnic || existingProfById) {
+        const res = await supabase.from('member_profiles').update(payload).eq('id', targetProfId);
+        error = res.error;
+        if (error && error.message?.includes('member_profiles_user_id_fkey')) {
+          payload.user_id = null as any;
+          const retry = await supabase.from('member_profiles').update(payload).eq('id', targetProfId);
+          error = retry.error;
+        }
+      } else {
+        const res = await supabase.from('member_profiles').insert(payload);
+        error = res.error;
+        if (error && error.message?.includes('member_profiles_user_id_fkey')) {
+          payload.user_id = null as any;
+          const retry = await supabase.from('member_profiles').insert(payload);
+          error = retry.error;
+        }
       }
 
       // Also sync user record to Supabase `users` table
       try {
         const userUuid = (validUserId && isUuid(validUserId)) ? validUserId : toValidUuid(profile.id);
-        await supabase.from('users').upsert({
-          id: userUuid,
-          cnic_number: normalizeCnic(profile.cnicNumber),
-          full_name: profile.fullName,
-          email: profile.email,
-          mobile_number: profile.mobileNumber,
-          role: 'MEMBER',
-          created_at: profile.submittedAt || new Date().toISOString(),
-        }, { onConflict: 'cnic_number' });
+        const normCnic = normalizeCnic(profile.cnicNumber);
+        
+        // Check if user exists by CNIC or ID
+        const { data: existingUsers } = await supabase
+          .from('users')
+          .select('id, cnic_number')
+          .or(`cnic_number.eq.${normCnic},id.eq.${userUuid}`);
+
+        const existingByCnic = existingUsers?.find(u => u.cnic_number === normCnic);
+        const existingById = existingUsers?.find(u => u.id === userUuid);
+        const targetId = existingByCnic?.id || existingById?.id || userUuid;
+
+        if (existingByCnic || existingById) {
+          await supabase.from('users').update({
+            cnic_number: normCnic,
+            full_name: profile.fullName,
+            email: profile.email,
+            mobile_number: profile.mobileNumber,
+            role: 'MEMBER',
+          }).eq('id', targetId);
+        } else {
+          await supabase.from('users').insert({
+            id: targetId,
+            cnic_number: normCnic,
+            full_name: profile.fullName,
+            email: profile.email,
+            mobile_number: profile.mobileNumber,
+            role: 'MEMBER',
+            created_at: profile.submittedAt || new Date().toISOString(),
+          });
+        }
       } catch (e) {
         console.warn('Supabase users table sync notice:', e);
       }
@@ -699,8 +747,17 @@ class StoreService {
         cleanCnic = `OFF-${validId.replace(/-/g, '').slice(0, 10)}`;
       }
 
+      // 1. Check if user already exists in Supabase by cnic_number or id
+      const { data: existingUsers } = await supabase
+        .from('users')
+        .select('id, cnic_number')
+        .or(`cnic_number.eq.${cleanCnic},id.eq.${validId}`);
+
+      const existingByCnic = existingUsers?.find(u => u.cnic_number === cleanCnic);
+      const existingById = existingUsers?.find(u => u.id === validId);
+      const targetId = existingByCnic?.id || existingById?.id || validId;
+
       const userPayload = {
-        id: validId,
         cnic_number: cleanCnic,
         full_name: user.fullName || user.username || 'Officer User',
         email: user.email || `${(user.username || 'officer').toLowerCase()}@nypsindh.org.pk`,
@@ -709,21 +766,34 @@ class StoreService {
         created_at: user.createdAt || new Date().toISOString(),
       };
 
-      // Strategy 1: Upsert on cnic_number
-      let { error } = await supabase.from('users').upsert(userPayload, { onConflict: 'cnic_number' });
+      let error: any = null;
 
-      // Strategy 2: Upsert on id
-      if (error) {
-        console.warn('Supabase upsert on cnic_number notice:', error.message, 'retrying on id...');
-        const retry = await supabase.from('users').upsert(userPayload, { onConflict: 'id' });
-        error = retry.error;
+      if (existingByCnic || existingById) {
+        // Record exists: update attributes without modifying the primary key id
+        const res = await supabase
+          .from('users')
+          .update({
+            cnic_number: cleanCnic,
+            full_name: userPayload.full_name,
+            email: userPayload.email,
+            mobile_number: userPayload.mobile_number,
+            role: userPayload.role,
+          })
+          .eq('id', targetId);
+        error = res.error;
+      } else {
+        // Record does not exist: insert new row
+        const res = await supabase.from('users').insert({
+          id: targetId,
+          ...userPayload
+        });
+        error = res.error;
       }
 
-      // Strategy 3: Insert without specifying fixed ID if foreign key constraint exists
-      if (error && (error.message?.includes('foreign key') || error.message?.includes('users_id_fkey'))) {
-        console.warn('Retrying insert without fixed UUID to bypass foreign key constraint...');
-        const { id, ...payloadWithoutId } = userPayload;
-        const retry = await supabase.from('users').insert(payloadWithoutId);
+      // Fallback Strategy: Upsert if initial operation had issue
+      if (error) {
+        console.warn('Supabase primary attempt notice:', error.message, 'Trying upsert fallback...');
+        const retry = await supabase.from('users').upsert({ id: targetId, ...userPayload }, { onConflict: 'cnic_number' });
         error = retry.error;
       }
 
