@@ -698,7 +698,7 @@ export const AdminMasterPage: React.FC = () => {
                             )}
                           </td>
                           <td className="p-3 text-right space-x-2">
-                            {off.role !== 'PRESIDENT' && off.role !== 'SUPER_ADMIN' && (
+                            {off.id !== currentUser?.id && (
                               <>
                                 <button
                                   onClick={() => handleToggleBlock(off.id)}
