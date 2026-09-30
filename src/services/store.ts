@@ -302,6 +302,7 @@ class StoreService {
 
     if (isSupabaseConfigured()) {
       try {
+        await supabase.from('users').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabase.from('cabinet_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabase.from('announcements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
@@ -328,6 +329,7 @@ class StoreService {
 
     if (isSupabaseConfigured()) {
       try {
+        await supabase.from('users').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabase.from('cabinet_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       } catch (e) {
