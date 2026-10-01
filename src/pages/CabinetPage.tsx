@@ -77,6 +77,7 @@ export const CabinetPage: React.FC = () => {
   // Filter list depending on current View Mode (Cabinets vs Parliamentarians)
   const filteredMembers = allCabinetMembersList.filter((member) => {
     if (isParliamentariansView) {
+      if (member.category === 'CABINET') return false;
       const isParl = member.category === 'PARLIAMENTARIAN' || 
         member.designation.toLowerCase().includes('mpa') || 
         member.designation.toLowerCase().includes('mna') ||
@@ -119,7 +120,7 @@ export const CabinetPage: React.FC = () => {
       
       return true;
     } else {
-      // Must NOT be a pure parliamentarian (or show main executive cabinet)
+      // Must NOT be a parliamentarian
       if (member.category === 'PARLIAMENTARIAN') return false;
 
       // 1. PROVINCIAL CABINET TAB: Only show Provincial Cabinet members

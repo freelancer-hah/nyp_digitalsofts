@@ -1619,8 +1619,11 @@ class StoreService {
   }
 
   // --- CMS Content Management ---
-  public getCabinetMembers(level?: 'PROVINCIAL' | 'DIVISIONAL', divisionId?: string): CabinetMember[] {
+  public getCabinetMembers(level?: 'PROVINCIAL' | 'DIVISIONAL', divisionId?: string, category?: 'CABINET' | 'PARLIAMENTARIAN'): CabinetMember[] {
     let list = [...this.cabinetMembers.filter((m) => m.isActive)];
+    if (category) {
+      list = list.filter((m) => m.category === category);
+    }
     if (level) {
       list = list.filter((m) => m.cabinetLevel === level);
     }
@@ -1645,6 +1648,10 @@ class StoreService {
         bio: member.bio || null,
         display_order: Number(member.displayOrder) || 1,
         is_active: member.isActive ?? true,
+        member_profile_id: member.memberProfileId ? (isUuid(member.memberProfileId) ? member.memberProfileId : toValidUuid(member.memberProfileId)) : null,
+        category: member.category || (member.designation?.toLowerCase().includes('mpa') || member.designation?.toLowerCase().includes('mna') ? 'PARLIAMENTARIAN' : 'CABINET'),
+        parliamentary_role: member.parliamentaryRole || null,
+        ministry_department: member.ministryDepartment || null,
       };
       const { error } = await supabase.from('cabinet_members').upsert(payload);
       if (error) {
@@ -1818,24 +1825,20 @@ class StoreService {
   }
 
   public async deleteCabinetMember(id: string) {
-    const targetMember = this.cabinetMembers.find((m) => m.id === id || m.memberProfileId === id);
+    const targetMember = this.cabinetMembers.find((m) => m.id === id);
 
-    // Update in-memory cabinet array immediately (leaves member_profiles untouched)
+    // Update in-memory cabinet array immediately by matching card id ONLY
     this.cabinetMembers = this.cabinetMembers.filter(
-      (m) => m.id !== id && m.memberProfileId !== id && (!targetMember || m.id !== targetMember.id)
+      (m) => m.id !== id && (!targetMember || m.id !== targetMember.id)
     );
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
 
-    // Direct Supabase DB deletions ONLY from cabinet_members table
+    // Direct Supabase DB deletion ONLY for this specific card id
     if (isSupabaseConfigured()) {
       try {
-        if (targetMember?.id) {
-          await supabase.from('cabinet_members').delete().eq('id', targetMember.id);
-        }
-        if (targetMember?.memberProfileId) {
-          await supabase.from('cabinet_members').delete().eq('member_profile_id', targetMember.memberProfileId);
-        }
-        if (id) {
+        const validId = targetMember?.id || (isUuid(id) ? id : toValidUuid(id));
+        await supabase.from('cabinet_members').delete().eq('id', validId);
+        if (id && id !== validId) {
           await supabase.from('cabinet_members').delete().eq('id', id);
         }
       } catch (e) {
