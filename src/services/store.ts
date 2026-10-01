@@ -452,6 +452,7 @@ class StoreService {
           ministryDepartment: d.ministry_department || undefined,
         }));
         localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+        this.profiles.forEach((p) => this.syncProfilePrimaryDesignation(p.id));
       }
 
       // Fetch media_items from Supabase
@@ -1702,13 +1703,12 @@ class StoreService {
       : this.profiles.find((p) => p.fullName.trim().toLowerCase() === data.fullName.trim().toLowerCase());
 
     if (targetProfile) {
-      targetProfile.assignedDesignation = data.designation;
       targetProfile.status = 'APPROVED';
       if (data.photoUrl && (!targetProfile.passportPhotoUrl || targetProfile.passportPhotoUrl.includes('unsplash'))) {
         targetProfile.passportPhotoUrl = data.photoUrl;
       }
       this.saveProfiles();
-      this.pushProfileToSupabase(targetProfile);
+      this.syncProfilePrimaryDesignation(targetProfile.id);
     } else {
       // Auto-create member profile for new parliamentarian/cabinet member so their card is immediately available!
       const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -1751,9 +1751,32 @@ class StoreService {
       this.pushProfileToSupabase(autoProfile);
       // Update cabinet member with linked memberProfileId in Supabase
       this.pushCabinetMemberToSupabase(newMember);
+      this.syncProfilePrimaryDesignation(autoProfile.id);
     }
 
     return newMember;
+  }
+
+  public syncProfilePrimaryDesignation(profileId: string) {
+    const profile = this.profiles.find((p) => p.id === profileId || (p.cnicNumber && p.cnicNumber === profileId));
+    if (!profile) return;
+
+    const linkedCards = this.cabinetMembers.filter(
+      (m) => m.isActive && (m.memberProfileId === profile.id || (m.fullName && m.fullName.trim().toLowerCase() === profile.fullName.trim().toLowerCase()))
+    );
+
+    const cabinetRole = linkedCards.find((m) => m.category === 'CABINET');
+    const parliamentarianRole = linkedCards.find((m) => m.category === 'PARLIAMENTARIAN');
+
+    if (cabinetRole) {
+      profile.assignedDesignation = cabinetRole.designation;
+    } else if (parliamentarianRole) {
+      profile.assignedDesignation = parliamentarianRole.designation;
+    } else if (!profile.assignedDesignation || profile.assignedDesignation === 'Applicant') {
+      profile.assignedDesignation = 'Youth Member';
+    }
+
+    this.saveProfiles();
   }
 
   public updateCabinetMember(id: string, data: Partial<CabinetMember>): CabinetMember | null {
@@ -1768,12 +1791,10 @@ class StoreService {
         ? this.profiles.find((p) => p.id === member.memberProfileId)
         : this.profiles.find((p) => p.fullName.trim().toLowerCase() === member.fullName.trim().toLowerCase());
 
-      if (targetProfile && data.designation) {
-        targetProfile.assignedDesignation = data.designation;
-        targetProfile.status = 'APPROVED';
+      if (targetProfile) {
         if (data.photoUrl) targetProfile.passportPhotoUrl = data.photoUrl;
         this.saveProfiles();
-        this.pushProfileToSupabase(targetProfile);
+        this.syncProfilePrimaryDesignation(targetProfile.id);
       }
 
       return member;
@@ -1826,6 +1847,7 @@ class StoreService {
 
   public async deleteCabinetMember(id: string) {
     const targetMember = this.cabinetMembers.find((m) => m.id === id);
+    const profileId = targetMember?.memberProfileId;
 
     // Update in-memory cabinet array immediately by matching card id ONLY
     this.cabinetMembers = this.cabinetMembers.filter(
@@ -1844,6 +1866,10 @@ class StoreService {
       } catch (e) {
         console.warn('Supabase DB delete cabinet notice:', e);
       }
+    }
+
+    if (profileId) {
+      this.syncProfilePrimaryDesignation(profileId);
     }
 
     this.notifyListeners();
