@@ -708,15 +708,14 @@ class StoreService {
       };
       if (user.password) payload.password = user.password;
 
+      // Check if user exists by CNIC to preserve primary key ID if updating existing record
       const { data: byCnic } = await supabase.from('users').select('id').eq('cnic_number', cleanCnic).maybeSingle();
       let error: any;
       if (byCnic) {
-        const { id, ...rest } = payload;
-        ({ error } = await supabase.from('users').update(rest).eq('id', byCnic.id));
+        payload.id = byCnic.id;
+        ({ error } = await supabase.from('users').upsert(payload, { onConflict: 'id' }));
       } else {
-        const { data: byId } = await supabase.from('users').select('id').eq('id', validId).maybeSingle();
-        if (byId) ({ error } = await supabase.from('users').update(payload).eq('id', validId));
-        else ({ error } = await supabase.from('users').insert(payload));
+        ({ error } = await supabase.from('users').upsert(payload, { onConflict: 'id' }));
       }
 
       if (error) {
@@ -1007,9 +1006,6 @@ class StoreService {
     };
     this.officerUsers.unshift(newOfficer);
     this.saveOfficerUsers();
-    if (isSupabaseConfigured()) {
-      this.pushOfficerToSupabase(newOfficer);
-    }
     return newOfficer;
   }
 
