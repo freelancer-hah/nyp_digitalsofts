@@ -391,16 +391,8 @@ class StoreService {
       if (profData) {
         const fetchedProfiles: MemberProfile[] = profData.map((d: any) => this.mapProfileRow(d));
 
-        // Supabase is single source of truth for profiles
-        this.profiles = fetchedProfiles.filter((p) => {
-          const normCnic = normalizeCnic(p.cnicNumber);
-          const isRemoved =
-            this.removedCabinetIds.has(p.id) ||
-            (normCnic && this.removedCabinetIds.has(normCnic)) ||
-            (p.cnicNumber && this.removedCabinetIds.has(p.cnicNumber.trim())) ||
-            (p.fullName && this.removedCabinetIds.has(p.fullName.trim()));
-          return !isRemoved;
-        });
+        // Supabase is strict single source of truth for profiles
+        this.profiles = fetchedProfiles;
         this.saveProfiles();
 
         // Fetch role_applications from Supabase
@@ -444,19 +436,7 @@ class StoreService {
       // Fetch cabinet_members from Supabase
       const { data: cabData, error: cabErr } = await supabase.from('cabinet_members').select('*');
       if (!cabErr && cabData) {
-        const validCabData = cabData.filter((d: any) => {
-          const normCnic = d.cnic_number ? normalizeCnic(d.cnic_number) : '';
-          const fullName = d.full_name ? d.full_name.trim() : '';
-          const isRemoved =
-            this.removedCabinetIds.has(d.id) ||
-            (d.member_profile_id && this.removedCabinetIds.has(d.member_profile_id)) ||
-            (normCnic && this.removedCabinetIds.has(normCnic)) ||
-            (d.cnic_number && this.removedCabinetIds.has(d.cnic_number)) ||
-            (fullName && this.removedCabinetIds.has(fullName));
-          return !isRemoved;
-        });
-
-        this.cabinetMembers = validCabData.map((d: any) => ({
+        this.cabinetMembers = cabData.map((d: any) => ({
           id: d.id,
           fullName: d.full_name || d.fullName || 'Member',
           designation: d.designation || 'Youth Parliamentarian',
@@ -1102,7 +1082,7 @@ class StoreService {
 
   // --- Profile Submission & Management ---
   public getAllProfiles(): MemberProfile[] {
-    return this.profiles.filter((p) => !this.removedCabinetIds.has(p.id));
+    return this.profiles;
   }
 
   public getProfileByUserId(userIdOrCnic?: string): MemberProfile | undefined {
@@ -1602,40 +1582,7 @@ class StoreService {
 
   // --- CMS Content Management ---
   public getCabinetMembers(level?: 'PROVINCIAL' | 'DIVISIONAL', divisionId?: string): CabinetMember[] {
-    const cabinetList = [
-      ...this.cabinetMembers.filter((m) =>
-        m.isActive &&
-        !this.removedCabinetIds.has(m.id) &&
-        (!m.memberProfileId || !this.removedCabinetIds.has(m.memberProfileId))
-      )
-    ];
-    const existingProfileIds = new Set(cabinetList.map((m) => m.memberProfileId).filter(Boolean));
-    const existingNames = new Set(cabinetList.map((m) => m.fullName.trim().toLowerCase()));
-
-    // Dynamically include APPROVED Member Profiles as division members / roster members (UNLESS REMOVED)
-    this.profiles.forEach((p) => {
-      if (p.status === 'APPROVED' && !this.removedCabinetIds.has(p.id)) {
-        const pKey = p.id;
-        const nameKey = p.fullName.trim().toLowerCase();
-        if (!existingProfileIds.has(pKey) && !existingNames.has(nameKey)) {
-          cabinetList.push({
-            id: p.id,
-            fullName: p.fullName,
-            designation: p.assignedDesignation || 'Youth Member',
-            cabinetLevel: p.divisionId ? 'DIVISIONAL' : 'PROVINCIAL',
-            divisionId: p.divisionId || 'div-karachi',
-            photoUrl: p.passportPhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
-            bio: p.statementOfPurpose || `Active Member - ${p.assignedDesignation || 'Youth Member'}`,
-            displayOrder: 99,
-            isActive: true,
-            memberProfileId: p.id,
-            category: (p.assignedDesignation?.toLowerCase().includes('mpa') || p.assignedDesignation?.toLowerCase().includes('mna')) ? 'PARLIAMENTARIAN' : 'CABINET',
-          });
-        }
-      }
-    });
-
-    let list = cabinetList;
+    let list = [...this.cabinetMembers.filter((m) => m.isActive)];
     if (level) {
       list = list.filter((m) => m.cabinetLevel === level);
     }
@@ -1832,70 +1779,49 @@ class StoreService {
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
   }
 
-  public deleteCabinetMember(id: string) {
+  public async deleteCabinetMember(id: string) {
     const targetMember = this.cabinetMembers.find((m) => m.id === id || m.memberProfileId === id);
-    this.removedCabinetIds.add(id);
-    if (targetMember?.id) {
-      this.removedCabinetIds.add(targetMember.id);
-    }
-    if (targetMember?.memberProfileId) {
-      this.removedCabinetIds.add(targetMember.memberProfileId);
-    }
-
     const matchingProfile = this.profiles.find(
       (p) => p.id === id || (targetMember && (p.id === targetMember.memberProfileId || p.fullName.trim().toLowerCase() === targetMember.fullName.trim().toLowerCase()))
     );
 
-    if (matchingProfile) {
-      this.removedCabinetIds.add(matchingProfile.id);
-      this.profiles = this.profiles.filter((p) => p.id !== matchingProfile.id);
-      this.saveProfiles();
-
-      if (isSupabaseConfigured()) {
-        try {
-          supabase.from('member_profiles').delete().eq('id', matchingProfile.id).then(({ error }) => {
-            if (error) console.warn('Supabase delete profile notice:', error.message);
-          });
-        } catch (e) {
-          console.warn('Supabase delete profile error:', e);
-        }
-      }
-    }
-
-    const directProfile = this.profiles.find((p) => p.id === id);
-    if (directProfile) {
-      this.removedCabinetIds.add(directProfile.id);
-      this.profiles = this.profiles.filter((p) => p.id !== id);
-      this.saveProfiles();
-
-      if (isSupabaseConfigured()) {
-        try {
-          supabase.from('member_profiles').delete().eq('id', id).then(({ error }) => {
-            if (error) console.warn('Supabase delete profile notice:', error.message);
-          });
-        } catch (e) {
-          console.warn('Supabase delete profile error:', e);
-        }
-      }
-    }
-
+    // Update in-memory arrays immediately
     this.cabinetMembers = this.cabinetMembers.filter(
-      (m) => m.id !== id && m.memberProfileId !== id && (!matchingProfile || m.memberProfileId !== matchingProfile.id)
+      (m) => m.id !== id && m.memberProfileId !== id && (!targetMember || m.id !== targetMember.id)
     );
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
-    localStorage.setItem(KEY_REMOVED_CABINET, JSON.stringify(Array.from(this.removedCabinetIds)));
 
-    const fullNameToDelete = targetMember?.fullName || matchingProfile?.fullName || directProfile?.fullName;
-    this.deleteCabinetMemberFromSupabase(id, fullNameToDelete);
-    if (targetMember?.id && targetMember.id !== id) {
-      this.deleteCabinetMemberFromSupabase(targetMember.id, fullNameToDelete);
+    if (matchingProfile) {
+      this.profiles = this.profiles.filter((p) => p.id !== matchingProfile.id);
+      this.saveProfiles();
+    } else {
+      this.profiles = this.profiles.filter((p) => p.id !== id);
+      this.saveProfiles();
     }
-    if (targetMember?.memberProfileId && targetMember.memberProfileId !== id) {
-      this.deleteCabinetMemberFromSupabase(targetMember.memberProfileId, fullNameToDelete);
+
+    // Direct Supabase DB deletions for cabinet_members and member_profiles
+    if (isSupabaseConfigured()) {
+      try {
+        if (targetMember?.id) {
+          await supabase.from('cabinet_members').delete().eq('id', targetMember.id);
+        }
+        if (targetMember?.memberProfileId) {
+          await supabase.from('cabinet_members').delete().eq('member_profile_id', targetMember.memberProfileId);
+          await supabase.from('member_profiles').delete().eq('id', targetMember.memberProfileId);
+        }
+        if (id) {
+          await supabase.from('cabinet_members').delete().eq('id', id);
+          await supabase.from('member_profiles').delete().eq('id', id);
+        }
+        if (matchingProfile?.id) {
+          await supabase.from('member_profiles').delete().eq('id', matchingProfile.id);
+        }
+      } catch (e) {
+        console.warn('Supabase DB delete notice:', e);
+      }
     }
-    if (matchingProfile?.id && matchingProfile.id !== id && matchingProfile.id !== targetMember?.memberProfileId) {
-      this.deleteCabinetMemberFromSupabase(matchingProfile.id, fullNameToDelete);
-    }
+
+    this.notifyListeners();
   }
 
   public getAnnouncements(): Announcement[] {
