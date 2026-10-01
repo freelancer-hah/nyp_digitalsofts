@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { store } from '../services/store';
+import { store, isSameCnic } from '../services/store';
 import { DigitalIdCard } from '../components/DigitalIdCard';
 import { uploadToCloudinary } from '../services/cloudinary';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS, SINDH_TALUKAS } from '../data/sindhHierarchy';
@@ -45,6 +45,9 @@ export const MemberDashboard: React.FC = () => {
   const [memPaymentProofUrl, setMemPaymentProofUrl] = useState('');
   const [isUploadingMemProof, setIsUploadingMemProof] = useState(false);
   const [memProofUploadError, setMemProofUploadError] = useState('');
+
+  // Multi-Card Switcher State for Multi-Role Members
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0);
 
   // Quick Copy Helper
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -429,24 +432,86 @@ export const MemberDashboard: React.FC = () => {
       </div>
 
       {/* 2. Full Width Official Membership Card Section (SHOWN RIGHT AFTER WELCOME) */}
-      <div className="w-full space-y-6">
-        <div className="ui-card p-4 sm:p-6 lg:p-8 space-y-4 shadow-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div>
-              <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">OFFICIAL VERIFIED DELEGATE PASS</span>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white font-heading">
-                NYP Sindh Digital Membership Card
-              </h3>
-            </div>
-            <span className="text-xs text-emerald-700 dark:text-emerald-400 font-extrabold flex items-center space-x-1.5 bg-emerald-100 dark:bg-emerald-950 px-3 py-1.5 rounded-full border border-emerald-300 dark:border-emerald-700/60 shrink-0">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>ACTIVE • CONFERRED</span>
-            </span>
-          </div>
+      {(() => {
+        const memberRoles = store.getCabinetMembers().filter((cm) => 
+          (profile && cm.memberProfileId && cm.memberProfileId === profile.id) ||
+          (profile && profile.cnicNumber && isSameCnic(cm.cnicNumber, profile.cnicNumber)) ||
+          (profile && profile.fullName && cm.fullName && cm.fullName.trim().toLowerCase() === profile.fullName.trim().toLowerCase())
+        );
 
-          <DigitalIdCard profile={profile} hideDownload={true} />
-        </div>
-      </div>
+        const cardProfiles: { title: string; profile: MemberProfile }[] = [];
+        if (profile) {
+          cardProfiles.push({
+            title: profile.assignedDesignation || 'Youth Member Pass',
+            profile: profile,
+          });
+
+          memberRoles.forEach((role, idx) => {
+            cardProfiles.push({
+              title: role.designation || (role.category === 'PARLIAMENTARIAN' ? 'Parliamentary Delegate' : 'Cabinet Official'),
+              profile: {
+                ...profile,
+                id: `${profile.id}-role-${idx}`,
+                assignedDesignation: role.designation,
+                preferredDepartment: role.ministryDepartment || (role.category === 'PARLIAMENTARIAN' ? (role.parliamentaryRole || 'Youth Assembly') : 'Executive Cabinet'),
+                passportPhotoUrl: role.photoUrl || profile.passportPhotoUrl,
+                divisionId: role.divisionId || profile.divisionId,
+              },
+            });
+          });
+        }
+
+        const activeCardObj = (cardProfiles[selectedCardIndex] || cardProfiles[0])?.profile || profile;
+
+        return (
+          <div className="w-full space-y-6">
+            <div className="ui-card p-4 sm:p-6 lg:p-8 space-y-4 shadow-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div>
+                  <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">OFFICIAL VERIFIED DELEGATE PASS</span>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white font-heading">
+                    NYP Sindh Digital Membership Card
+                  </h3>
+                </div>
+                <span className="text-xs text-emerald-700 dark:text-emerald-400 font-extrabold flex items-center space-x-1.5 bg-emerald-100 dark:bg-emerald-950 px-3 py-1.5 rounded-full border border-emerald-300 dark:border-emerald-700/60 shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>ACTIVE • CONFERRED</span>
+                </span>
+              </div>
+
+              {/* Multi-Card Selector Switcher Bar */}
+              {cardProfiles.length > 1 && (
+                <div className="bg-slate-100 dark:bg-slate-950 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+                  <span className="text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-wider block text-center">
+                    Official Assigned Roles ({cardProfiles.length} Cards Available - Click to Switch View):
+                  </span>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    {cardProfiles.map((cp, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedCardIndex(idx)}
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 cursor-pointer ${
+                          selectedCardIndex === idx
+                            ? 'bg-amber-400 text-slate-950 shadow-md scale-105 border border-amber-500'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        <Award className="w-4 h-4 text-amber-500 shrink-0" />
+                        <span>{cp.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {profile && (
+                <DigitalIdCard profile={activeCardObj} hideDownload={true} />
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 3. Member Credentials Overview & Edit Option */}
       <div className="w-full">

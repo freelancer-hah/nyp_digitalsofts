@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { store } from '../services/store';
+import { store, isSameCnic } from '../services/store';
 import { SINDH_DIVISIONS } from '../data/sindhHierarchy';
 import { CabinetMember, MemberProfile } from '../types';
 import { uploadToCloudinary } from '../services/cloudinary';
@@ -150,17 +150,10 @@ export const CabinetPage: React.FC = () => {
       .map((cm) => cm.fullName.trim().toLowerCase())
   );
 
-  const availableProfiles = registeredProfiles.filter((p) => {
-    if (editingMember && (editingMember.memberProfileId === p.id || editingMember.fullName.trim().toLowerCase() === p.fullName.trim().toLowerCase())) {
-      return true;
-    }
-    return !assignedProfileIds.has(p.id) && !assignedNames.has(p.fullName.trim().toLowerCase());
-  });
+  const availableProfiles = registeredProfiles;
 
   const filteredSelectableProfiles = registeredProfiles.filter((p) => {
-    if (!profileSearchQuery.trim()) {
-      return availableProfiles.some((ap) => ap.id === p.id);
-    }
+    if (!profileSearchQuery.trim()) return true;
     const q = profileSearchQuery.toLowerCase().trim();
     const cleanQ = q.replace(/\D/g, '');
     const cleanCnic = (p.cnicNumber || '').replace(/\D/g, '');
@@ -747,15 +740,21 @@ export const CabinetPage: React.FC = () => {
                   onChange={(e) => handleProfileSelect(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 font-bold"
                 >
-                  <option value="">-- Choose from Unassigned Registered Members ({filteredSelectableProfiles.length}) --</option>
-                  {filteredSelectableProfiles.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.fullName} ({p.cnicNumber}) - {p.divisionId ? store.getDivisionName(p.divisionId) : 'Sindh'}
-                    </option>
-                  ))}
+                  <option value="">-- Select Registered Member ({filteredSelectableProfiles.length}) --</option>
+                  {filteredSelectableProfiles.map((p) => {
+                    const existingRoles = allCabinetMembersList
+                      .filter((cm: CabinetMember) => cm.memberProfileId === p.id || (p.cnicNumber && isSameCnic(cm.cnicNumber, p.cnicNumber)) || cm.fullName.trim().toLowerCase() === p.fullName.trim().toLowerCase())
+                      .map((cm: CabinetMember) => cm.designation);
+                    const rolesBadge = existingRoles.length > 0 ? ` [Active Roles: ${existingRoles.join(', ')}]` : '';
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {p.fullName} ({p.cnicNumber || 'No CNIC'}) - {p.divisionId ? store.getDivisionName(p.divisionId) : 'Sindh'}{rolesBadge}
+                      </option>
+                    );
+                  })}
                 </select>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                  Members already assigned to a cabinet/parliament role are automatically filtered out.
+                  All registered members are selectable. A member can hold multiple official roles simultaneously.
                 </p>
               </div>
 
