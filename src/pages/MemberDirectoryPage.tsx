@@ -27,7 +27,8 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Edit3
 } from 'lucide-react';
 import { store } from '../services/store';
 import { MemberProfile } from '../types';
@@ -50,10 +51,24 @@ export const MemberDirectoryPage: React.FC = () => {
 
   // Modal / Detailed Drawer State
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
+  const [editingDesignationProfile, setEditingDesignationProfile] = useState<MemberProfile | null>(null);
+  const [customDesignation, setCustomDesignation] = useState<string>('');
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [copiedAllPhones, setCopiedAllPhones] = useState(false);
   const currentUser = store.getCurrentUser();
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'PRESIDENT' || currentUser?.role === 'WEB_COORDINATOR' || currentUser?.role === 'APPROVAL_AUTHORITY' || !currentUser?.role;
+
+  const handleSaveDesignation = async () => {
+    if (!editingDesignationProfile || !customDesignation.trim()) return;
+    const newDesig = customDesignation.trim();
+    await store.updateMemberDesignation(editingDesignationProfile.id, newDesig);
+    setEditingDesignationProfile(null);
+    setCustomDesignation('');
+    loadData();
+    if (selectedProfile && (selectedProfile.id === editingDesignationProfile.id || selectedProfile.cnicNumber === editingDesignationProfile.cnicNumber)) {
+      setSelectedProfile({ ...selectedProfile, assignedDesignation: newDesig });
+    }
+  };
 
   const handleDeleteProfile = async (e: React.MouseEvent, profileId: string, name: string) => {
     e.stopPropagation();
@@ -694,9 +709,24 @@ export const MemberDirectoryPage: React.FC = () => {
                     <Award className="w-3.5 h-3.5 text-amber-500" />
                     <span>Designation:</span>
                   </span>
-                  <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">
-                    {member.assignedDesignation || 'Member'}
-                  </span>
+                  <div className="flex items-center space-x-1">
+                    <span className="font-bold text-slate-900 dark:text-white truncate max-w-[150px]">
+                      {member.assignedDesignation || 'Member'}
+                    </span>
+                    {isSuperAdmin && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingDesignationProfile(member);
+                          setCustomDesignation(member.assignedDesignation || 'Youth Member');
+                        }}
+                        className="p-1 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 rounded transition-colors cursor-pointer"
+                        title="Edit Designation / Uhda"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
@@ -819,9 +849,24 @@ export const MemberDirectoryPage: React.FC = () => {
                           <span className="font-bold text-slate-900 dark:text-white block">
                             {member.fullName}
                           </span>
-                          <span className="text-[11px] text-slate-500 font-medium">
-                            {member.assignedDesignation || 'Member'}
-                          </span>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-[11px] text-slate-500 font-medium">
+                              {member.assignedDesignation || 'Member'}
+                            </span>
+                            {isSuperAdmin && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingDesignationProfile(member);
+                                  setCustomDesignation(member.assignedDesignation || 'Youth Member');
+                                }}
+                                className="p-0.5 text-amber-500 hover:text-amber-400 cursor-pointer"
+                                title="Edit Designation / Uhda"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -936,14 +981,27 @@ export const MemberDirectoryPage: React.FC = () => {
 
               <div className="flex items-center space-x-2">
                 {isSuperAdmin && (
-                  <button
-                    onClick={(e) => handleDeleteProfile(e, selectedProfile.id, selectedProfile.fullName)}
-                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1 shadow-sm cursor-pointer"
-                    title="Delete Member Profile"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Profile</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setEditingDesignationProfile(selectedProfile);
+                        setCustomDesignation(selectedProfile.assignedDesignation || 'Youth Member');
+                      }}
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 shadow-sm cursor-pointer"
+                      title="Edit Designation / Uhda"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit Uhda</span>
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteProfile(e, selectedProfile.id, selectedProfile.fullName)}
+                      className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1 shadow-sm cursor-pointer"
+                      title="Delete Member Profile"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Profile</span>
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => setSelectedProfile(null)}
@@ -1170,6 +1228,102 @@ export const MemberDirectoryPage: React.FC = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Designation / Role Assignment Modal */}
+      {editingDesignationProfile && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">
+                    Edit Designation / Uhda
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {editingDesignationProfile.fullName} ({editingDesignationProfile.membershipIdNumber || editingDesignationProfile.cnicNumber})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingDesignationProfile(null)}
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  Current Designation: <span className="text-amber-500">{editingDesignationProfile.assignedDesignation || 'Youth Member'}</span>
+                </label>
+                <input
+                  type="text"
+                  value={customDesignation}
+                  onChange={(e) => setCustomDesignation(e.target.value)}
+                  placeholder="e.g. Joint Secretary, Youth Minister, Divisional Coordinator"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white focus:outline-hidden focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Quick Select Roles / Uhde:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    'Youth Member',
+                    'Youth MPA',
+                    'Youth MNA',
+                    'Youth Minister',
+                    'Joint Secretary',
+                    'Provincial Coordinator',
+                    'Divisional Coordinator',
+                    'District Coordinator',
+                    'Information Secretary',
+                    'General Secretary',
+                    'Vice President',
+                    'President'
+                  ].map((role) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => setCustomDesignation(role)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        customDesignation === role
+                          ? 'bg-amber-500 text-slate-950 shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setEditingDesignationProfile(null)}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveDesignation}
+                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs shadow-lg transition-transform active:scale-95 cursor-pointer"
+              >
+                Save Designation
+              </button>
+            </div>
           </div>
         </div>
       )}
