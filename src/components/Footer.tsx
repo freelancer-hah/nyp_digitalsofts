@@ -53,7 +53,7 @@ export const Footer: React.FC = () => {
             <div className="flex items-center space-x-2.5 pt-1">
               {/* WhatsApp Community */}
               <a
-                href="https://chat.whatsapp.com/L9CN1uC3P2EKQknVGPUGDs?s=cl&p=i&mlu=4&ilr=4"
+                href="https://chat.whatsapp.com/D7E7DgCE69lJu94JAGJuM8?mode=gi_t"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="WhatsApp Group"
@@ -181,7 +181,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2.5">
                 <a
-                  href="https://chat.whatsapp.com/L9CN1uC3P2EKQknVGPUGDs?s=cl&p=i&mlu=4&ilr=4"
+                  href="https://chat.whatsapp.com/D7E7DgCE69lJu94JAGJuM8?mode=gi_t"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center space-x-2 text-slate-100 hover:text-amber-300 transition-colors group"

@@ -158,7 +158,7 @@ export const ContactPage: React.FC = () => {
                   Join our official WhatsApp group for verified announcements, meeting links, and youth notifications.
                 </p>
                 <a
-                  href="https://chat.whatsapp.com/L9CN1uC3P2EKQknVGPUGDs?s=cl&p=i&mlu=4&ilr=4"
+                  href="https://chat.whatsapp.com/D7E7DgCE69lJu94JAGJuM8?mode=gi_t"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center space-x-1.5 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-2 rounded-xl transition-all shadow-xs"
@@ -174,7 +174,7 @@ export const ContactPage: React.FC = () => {
                 </span>
                 <div className="flex items-center gap-2 flex-wrap">
                   <a
-                    href="https://chat.whatsapp.com/L9CN1uC3P2EKQknVGPUGDs?s=cl&p=i&mlu=4&ilr=4"
+                    href="https://chat.whatsapp.com/D7E7DgCE69lJu94JAGJuM8?mode=gi_t"
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold text-xs hover:bg-emerald-100 transition-colors"
