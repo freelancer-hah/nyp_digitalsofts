@@ -22,6 +22,15 @@ export async function signUpMemberWithSupabaseAuth(data: {
   profileData: Partial<MemberProfile>;
 }): Promise<{ user: User; profile: MemberProfile } | { error: string }> {
   const cleanCnic = normalizeCnic(data.cnicNumber);
+  
+  // Validate global CNIC uniqueness across Admin Officers and Members
+  const cnicCheck = await store.checkCnicUniqueness(cleanCnic);
+  if (cnicCheck.isTaken) {
+    return {
+      error: `Yeh CNIC (${cleanCnic}) pehle se system mein ${cnicCheck.takenBy === 'OFFICER' ? 'Admin Officer' : 'Member'} (${cnicCheck.name || ''}) ke naam par registered hai. Ek CNIC par sirf ek hi account ban sakta hai.`
+    };
+  }
+
   const authEmail = (data.email && data.email.includes('@')) ? data.email.trim() : cnicToAuthEmail(cleanCnic);
   const password = data.password || '';
   let registeredAuthId: string | undefined = undefined;

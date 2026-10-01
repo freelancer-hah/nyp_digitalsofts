@@ -190,7 +190,16 @@ class StoreService {
 
   private init() {
     if (isSupabaseConfigured()) {
-      this.officerUsers = [...INITIAL_OFFICER_USERS];
+      const storedOfficers = localStorage.getItem(KEY_OFFICER_USERS);
+      if (storedOfficers) {
+        try {
+          this.officerUsers = JSON.parse(storedOfficers);
+        } catch (e) {
+          this.officerUsers = [];
+        }
+      } else {
+        this.officerUsers = [];
+      }
     } else {
       const storedOfficers = localStorage.getItem(KEY_OFFICER_USERS);
       let parsed: User[] = [];
@@ -501,13 +510,6 @@ class StoreService {
                 createdAt: u.created_at,
               };
             });
-
-          // Ensure Initial Super Admin is present if missing from DB query
-          INITIAL_OFFICER_USERS.forEach((initOff) => {
-            if (!dbOfficers.some((o) => isSameCnic(o.cnicNumber, initOff.cnicNumber) || o.id === initOff.id)) {
-              dbOfficers.unshift(initOff);
-            }
-          });
 
           this.officerUsers = dbOfficers;
           this.saveOfficerUsers();
@@ -910,9 +912,96 @@ class StoreService {
     }
   }
 
+  public checkCnicUniquenessSync(cnic: string, excludeId?: string): { isTaken: boolean; takenBy?: 'OFFICER' | 'MEMBER'; name?: string; role?: string } {
+    if (!cnic) return { isTaken: false };
+    const cleanCnic = normalizeCnic(cnic);
+
+    // Check local officer Users
+    const officerMatch = this.officerUsers.find(
+      (u) => isSameCnic(u.cnicNumber, cleanCnic) && u.id !== excludeId
+    );
+    if (officerMatch) {
+      return {
+        isTaken: true,
+        takenBy: 'OFFICER',
+        name: officerMatch.fullName,
+        role: officerMatch.role,
+      };
+    }
+
+    // Check local member profiles
+    const profileMatch = this.profiles.find(
+      (p) => isSameCnic(p.cnicNumber, cleanCnic) && p.id !== excludeId && p.userId !== excludeId
+    );
+    if (profileMatch) {
+      return {
+        isTaken: true,
+        takenBy: 'MEMBER',
+        name: profileMatch.fullName,
+        role: 'MEMBER',
+      };
+    }
+
+    return { isTaken: false };
+  }
+
+  public async checkCnicUniqueness(cnic: string, excludeId?: string): Promise<{ isTaken: boolean; takenBy?: 'OFFICER' | 'MEMBER'; name?: string; role?: string }> {
+    const syncResult = this.checkCnicUniquenessSync(cnic, excludeId);
+    if (syncResult.isTaken) return syncResult;
+
+    if (isSupabaseConfigured()) {
+      try {
+        const normCnic = normalizeCnic(cnic);
+
+        // 1. Check DB users table (Officers)
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('id, full_name, role, cnic_number')
+          .or(`cnic_number.eq.${normCnic},cnic_number.eq.${cnic}`)
+          .maybeSingle();
+
+        if (dbUser && dbUser.id !== excludeId) {
+          return {
+            isTaken: true,
+            takenBy: 'OFFICER',
+            name: dbUser.full_name,
+            role: dbUser.role,
+          };
+        }
+
+        // 2. Check DB member_profiles table (Members)
+        const { data: dbProf } = await supabase
+          .from('member_profiles')
+          .select('id, user_id, full_name, cnic_number')
+          .or(`cnic_number.eq.${normCnic},cnic_number.eq.${cnic}`)
+          .maybeSingle();
+
+        if (dbProf && dbProf.id !== excludeId && dbProf.user_id !== excludeId) {
+          return {
+            isTaken: true,
+            takenBy: 'MEMBER',
+            name: dbProf.full_name,
+            role: 'MEMBER',
+          };
+        }
+      } catch (e) {
+        console.warn('checkCnicUniqueness Supabase query notice:', e);
+      }
+    }
+
+    return { isTaken: false };
+  }
+
   public addOfficerUser(data: Omit<User, 'id' | 'createdAt'>): User {
+    const cleanCnic = normalizeCnic(data.cnicNumber);
+    const check = this.checkCnicUniquenessSync(cleanCnic);
+    if (check.isTaken) {
+      throw new Error(`Yeh CNIC (${cleanCnic}) pehle se system mein ${check.takenBy === 'OFFICER' ? 'Admin Officer' : 'Member'} (${check.name}) ke naam par registered hai.`);
+    }
+
     const newOfficer: User = {
       ...data,
+      cnicNumber: cleanCnic,
       id: generateUuid(),
       createdAt: new Date().toISOString(),
     };
@@ -1027,8 +1116,15 @@ class StoreService {
     const prof = this.profiles.find((p) => {
       if (cleanInput && (p.id === cleanInput || p.userId === cleanInput)) return true;
       if (current && (p.userId === current.id || p.id === current.id)) return true;
-      if (cleanInput && isSameCnic(p.cnicNumber, cleanInput)) return true;
-      if (current && isSameCnic(p.cnicNumber, current.cnicNumber)) return true;
+      
+      // Fallback CNIC match: only match if NOT assigned to an Officer account
+      if (cleanInput && isSameCnic(p.cnicNumber, cleanInput)) {
+        const matchingOfficer = this.officerUsers.find(o => isSameCnic(o.cnicNumber, cleanInput));
+        if (!matchingOfficer || matchingOfficer.id === p.userId) return true;
+      }
+      if (current && (current.role === 'MEMBER' || current.role === 'APPLICANT') && isSameCnic(p.cnicNumber, current.cnicNumber)) {
+        return true;
+      }
       return false;
     });
 
@@ -1066,6 +1162,39 @@ class StoreService {
     const cleanCnic = normalizeCnic(data.cnicNumber);
     const validUserId = isUuid(data.userId) ? (data.userId as string) : (isUuid(this.currentUser?.id) ? (this.currentUser?.id as string) : generateUuid());
 
+    // 1. Check if CNIC belongs to an Admin Officer
+    const officerMatch = this.officerUsers.find((u) => isSameCnic(u.cnicNumber, cleanCnic));
+    if (officerMatch) {
+      throw new Error(`Yeh CNIC (${cleanCnic}) pehle se Admin Officer (${officerMatch.fullName} - ${officerMatch.role}) ke naam par registered hai. Dual account (Admin + Member) allow nahi hai.`);
+    }
+
+    // 2. Check if existing profile with same CNIC belongs to a DIFFERENT user
+    const existingIndex = this.profiles.findIndex((p) => isSameCnic(p.cnicNumber, cleanCnic));
+    if (existingIndex >= 0) {
+      const existing = this.profiles[existingIndex];
+      if (existing.userId && validUserId && existing.userId !== validUserId && isUuid(existing.userId) && isUuid(validUserId)) {
+        throw new Error(`Yeh CNIC (${cleanCnic}) pehle se ek doosre Member (${existing.fullName}) ke naam par registered hai.`);
+      }
+    }
+
+    // 3. Check Supabase DB for Officer with this CNIC
+    if (isSupabaseConfigured()) {
+      try {
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('id, full_name, role')
+          .or(`cnic_number.eq.${cleanCnic}`)
+          .maybeSingle();
+
+        if (dbUser) {
+          throw new Error(`Yeh CNIC (${cleanCnic}) pehle se Admin Officer (${dbUser.full_name} - ${dbUser.role}) ke naam par Supabase DB mein registered hai.`);
+        }
+      } catch (e: any) {
+        if (e.message && e.message.includes('registered')) throw e;
+        console.warn('submitMemberProfile Supabase officer check notice:', e);
+      }
+    }
+
     const profileData = {
       ...data,
       cnicNumber: cleanCnic,
@@ -1075,7 +1204,6 @@ class StoreService {
       },
     };
 
-    const existingIndex = this.profiles.findIndex((p) => isSameCnic(p.cnicNumber, cleanCnic));
     let newProfile: MemberProfile;
     const generatedId = `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 

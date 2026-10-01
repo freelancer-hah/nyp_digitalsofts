@@ -129,30 +129,42 @@ export const AdminMasterPage: React.FC = () => {
     e.preventDefault();
     if (!newFullName || !newCnic) return;
 
-    const created = store.addOfficerUser({
-      fullName: newFullName,
-      cnicNumber: newCnic,
-      role: newRole,
-      password: newPassword,
-      email: newEmail,
-      mobileNumber: newMobile,
-    });
-
-    setOfficers(store.getOfficerUsers());
-    setOfficerSuccessMsg(`Officer account for "${created.fullName}" created successfully! Syncing to database...`);
-    setNewFullName('');
-    setNewCnic('');
-    setNewEmail('');
-    setNewMobile('');
-
-    const res = await store.pushOfficerToSupabase(created);
-    if (res.success) {
-      setOfficerSuccessMsg(`Officer account for "${created.fullName}" created and saved to database!`);
-    } else {
-      setOfficerSuccessMsg(`Officer created locally. (Database notice: ${res.error || 'Check SQL policies'})`);
+    // Check CNIC uniqueness across the system
+    const cnicCheck = await store.checkCnicUniqueness(newCnic);
+    if (cnicCheck.isTaken) {
+      setOfficerSuccessMsg(`Error: Yeh CNIC (${newCnic}) pehle se system mein ${cnicCheck.takenBy === 'OFFICER' ? 'Admin Officer' : 'Member'} (${cnicCheck.name}) ke naam par registered hai.`);
+      setTimeout(() => setOfficerSuccessMsg(''), 7000);
+      return;
     }
 
-    setTimeout(() => setOfficerSuccessMsg(''), 5000);
+    try {
+      const created = store.addOfficerUser({
+        fullName: newFullName,
+        cnicNumber: newCnic,
+        role: newRole,
+        password: newPassword,
+        email: newEmail,
+        mobileNumber: newMobile,
+      });
+
+      setOfficers(store.getOfficerUsers());
+      setOfficerSuccessMsg(`Officer account for "${created.fullName}" created successfully! Syncing to database...`);
+      setNewFullName('');
+      setNewCnic('');
+      setNewEmail('');
+      setNewMobile('');
+
+      const res = await store.pushOfficerToSupabase(created);
+      if (res.success) {
+        setOfficerSuccessMsg(`Officer account for "${created.fullName}" created and saved to database!`);
+      } else {
+        setOfficerSuccessMsg(`Officer created locally. (Database notice: ${res.error || 'Check SQL policies'})`);
+      }
+    } catch (err: any) {
+      setOfficerSuccessMsg(`Error: ${err.message || 'Officer creation failed.'}`);
+    }
+
+    setTimeout(() => setOfficerSuccessMsg(''), 7000);
   };
 
   const handleToggleBlock = (userId: string) => {

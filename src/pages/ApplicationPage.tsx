@@ -261,7 +261,7 @@ export const ApplicationPage: React.FC = () => {
 
     const cleanDob = normalizeDob(dobInput || dob);
 
-    await signUpMemberWithSupabaseAuth({
+    const res = await signUpMemberWithSupabaseAuth({
       cnicNumber,
       fullName,
       email,
@@ -299,6 +299,12 @@ export const ApplicationPage: React.FC = () => {
         declarationAccepted,
       },
     });
+
+    if ('error' in res && res.error) {
+      setErrorMessage(res.error);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
 
     navigate('/member/dashboard');
   };
