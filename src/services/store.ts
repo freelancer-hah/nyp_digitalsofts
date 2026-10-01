@@ -1360,7 +1360,7 @@ class StoreService {
       if (p.id === profileId) return false;
       if (profile) {
         if (p.id === profile.id) return false;
-        if (profile.cnicNumber && normalizeCnic(p.cnicNumber) === normalizeCnic(profile.cnicNumber)) return false;
+        if (profile.cnicNumber && isSameCnic(p.cnicNumber, profile.cnicNumber)) return false;
         if (profile.fullName && p.fullName.trim().toLowerCase() === profile.fullName.trim().toLowerCase()) return false;
       }
       return true;
@@ -1369,8 +1369,6 @@ class StoreService {
 
     // Delete associated cabinet member from state
     this.deleteCabinetMember(profileId);
-
-    localStorage.setItem(KEY_REMOVED_CABINET, JSON.stringify(Array.from(this.removedCabinetIds)));
 
     // Immediately notify UI listeners so deletion reflects instantly
     this.notifyListeners();
@@ -1381,31 +1379,54 @@ class StoreService {
           const cnic = profile?.cnicNumber ? profile.cnicNumber.trim() : null;
           const normCnic = cnic ? normalizeCnic(cnic) : null;
           const fullName = profile?.fullName ? profile.fullName.trim() : null;
-          const validId = toValidUuid(profileId);
+          const validId = isUuid(profileId) ? profileId : toValidUuid(profileId);
 
-          const dependentPromises = [
-            cnic ? supabase.from('role_applications').delete().eq('applicant_cnic', cnic) : null,
-            cnic ? supabase.from('role_applications').delete().eq('cnic_number', cnic) : null,
-            (normCnic && normCnic !== cnic) ? supabase.from('role_applications').delete().eq('applicant_cnic', normCnic) : null,
-            cnic ? supabase.from('cabinet_members').delete().eq('cnic_number', cnic) : null,
-            fullName ? supabase.from('cabinet_members').delete().ilike('full_name', fullName) : null,
-            fullName ? supabase.from('role_applications').delete().ilike('full_name', fullName) : null,
-            supabase.from('cabinet_members').delete().eq('member_profile_id', profileId),
-            (profile?.id) ? supabase.from('cabinet_members').delete().eq('member_profile_id', profile.id) : null,
-          ].filter(Boolean);
+          // 1. Delete dependent records first (role_applications & cabinet_members using valid DB schema columns only)
+          try {
+            await supabase.from('role_applications').delete().eq('profile_id', profileId);
+            if (profile?.id && profile.id !== profileId) {
+              await supabase.from('role_applications').delete().eq('profile_id', profile.id);
+            }
+            if (cnic) {
+              await supabase.from('role_applications').delete().eq('cnic_number', cnic);
+            }
+            if (normCnic && normCnic !== cnic) {
+              await supabase.from('role_applications').delete().eq('cnic_number', normCnic);
+            }
+          } catch (e) {
+            console.warn('role_applications delete notice:', e);
+          }
 
-          await Promise.all(dependentPromises);
+          try {
+            await supabase.from('cabinet_members').delete().eq('member_profile_id', profileId);
+            if (profile?.id && profile.id !== profileId) {
+              await supabase.from('cabinet_members').delete().eq('member_profile_id', profile.id);
+            }
+            if (fullName) {
+              await supabase.from('cabinet_members').delete().ilike('full_name', fullName);
+            }
+          } catch (e) {
+            console.warn('cabinet_members delete notice:', e);
+          }
 
-          const mainPromises = [
-            supabase.from('member_profiles').delete().eq('id', profileId),
-            (profile?.id && profile.id !== profileId) ? supabase.from('member_profiles').delete().eq('id', profile.id) : null,
-            (validId !== profileId) ? supabase.from('member_profiles').delete().eq('id', validId) : null,
-            cnic ? supabase.from('member_profiles').delete().eq('cnic_number', cnic) : null,
-            (normCnic && normCnic !== cnic) ? supabase.from('member_profiles').delete().eq('cnic_number', normCnic) : null,
-            fullName ? supabase.from('member_profiles').delete().ilike('full_name', fullName) : null,
-          ].filter(Boolean);
-
-          await Promise.all(mainPromises);
+          // 2. Delete main profile record from member_profiles
+          try {
+            await supabase.from('member_profiles').delete().eq('id', profileId);
+            if (profile?.id && profile.id !== profileId) {
+              await supabase.from('member_profiles').delete().eq('id', profile.id);
+            }
+            if (validId && validId !== profileId) {
+              await supabase.from('member_profiles').delete().eq('id', validId);
+            }
+            if (cnic) {
+              await supabase.from('member_profiles').delete().eq('cnic_number', cnic);
+            }
+            if (normCnic && normCnic !== cnic) {
+              await supabase.from('member_profiles').delete().eq('cnic_number', normCnic);
+            }
+          } catch (e) {
+            console.warn('member_profiles delete notice:', e);
+          }
         } catch (e) {
           console.warn('Supabase delete profile notice:', e);
         }
