@@ -660,7 +660,7 @@ export const CmsManagerPage: React.FC = () => {
                       <option value="Youth Summit">Youth Summit</option>
                       <option value="Assembly Session">Assembly Session</option>
                       <option value="Divisional Meetup">Divisional Meetup</option>
-                      <option value="Community Outreach">Community Outreach</option>
+                      <option value="Official Notification">Official Notification</option>
                       <option value="Policy Workshop">Policy Workshop</option>
                     </select>
                   </div>

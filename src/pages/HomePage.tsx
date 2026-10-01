@@ -636,13 +636,13 @@ export const HomePage: React.FC = () => {
                 Capturing Youth Action Across Sindh
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
-                Explore highlights from official youth parliamentary sessions, divisional leadership conventions, and community outreach programs across Sindh.
+                Explore highlights from official youth parliamentary sessions, divisional leadership conventions, and official notifications across Sindh.
               </p>
             </div>
 
             {/* Category Filter Pills */}
             <div className="flex flex-wrap items-center gap-2 bg-slate-950 border border-slate-800 p-1.5 rounded-2xl shrink-0">
-              {['ALL', 'Youth Summit', 'Assembly Session', 'Divisional Meetup', 'Community Outreach'].map((cat) => (
+              {['ALL', 'Youth Summit', 'Assembly Session', 'Divisional Meetup', 'Official Notification'].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedMediaCategory(cat)}

@@ -204,7 +204,7 @@ export interface MediaItem {
   id: string;
   title: string;
   description: string;
-  category: string; // e.g. Youth Summit, Assembly Session, Divisional Meetup, Community Outreach
+  category: string; // e.g. Youth Summit, Assembly Session, Divisional Meetup, Official Notification
   mediaType: 'IMAGE' | 'VIDEO';
   mediaUrl: string;
   eventDate?: string;
