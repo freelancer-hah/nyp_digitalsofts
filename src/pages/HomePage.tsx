@@ -563,7 +563,9 @@ export const HomePage: React.FC = () => {
               };
 
               const divImage = divisionImagesMap[div.id] || divisionImagesMap['div-karachi'];
-              const memberCount = store.getCabinetMembers(undefined, div.id).length;
+              const memberCount = store.getAllProfiles().filter(
+                (p) => p.divisionId === div.id && (p.status === 'APPROVED' || p.status === 'VERIFIED')
+              ).length;
 
               return (
                 <div

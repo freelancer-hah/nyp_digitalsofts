@@ -1356,6 +1356,13 @@ class StoreService {
       }
     }
 
+    // Delete associated cabinet member cards from local state
+    this.cabinetMembers = this.cabinetMembers.filter(
+      (m) => m.id !== profileId && m.memberProfileId !== profileId && (!profile || (m.memberProfileId !== profile.id && m.fullName.trim().toLowerCase() !== profile.fullName.trim().toLowerCase()))
+    );
+    localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+
+    // Remove from profiles array
     this.profiles = this.profiles.filter((p) => {
       if (p.id === profileId) return false;
       if (profile) {
@@ -1367,72 +1374,82 @@ class StoreService {
     });
     this.saveProfiles();
 
-    // Delete associated cabinet member from state
-    this.deleteCabinetMember(profileId);
-
-    // Immediately notify UI listeners so deletion reflects instantly
-    this.notifyListeners();
-
     if (isSupabaseConfigured()) {
-      (async () => {
+      try {
+        const cnic = profile?.cnicNumber ? profile.cnicNumber.trim() : null;
+        const normCnic = cnic ? normalizeCnic(cnic) : null;
+        const fullName = profile?.fullName ? profile.fullName.trim() : null;
+        const validId = isUuid(profileId) ? profileId : toValidUuid(profileId);
+        const userId = profile?.userId || (profile?.id && isUuid(profile.id) ? profile.id : null);
+
+        // 1. Delete dependent records from role_applications
         try {
-          const cnic = profile?.cnicNumber ? profile.cnicNumber.trim() : null;
-          const normCnic = cnic ? normalizeCnic(cnic) : null;
-          const fullName = profile?.fullName ? profile.fullName.trim() : null;
-          const validId = isUuid(profileId) ? profileId : toValidUuid(profileId);
-
-          // 1. Delete dependent records first (role_applications & cabinet_members using valid DB schema columns only)
-          try {
-            await supabase.from('role_applications').delete().eq('profile_id', profileId);
-            if (profile?.id && profile.id !== profileId) {
-              await supabase.from('role_applications').delete().eq('profile_id', profile.id);
-            }
-            if (cnic) {
-              await supabase.from('role_applications').delete().eq('cnic_number', cnic);
-            }
-            if (normCnic && normCnic !== cnic) {
-              await supabase.from('role_applications').delete().eq('cnic_number', normCnic);
-            }
-          } catch (e) {
-            console.warn('role_applications delete notice:', e);
+          await supabase.from('role_applications').delete().eq('profile_id', profileId);
+          if (profile?.id && profile.id !== profileId) {
+            await supabase.from('role_applications').delete().eq('profile_id', profile.id);
           }
-
-          try {
-            await supabase.from('cabinet_members').delete().eq('member_profile_id', profileId);
-            if (profile?.id && profile.id !== profileId) {
-              await supabase.from('cabinet_members').delete().eq('member_profile_id', profile.id);
-            }
-            if (fullName) {
-              await supabase.from('cabinet_members').delete().ilike('full_name', fullName);
-            }
-          } catch (e) {
-            console.warn('cabinet_members delete notice:', e);
+          if (cnic) {
+            await supabase.from('role_applications').delete().eq('cnic_number', cnic);
           }
-
-          // 2. Delete main profile record from member_profiles
-          try {
-            await supabase.from('member_profiles').delete().eq('id', profileId);
-            if (profile?.id && profile.id !== profileId) {
-              await supabase.from('member_profiles').delete().eq('id', profile.id);
-            }
-            if (validId && validId !== profileId) {
-              await supabase.from('member_profiles').delete().eq('id', validId);
-            }
-            if (cnic) {
-              await supabase.from('member_profiles').delete().eq('cnic_number', cnic);
-            }
-            if (normCnic && normCnic !== cnic) {
-              await supabase.from('member_profiles').delete().eq('cnic_number', normCnic);
-            }
-          } catch (e) {
-            console.warn('member_profiles delete notice:', e);
+          if (normCnic && normCnic !== cnic) {
+            await supabase.from('role_applications').delete().eq('cnic_number', normCnic);
           }
         } catch (e) {
-          console.warn('Supabase delete profile notice:', e);
+          console.warn('role_applications delete notice:', e);
         }
-      })();
+
+        // 2. Delete dependent records from cabinet_members
+        try {
+          await supabase.from('cabinet_members').delete().eq('member_profile_id', profileId);
+          if (profile?.id && profile.id !== profileId) {
+            await supabase.from('cabinet_members').delete().eq('member_profile_id', profile.id);
+          }
+          if (fullName) {
+            await supabase.from('cabinet_members').delete().ilike('full_name', fullName);
+          }
+        } catch (e) {
+          console.warn('cabinet_members delete notice:', e);
+        }
+
+        // 3. Delete main record from member_profiles
+        try {
+          await supabase.from('member_profiles').delete().eq('id', profileId);
+          if (profile?.id && profile.id !== profileId) {
+            await supabase.from('member_profiles').delete().eq('id', profile.id);
+          }
+          if (validId && validId !== profileId) {
+            await supabase.from('member_profiles').delete().eq('id', validId);
+          }
+          if (cnic) {
+            await supabase.from('member_profiles').delete().eq('cnic_number', cnic);
+          }
+          if (normCnic && normCnic !== cnic) {
+            await supabase.from('member_profiles').delete().eq('cnic_number', normCnic);
+          }
+        } catch (e) {
+          console.warn('member_profiles delete notice:', e);
+        }
+
+        // 4. Delete user record from users table
+        try {
+          if (userId) {
+            await supabase.from('users').delete().eq('id', userId);
+          }
+          if (cnic) {
+            await supabase.from('users').delete().eq('cnic_number', cnic);
+          }
+          if (normCnic && normCnic !== cnic) {
+            await supabase.from('users').delete().eq('cnic_number', normCnic);
+          }
+        } catch (e) {
+          console.warn('users delete notice:', e);
+        }
+      } catch (e) {
+        console.warn('Supabase delete profile notice:', e);
+      }
     }
 
+    this.notifyListeners();
     return true;
   }
 
@@ -1802,25 +1819,14 @@ class StoreService {
 
   public async deleteCabinetMember(id: string) {
     const targetMember = this.cabinetMembers.find((m) => m.id === id || m.memberProfileId === id);
-    const matchingProfile = this.profiles.find(
-      (p) => p.id === id || (targetMember && (p.id === targetMember.memberProfileId || p.fullName.trim().toLowerCase() === targetMember.fullName.trim().toLowerCase()))
-    );
 
-    // Update in-memory arrays immediately
+    // Update in-memory cabinet array immediately (leaves member_profiles untouched)
     this.cabinetMembers = this.cabinetMembers.filter(
       (m) => m.id !== id && m.memberProfileId !== id && (!targetMember || m.id !== targetMember.id)
     );
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
 
-    if (matchingProfile) {
-      this.profiles = this.profiles.filter((p) => p.id !== matchingProfile.id);
-      this.saveProfiles();
-    } else {
-      this.profiles = this.profiles.filter((p) => p.id !== id);
-      this.saveProfiles();
-    }
-
-    // Direct Supabase DB deletions for cabinet_members and member_profiles
+    // Direct Supabase DB deletions ONLY from cabinet_members table
     if (isSupabaseConfigured()) {
       try {
         if (targetMember?.id) {
@@ -1828,17 +1834,12 @@ class StoreService {
         }
         if (targetMember?.memberProfileId) {
           await supabase.from('cabinet_members').delete().eq('member_profile_id', targetMember.memberProfileId);
-          await supabase.from('member_profiles').delete().eq('id', targetMember.memberProfileId);
         }
         if (id) {
           await supabase.from('cabinet_members').delete().eq('id', id);
-          await supabase.from('member_profiles').delete().eq('id', id);
-        }
-        if (matchingProfile?.id) {
-          await supabase.from('member_profiles').delete().eq('id', matchingProfile.id);
         }
       } catch (e) {
-        console.warn('Supabase DB delete notice:', e);
+        console.warn('Supabase DB delete cabinet notice:', e);
       }
     }
 
