@@ -790,7 +790,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
 
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Valid Till</span>
-                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: 31/12/2026</span>
+                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: 31/12/2027</span>
                   </div>
 
                 </div>
