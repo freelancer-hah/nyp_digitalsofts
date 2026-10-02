@@ -762,10 +762,6 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
                   {(profile.assignedDesignation || 'JOINT SECRETARY').toUpperCase()}
                 </div>
 
-                <div style={{ color: '#065f46', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.3px', lineHeight: 1.2, marginTop: '1px', fontFamily: "'Outfit', sans-serif" }}>
-                  {divisionName || 'Karachi Division'}
-                </div>
-
                 {/* Gold Accent Line */}
                 <div style={{ width: '42px', height: '2px', background: '#d97706', margin: '4px 0 6px 0' }}></div>
 

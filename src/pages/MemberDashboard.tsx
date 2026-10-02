@@ -759,12 +759,12 @@ export const MemberDashboard: React.FC = () => {
       {/* EDIT PROFILE MODAL                                       */}
       {/* ======================================================== */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-3xl w-full my-8 space-y-6 text-left shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-3xl w-full my-auto max-h-[92vh] flex flex-col text-left shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
               <div>
                 <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block">MEMBER ACCOUNT EDIT</span>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white font-heading">Edit Member Profile Details</h3>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-heading">Edit Member Profile Details</h3>
               </div>
               <button 
                 onClick={() => setIsEditModalOpen(false)} 
@@ -775,310 +775,311 @@ export const MemberDashboard: React.FC = () => {
             </div>
 
             {editSuccessMsg && (
-              <div className="bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-400 text-emerald-800 dark:text-emerald-300 p-3 rounded-xl text-xs font-bold flex items-center space-x-2">
+              <div className="bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-400 text-emerald-800 dark:text-emerald-300 p-3 rounded-xl text-xs font-bold flex items-center space-x-2 my-2 shrink-0">
                 <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                 <span>{editSuccessMsg}</span>
               </div>
             )}
 
-            <form onSubmit={handleSaveProfile} className="space-y-5 text-xs">
-              
-              {/* Photo Upload Section */}
-              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-4">
-                <div className="relative w-20 h-24 shrink-0 rounded-xl overflow-hidden border-2 border-amber-400 shadow-md bg-white">
-                  {editFormData.passportPhotoUrl ? (
-                    <img
-                      src={editFormData.passportPhotoUrl}
-                      alt="Passport Photo"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400">
-                      <User className="w-8 h-8" />
-                    </div>
-                  )}
-                  {isUploadingPhoto && (
-                    <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center text-white">
-                      <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
-                    </div>
-                  )}
+            <form onSubmit={handleSaveProfile} className="flex flex-col min-h-0 flex-1 mt-2">
+              <div className="overflow-y-auto flex-1 space-y-4 sm:space-y-5 pr-1.5 -mr-1.5 text-xs py-1">
+                {/* Photo Upload Section */}
+                <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-4">
+                  <div className="relative w-20 h-24 shrink-0 rounded-xl overflow-hidden border-2 border-amber-400 shadow-md bg-white">
+                    {editFormData.passportPhotoUrl ? (
+                      <img
+                        src={editFormData.passportPhotoUrl}
+                        alt="Passport Photo"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400">
+                        <User className="w-8 h-8" />
+                      </div>
+                    )}
+                    {isUploadingPhoto && (
+                      <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center text-white">
+                        <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1.5 flex-1 text-center sm:text-left">
+                    <label className="font-bold text-slate-900 dark:text-white block">Passport Size Picture</label>
+                    <p className="text-[11px] text-slate-500">Upload a recent formal photo for your official membership card</p>
+                    <label className="inline-flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl cursor-pointer transition-colors">
+                      <Camera className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{isUploadingPhoto ? 'Uploading...' : 'Change Photo'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isUploadingPhoto}
+                        onChange={handleEditPhotoUpload}
+                      />
+                    </label>
+                  </div>
                 </div>
-                <div className="space-y-1.5 flex-1 text-center sm:text-left">
-                  <label className="font-bold text-slate-900 dark:text-white block">Passport Size Picture</label>
-                  <p className="text-[11px] text-slate-500">Upload a recent formal photo for your official membership card</p>
-                  <label className="inline-flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl cursor-pointer transition-colors">
-                    <Camera className="w-3.5 h-3.5 text-amber-300" />
-                    <span>{isUploadingPhoto ? 'Uploading...' : 'Change Photo'}</span>
+
+                {/* Personal Info Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={isUploadingPhoto}
-                      onChange={handleEditPhotoUpload}
+                      type="text"
+                      required
+                      value={editFormData.fullName}
+                      onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
                     />
-                  </label>
-                </div>
-              </div>
+                  </div>
 
-              {/* Personal Info Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editFormData.fullName}
-                    onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
-                  />
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Father / Guardian Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editFormData.fatherGuardianName}
+                      onChange={(e) => setEditFormData({ ...editFormData, fatherGuardianName: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Mobile / WhatsApp Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      value={editFormData.mobileNumber}
+                      onChange={(e) => setEditFormData({ ...editFormData, mobileNumber: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      value={editFormData.email}
+                      onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Gender</label>
+                    <select
+                      value={editFormData.gender}
+                      onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value as any })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Blood Group</label>
+                    <select
+                      value={editFormData.bloodGroup}
+                      onChange={(e) => setEditFormData({ ...editFormData, bloodGroup: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    >
+                      <option value="">Select Blood Group</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                    </select>
+                  </div>
                 </div>
 
+                {/* Location & Address */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Division *</label>
+                    <select
+                      value={editFormData.divisionId}
+                      onChange={(e) => {
+                        const newDiv = e.target.value;
+                        const dists = SINDH_DISTRICTS.filter((d) => d.divisionId === newDiv);
+                        setEditFormData({
+                          ...editFormData,
+                          divisionId: newDiv,
+                          districtId: dists[0]?.id || '',
+                          talukaId: '',
+                        });
+                      }}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    >
+                      {SINDH_DIVISIONS.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">District *</label>
+                    <select
+                      value={editFormData.districtId}
+                      onChange={(e) => {
+                        const newDist = e.target.value;
+                        const talukas = SINDH_TALUKAS.filter((t) => t.districtId === newDist);
+                        setEditFormData({
+                          ...editFormData,
+                          districtId: newDist,
+                          talukaId: talukas[0]?.id || '',
+                        });
+                      }}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    >
+                      {currentDistricts.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Taluka / Tehsil</label>
+                    <select
+                      value={editFormData.talukaId}
+                      onChange={(e) => setEditFormData({ ...editFormData, talukaId: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    >
+                      <option value="">Select Taluka</option>
+                      {currentTalukas.map((t) => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Residential Address *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editFormData.residentialAddress}
+                      onChange={(e) => setEditFormData({ ...editFormData, residentialAddress: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">City / Town *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editFormData.cityTown}
+                      onChange={(e) => setEditFormData({ ...editFormData, cityTown: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+                </div>
+
+                {/* Education & Profession */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Highest Qualification</label>
+                    <input
+                      type="text"
+                      value={editFormData.qualification}
+                      onChange={(e) => setEditFormData({ ...editFormData, qualification: e.target.value })}
+                      placeholder="e.g. Bachelor in Computer Science / Law / MBA"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Institution / University</label>
+                    <input
+                      type="text"
+                      value={editFormData.institutionName}
+                      onChange={(e) => setEditFormData({ ...editFormData, institutionName: e.target.value })}
+                      placeholder="e.g. University of Sindh / NED / IBA"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Profession / Current Occupation</label>
+                    <input
+                      type="text"
+                      value={editFormData.profession}
+                      onChange={(e) => setEditFormData({ ...editFormData, profession: e.target.value })}
+                      placeholder="e.g. Student, Advocate, Entrepreneur"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Preferred Responsibility / Department</label>
+                    <input
+                      type="text"
+                      value={editFormData.preferredDepartment}
+                      onChange={(e) => setEditFormData({ ...editFormData, preferredDepartment: e.target.value })}
+                      placeholder="e.g. Youth Affairs, Media Wing, Legal Cell"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+                </div>
+
+                {/* Statement of Purpose */}
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Father / Guardian Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editFormData.fatherGuardianName}
-                    onChange={(e) => setEditFormData({ ...editFormData, fatherGuardianName: e.target.value })}
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Why do you want to be part of NYP Sindh?</label>
+                  <textarea
+                    rows={2}
+                    value={editFormData.statementOfPurpose}
+                    onChange={(e) => setEditFormData({ ...editFormData, statementOfPurpose: e.target.value })}
+                    placeholder="Your vision and objectives for youth development in Sindh..."
                     className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
                   />
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Mobile / WhatsApp Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={editFormData.mobileNumber}
-                    onChange={(e) => setEditFormData({ ...editFormData, mobileNumber: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address *</label>
-                  <input
-                    type="email"
-                    required
-                    value={editFormData.email}
-                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Gender</label>
-                  <select
-                    value={editFormData.gender}
-                    onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value as any })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Prefer not to say">Prefer not to say</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Blood Group</label>
-                  <select
-                    value={editFormData.bloodGroup}
-                    onChange={(e) => setEditFormData({ ...editFormData, bloodGroup: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  >
-                    <option value="">Select Blood Group</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Location & Address */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Division *</label>
-                  <select
-                    value={editFormData.divisionId}
-                    onChange={(e) => {
-                      const newDiv = e.target.value;
-                      const dists = SINDH_DISTRICTS.filter((d) => d.divisionId === newDiv);
-                      setEditFormData({
-                        ...editFormData,
-                        divisionId: newDiv,
-                        districtId: dists[0]?.id || '',
-                        talukaId: '',
-                      });
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  >
-                    {SINDH_DIVISIONS.map((d) => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">District *</label>
-                  <select
-                    value={editFormData.districtId}
-                    onChange={(e) => {
-                      const newDist = e.target.value;
-                      const talukas = SINDH_TALUKAS.filter((t) => t.districtId === newDist);
-                      setEditFormData({
-                        ...editFormData,
-                        districtId: newDist,
-                        talukaId: talukas[0]?.id || '',
-                      });
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  >
-                    {currentDistricts.map((d) => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Taluka / Tehsil</label>
-                  <select
-                    value={editFormData.talukaId}
-                    onChange={(e) => setEditFormData({ ...editFormData, talukaId: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  >
-                    <option value="">Select Taluka</option>
-                    {currentTalukas.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Residential Address *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editFormData.residentialAddress}
-                    onChange={(e) => setEditFormData({ ...editFormData, residentialAddress: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">City / Town *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editFormData.cityTown}
-                    onChange={(e) => setEditFormData({ ...editFormData, cityTown: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Education & Profession */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Highest Qualification</label>
-                  <input
-                    type="text"
-                    value={editFormData.qualification}
-                    onChange={(e) => setEditFormData({ ...editFormData, qualification: e.target.value })}
-                    placeholder="e.g. Bachelor in Computer Science / Law / MBA"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Institution / University</label>
-                  <input
-                    type="text"
-                    value={editFormData.institutionName}
-                    onChange={(e) => setEditFormData({ ...editFormData, institutionName: e.target.value })}
-                    placeholder="e.g. University of Sindh / NED / IBA"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Profession / Current Occupation</label>
-                  <input
-                    type="text"
-                    value={editFormData.profession}
-                    onChange={(e) => setEditFormData({ ...editFormData, profession: e.target.value })}
-                    placeholder="e.g. Student, Advocate, Entrepreneur"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Preferred Responsibility / Department</label>
-                  <input
-                    type="text"
-                    value={editFormData.preferredDepartment}
-                    onChange={(e) => setEditFormData({ ...editFormData, preferredDepartment: e.target.value })}
-                    placeholder="e.g. Youth Affairs, Media Wing, Legal Cell"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Statement of Purpose */}
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Why do you want to be part of NYP Sindh?</label>
-                <textarea
-                  rows={2}
-                  value={editFormData.statementOfPurpose}
-                  onChange={(e) => setEditFormData({ ...editFormData, statementOfPurpose: e.target.value })}
-                  placeholder="Your vision and objectives for youth development in Sindh..."
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                />
-              </div>
-
-              {/* Skills Multi-select chips */}
-              <div className="space-y-1.5">
-                <label className="block font-bold text-slate-700 dark:text-slate-300">Skills &amp; Competencies</label>
-                <div className="flex flex-wrap gap-2">
-                  {availableSkillsList.map((skill) => {
-                    const isSelected = editFormData.skills.includes(skill);
-                    return (
-                      <button
-                        type="button"
-                        key={skill}
-                        onClick={() => toggleSkill(skill)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-emerald-600 text-white shadow-sm'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
-                        }`}
-                      >
-                        {isSelected ? '✓ ' : '+ '}{skill}
-                      </button>
-                    );
-                  })}
+                {/* Skills Multi-select chips */}
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">Skills &amp; Competencies</label>
+                  <div className="flex flex-wrap gap-2">
+                    {availableSkillsList.map((skill) => {
+                      const isSelected = editFormData.skills.includes(skill);
+                      return (
+                        <button
+                          type="button"
+                          key={skill}
+                          onClick={() => toggleSkill(skill)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-emerald-600 text-white shadow-sm'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                          }`}
+                        >
+                          {isSelected ? '✓ ' : '+ '}{skill}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
               {/* Submit Buttons */}
-              <div className="pt-3 flex items-center justify-end space-x-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-3 mt-3 flex items-center justify-end space-x-3 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-bold cursor-pointer"
+                  className="px-4 sm:px-5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-bold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingEdit || isUploadingPhoto}
-                  className="ui-btn-gold text-slate-950 font-black px-7 py-2.5 rounded-xl uppercase tracking-wider flex items-center space-x-2 cursor-pointer shadow-lg disabled:opacity-50"
+                  className="ui-btn-gold text-slate-950 font-black px-5 sm:px-7 py-2.5 rounded-xl uppercase tracking-wider flex items-center space-x-2 cursor-pointer shadow-lg disabled:opacity-50 text-xs"
                 >
                   {isSavingEdit ? (
                     <>
@@ -1093,7 +1094,6 @@ export const MemberDashboard: React.FC = () => {
                   )}
                 </button>
               </div>
-
             </form>
           </div>
         </div>
@@ -1103,9 +1103,9 @@ export const MemberDashboard: React.FC = () => {
       {/* ROLE MODAL                                               */}
       {/* ======================================================== */}
       {selectedRoleModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-5 text-left shadow-2xl my-8">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-lg w-full my-auto max-h-[92vh] flex flex-col text-left shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
               <div>
                 <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">APPLY FOR OFFICIAL ROLE &amp; PAY PASS FEE</span>
                 <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">{selectedRoleModal.title}</h3>
@@ -1115,49 +1115,51 @@ export const MemberDashboard: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateRoleApplication} className="space-y-4 text-xs">
-              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 p-4 rounded-2xl space-y-1 text-amber-900 dark:text-amber-200">
-                <span className="text-[10px] font-black uppercase tracking-wider block text-amber-600 dark:text-amber-400">Step 1: Verification Desk Approval</span>
-                <p className="text-xs font-medium leading-relaxed">
-                  Submit your post title and statement of purpose for verification. Once verified by Verification Desk, you will receive payment details in your portal to submit payment and upload receipt proof for final authorisation.
-                </p>
+            <form onSubmit={handleCreateRoleApplication} className="flex flex-col min-h-0 flex-1 mt-2">
+              <div className="overflow-y-auto flex-1 space-y-4 text-xs py-1 pr-1">
+                <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 p-4 rounded-2xl space-y-1 text-amber-900 dark:text-amber-200">
+                  <span className="text-[10px] font-black uppercase tracking-wider block text-amber-600 dark:text-amber-400">Step 1: Verification Desk Approval</span>
+                  <p className="text-xs font-medium leading-relaxed">
+                    Submit your post title and statement of purpose for verification. Once verified by Verification Desk, you will receive payment details in your portal to submit payment and upload receipt proof for final authorisation.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Target Role Designation / Post *</label>
+                  <input
+                    type="text"
+                    required
+                    value={targetRoleTitle}
+                    onChange={(e) => setTargetRoleTitle(e.target.value)}
+                    placeholder="e.g. Youth MPA, Executive Member, District Coordinator"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Statement of Purpose / Why are you applying for this position? *</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={roleReason}
+                    onChange={(e) => setRoleReason(e.target.value)}
+                    placeholder="Explain why you are applying for this post and how you intend to contribute to NYP Sindh..."
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Target Role Designation / Post *</label>
-                <input
-                  type="text"
-                  required
-                  value={targetRoleTitle}
-                  onChange={(e) => setTargetRoleTitle(e.target.value)}
-                  placeholder="e.g. Youth MPA, Executive Member, District Coordinator"
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Statement of Purpose / Why are you applying for this position? *</label>
-                <textarea
-                  required
-                  rows={3}
-                  value={roleReason}
-                  onChange={(e) => setRoleReason(e.target.value)}
-                  placeholder="Explain why you are applying for this post and how you intend to contribute to NYP Sindh..."
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end space-x-3">
+              <div className="pt-3 mt-2 flex items-center justify-end space-x-3 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
                 <button
                   type="button"
                   onClick={() => setSelectedRoleModal(null)}
-                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-bold cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-bold cursor-pointer text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="ui-btn-gold text-slate-950 font-black px-6 py-2.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-lg"
+                  className="ui-btn-gold text-slate-950 font-black px-6 py-2.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-lg text-xs"
                 >
                   SUBMIT TO VERIFICATION DESK
                 </button>
