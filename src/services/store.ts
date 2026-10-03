@@ -218,11 +218,11 @@ class StoreService {
       try {
         const parsed: MemberProfile[] = JSON.parse(storedProfiles);
         this.profiles = (parsed || []).map((p) => {
-          const generatedId = `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+          const generatedId = `NYPS-2027-${Math.floor(1000 + Math.random() * 9000)}`;
           return {
             ...p,
             status: p.status || 'PENDING_VERIFICATION',
-            membershipIdNumber: p.membershipIdNumber || generatedId,
+            membershipIdNumber: (p.membershipIdNumber || generatedId).replace('NYPS-2026-', 'NYPS-2027-'),
             assignedDesignation: (!p.assignedDesignation || p.assignedDesignation === 'Applicant') ? 'Youth Member' : p.assignedDesignation,
             approvalDate: p.approvalDate || p.submittedAt || new Date().toISOString(),
           };
@@ -556,7 +556,7 @@ class StoreService {
       declarationAccepted: d.declaration_accepted ?? true,
       status: (d.social_links?.actualStatus as ApplicationStatus) || d.status || 'PENDING_VERIFICATION',
       rejectionReason: d.rejection_reason,
-      membershipIdNumber: d.membership_id_number || `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      membershipIdNumber: (d.membership_id_number || `NYPS-2027-${Math.floor(1000 + Math.random() * 9000)}`).replace('NYPS-2026-', 'NYPS-2027-'),
       assignedDesignation: (!d.assigned_designation || d.assigned_designation === 'Applicant') ? 'Youth Member' : d.assigned_designation,
       approvalDate: d.approval_date || d.submitted_at || new Date().toISOString(),
       submittedAt: d.submitted_at || new Date().toISOString(),
@@ -1108,7 +1108,7 @@ class StoreService {
     if (prof) {
       let modified = false;
       if (!prof.membershipIdNumber) {
-        prof.membershipIdNumber = `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        prof.membershipIdNumber = `NYPS-2027-${Math.floor(1000 + Math.random() * 9000)}`;
         modified = true;
       }
       if (prof.status === 'PENDING_VERIFICATION' || !prof.status) {
@@ -1182,7 +1182,7 @@ class StoreService {
     };
 
     let newProfile: MemberProfile;
-    const generatedId = `NYPS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedId = `NYPS-2027-${Math.floor(1000 + Math.random() * 9000)}`;
 
     if (existingIndex >= 0) {
       const existing = this.profiles[existingIndex];
@@ -1272,7 +1272,7 @@ class StoreService {
         profile.membershipIdNumber = details.membershipIdNumber;
       } else if (!profile.membershipIdNumber) {
         const randomNum = Math.floor(1000 + Math.random() * 9000);
-        profile.membershipIdNumber = `NYPS-2026-${randomNum}`;
+        profile.membershipIdNumber = `NYPS-2027-${randomNum}`;
       }
     } else if (status === 'REJECTED' && details?.rejectionReason) {
       profile.rejectionReason = details.rejectionReason;
@@ -1742,7 +1742,7 @@ class StoreService {
         declarationAccepted: true,
         status: 'APPROVED',
         approvalDate: new Date().toISOString().split('T')[0],
-        membershipIdNumber: `NYPS-2026-${randomNum}`,
+        membershipIdNumber: `NYPS-2027-${randomNum}`,
         submittedAt: new Date().toISOString(),
       };
       this.profiles.unshift(autoProfile);

@@ -65,7 +65,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
     };
   }, []);
 
-  const issueDateStr = formatDateDDMMYYYY(profile.approvalDate || profile.submittedAt) || '18/09/2026';
+  const issueDateStr = formatDateDDMMYYYY(profile.approvalDate || profile.submittedAt) || '18/09/2027';
 
   // Geographic Jurisdiction Resolvers
   const provinceName = profile.province || 'Sindh';
@@ -770,7 +770,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
 
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Member ID</span>
-                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {profile.membershipIdNumber || 'NYPS-2026-3578'}</span>
+                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {(profile.membershipIdNumber || 'NYPS-2027-3578').replace('NYPS-2026-', 'NYPS-2027-')}</span>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -785,7 +785,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
 
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <span style={{ color: '#475569', fontWeight: 800, width: '74px', flexShrink: 0 }}>Date of Issue</span>
-                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {issueDateStr || '18/09/2026'}</span>
+                    <span style={{ color: '#0f172a', fontWeight: 900, fontSize: '9.4px', whiteSpace: 'nowrap' }}>: {issueDateStr || '18/09/2027'}</span>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center' }}>
