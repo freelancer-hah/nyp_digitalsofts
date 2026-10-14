@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { store, normalizeCnic, formatCnic } from './store';
+import { store, normalizeCnic, formatCnic, isValidCnic } from './store';
 import { User, MemberProfile, UserRole } from '../types';
 
 export function cnicToAuthEmail(cnicOrEmail: string): string {
@@ -21,6 +21,20 @@ export async function signUpMemberWithSupabaseAuth(data: {
   password?: string;
   profileData: Partial<MemberProfile>;
 }): Promise<{ user: User; profile: MemberProfile } | { error: string }> {
+  const digits = (data.cnicNumber || '').replace(/\D/g, '');
+  if (digits.length !== 13) {
+    return {
+      error: `Mukammal 13-digit CNIC darj karna lazmi hai (Aapne sirf ${digits.length} digits enter kiye hain). Without full CNIC, login ID / user account create nahi ho sakta.`
+    };
+  }
+
+  // Digits not allowed in full name
+  if (/\d/.test(data.fullName) || !/^[a-zA-Z\s]+$/.test(data.fullName.trim())) {
+    return {
+      error: 'Name mein sirf letters aur spaces allowed hain. Digits ya numbers allowed nahi hain.'
+    };
+  }
+
   const cleanCnic = normalizeCnic(data.cnicNumber);
   
   // Validate global CNIC uniqueness across Admin Officers and Members

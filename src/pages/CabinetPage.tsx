@@ -816,7 +816,10 @@ export const CabinetPage: React.FC = () => {
                   type="text"
                   required
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={(e) => setFullName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
+                  onKeyDown={(e) => {
+                    if (/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
                   placeholder="e.g. Abdul Rehman Halepoto"
                   className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 font-medium"
                 />

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { store } from '../services/store';
+import { store, formatCnic } from '../services/store';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS } from '../data/sindhHierarchy';
 import { MemberProfile, User, UserRole } from '../types';
-import { Printer, Filter, FileSpreadsheet, Layout, Users, Trash2, X, Plus, UserPlus, CheckCircle2, Lock, Unlock, ShieldAlert, Edit3, Award, RefreshCw } from 'lucide-react';
+import { Printer, Filter, FileSpreadsheet, Layout, Users, Trash2, X, Plus, UserPlus, CheckCircle2, Lock, Unlock, ShieldAlert, Edit3, Award, RefreshCw, ShieldCheck } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { DigitalIdCard } from '../components/DigitalIdCard';
 
@@ -14,6 +14,7 @@ export const AdminMasterPage: React.FC = () => {
   const [selectedDistrict, setSelectedDistrict] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedCardProfile, setSelectedCardProfile] = useState<MemberProfile | null>(null);
+  const [adminCardIndex, setAdminCardIndex] = useState<number>(0);
   
   // Fast Designation / Role Assignment Modal State
   const [editingDesignationProfile, setEditingDesignationProfile] = useState<MemberProfile | null>(null);
@@ -128,6 +129,19 @@ export const AdminMasterPage: React.FC = () => {
   const handleCreateOfficer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFullName || !newCnic) return;
+
+    if (/\d/.test(newFullName) || !/^[a-zA-Z\s]+$/.test(newFullName.trim())) {
+      setOfficerSuccessMsg('Error: Full Name mein sirf letters aur spaces allowed hain. Digits ya numbers allowed nahi hain.');
+      setTimeout(() => setOfficerSuccessMsg(''), 7000);
+      return;
+    }
+
+    const cnicDigits = newCnic.replace(/\D/g, '');
+    if (cnicDigits.length > 0 && cnicDigits.length !== 13) {
+      setOfficerSuccessMsg(`Error: Mukammal 13-digit CNIC lazmi hai (${cnicDigits.length}/13 digits entered). Incomplete CNIC allowed nahi hai.`);
+      setTimeout(() => setOfficerSuccessMsg(''), 7000);
+      return;
+    }
 
     // Check CNIC uniqueness across the system
     const cnicCheck = await store.checkCnicUniqueness(newCnic);
@@ -526,13 +540,26 @@ export const AdminMasterPage: React.FC = () => {
                         </>
                       )}
                       {m.status === 'APPROVED' && (
-                        <button
-                          onClick={() => setSelectedCardProfile(m)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-[10px] inline-flex items-center space-x-1 shadow-sm transition-colors cursor-pointer"
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                          <span>Print Card</span>
-                        </button>
+                        <div className="inline-flex items-center gap-1.5">
+                          {(() => {
+                            const cards = store.getMemberCardProfiles(m);
+                            return cards.length > 1 ? (
+                              <span className="bg-amber-400/20 text-amber-500 dark:text-amber-300 border border-amber-400/40 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                {cards.length} Cards
+                              </span>
+                            ) : null;
+                          })()}
+                          <button
+                            onClick={() => {
+                              setSelectedCardProfile(m);
+                              setAdminCardIndex(0);
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-[10px] inline-flex items-center space-x-1 shadow-sm transition-colors cursor-pointer"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>Print Card</span>
+                          </button>
+                        </div>
                       )}
                       <button
                         onClick={() => handleDeleteSingleRecord(m.id)}
@@ -598,10 +625,11 @@ export const AdminMasterPage: React.FC = () => {
                       type="text"
                       required
                       value={newFullName}
-                      onChange={(e) => setNewFullName(e.target.value)}
+                      onChange={(e) => setNewFullName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
                       placeholder="e.g. Syed Ali Shah"
                       className="w-full bg-white border border-slate-300 text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white rounded-xl px-3 py-2 font-medium outline-none focus:border-purple-600"
                     />
+                    <span className="text-[10px] text-slate-500 mt-1 block">Letters & space only (no digits)</span>
                   </div>
 
                   <div>
@@ -610,10 +638,19 @@ export const AdminMasterPage: React.FC = () => {
                       type="text"
                       required
                       value={newCnic}
-                      onChange={(e) => setNewCnic(e.target.value)}
-                      placeholder="e.g. officer01"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (/\d/.test(val)) {
+                          setNewCnic(formatCnic(val));
+                        } else {
+                          setNewCnic(val);
+                        }
+                      }}
+                      maxLength={15}
+                      placeholder="e.g. 41304-1234567-1"
                       className="w-full bg-white border border-slate-300 text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white rounded-xl px-3 py-2 font-mono font-bold outline-none focus:border-purple-600"
                     />
+                    <span className="text-[10px] text-slate-500 mt-1 block">13-digit CNIC required for login ID</span>
                   </div>
 
                   <div>
@@ -861,29 +898,70 @@ export const AdminMasterPage: React.FC = () => {
         </div>
       )}
 
-      {/* SINGLE MEMBER CARD PRINTING MODAL */}
-      {selectedCardProfile && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto no-print-bg">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl p-4 sm:p-6 relative">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4 no-print">
-              <div>
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block">Official Member Pass</span>
-                <h3 className="text-white font-black text-lg font-heading">{selectedCardProfile.fullName}</h3>
-                <p className="text-xs text-slate-400 font-mono">CNIC: {selectedCardProfile.cnicNumber}</p>
-              </div>
-              <button
-                onClick={() => setSelectedCardProfile(null)}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-colors flex items-center space-x-1 border border-slate-700 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-                <span>Close</span>
-              </button>
-            </div>
+      {/* SINGLE MEMBER CARD PRINTING MODAL WITH DUAL CARD SUPPORT */}
+      {selectedCardProfile && (() => {
+        const cardProfiles = store.getMemberCardProfiles(selectedCardProfile);
+        const activeCard = (cardProfiles[adminCardIndex] || cardProfiles[0])?.profile || selectedCardProfile;
 
-            <DigitalIdCard profile={selectedCardProfile} />
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto no-print-bg">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl p-4 sm:p-6 relative">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4 no-print">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block">
+                      Official Member Pass
+                    </span>
+                    {cardProfiles.length > 1 && (
+                      <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        {cardProfiles.length} Cards Conferred
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-white font-black text-lg font-heading">{selectedCardProfile.fullName}</h3>
+                  <p className="text-xs text-slate-400 font-mono">CNIC: {selectedCardProfile.cnicNumber}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedCardProfile(null)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-colors flex items-center space-x-1 border border-slate-700 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Close</span>
+                </button>
+              </div>
+
+              {/* Multi-Card Switcher Bar */}
+              {cardProfiles.length > 1 && (
+                <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 mb-6 no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-inner">
+                  <div className="flex items-center space-x-2 text-amber-400 text-xs font-black">
+                    <Award className="w-4 h-4 shrink-0" />
+                    <span>Official Assigned Cards ({cardProfiles.length} Available - Click to Switch Card):</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {cardProfiles.map((cp, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setAdminCardIndex(idx)}
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${
+                          adminCardIndex === idx
+                            ? 'bg-amber-400 text-slate-950 shadow-md font-black scale-105 border border-amber-500'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700'
+                        }`}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>{cp.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <DigitalIdCard profile={activeCard} />
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
     </div>
   );

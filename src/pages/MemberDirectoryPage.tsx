@@ -28,11 +28,14 @@ import {
   XCircle,
   AlertTriangle,
   Trash2,
-  Edit3
+  Edit3,
+  CreditCard,
+  Printer
 } from 'lucide-react';
 import { store } from '../services/store';
 import { MemberProfile } from '../types';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS, SINDH_TALUKAS } from '../data/sindhHierarchy';
+import { DigitalIdCard } from '../components/DigitalIdCard';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -51,6 +54,8 @@ export const MemberDirectoryPage: React.FC = () => {
 
   // Modal / Detailed Drawer State
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
+  const [selectedCardProfile, setSelectedCardProfile] = useState<MemberProfile | null>(null);
+  const [directoryCardIndex, setDirectoryCardIndex] = useState<number>(0);
   const [editingDesignationProfile, setEditingDesignationProfile] = useState<MemberProfile | null>(null);
   const [customDesignation, setCustomDesignation] = useState<string>('');
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
@@ -1032,10 +1037,22 @@ export const MemberDirectoryPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCardProfile(selectedProfile);
+                      setDirectoryCardIndex(0);
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black flex items-center space-x-1.5 shadow-sm cursor-pointer transition-colors text-xs"
+                  >
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>View / Print Card(s) ({store.getMemberCardProfiles(selectedProfile).length})</span>
+                  </button>
+
                   <a
                     href={`tel:${selectedProfile.mobileNumber}`}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center space-x-1.5 shadow-sm"
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center space-x-1.5 shadow-sm text-xs"
                   >
                     <Phone className="w-3.5 h-3.5" />
                     <span>Call Now</span>
@@ -1045,7 +1062,7 @@ export const MemberDirectoryPage: React.FC = () => {
                     href={`https://wa.me/${(selectedProfile.mobileNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '92')}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold flex items-center space-x-1.5 shadow-sm"
+                    className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold flex items-center space-x-1.5 shadow-sm text-xs"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
                     <span>WhatsApp</span>
@@ -1327,6 +1344,71 @@ export const MemberDirectoryPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* SINGLE MEMBER CARD PRINTING MODAL WITH DUAL CARD SUPPORT */}
+      {selectedCardProfile && (() => {
+        const cardProfiles = store.getMemberCardProfiles(selectedCardProfile);
+        const activeCard = (cardProfiles[directoryCardIndex] || cardProfiles[0])?.profile || selectedCardProfile;
+
+        return (
+          <div className="fixed inset-0 z-[120] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto no-print-bg">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl p-4 sm:p-6 relative">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4 no-print">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block">
+                      Official Member Pass
+                    </span>
+                    {cardProfiles.length > 1 && (
+                      <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        {cardProfiles.length} Cards Conferred
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-white font-black text-lg font-heading">{selectedCardProfile.fullName}</h3>
+                  <p className="text-xs text-slate-400 font-mono">CNIC: {selectedCardProfile.cnicNumber}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedCardProfile(null)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-colors flex items-center space-x-1 border border-slate-700 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Close</span>
+                </button>
+              </div>
+
+              {/* Multi-Card Switcher Bar */}
+              {cardProfiles.length > 1 && (
+                <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 mb-6 no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-inner">
+                  <div className="flex items-center space-x-2 text-amber-400 text-xs font-black">
+                    <Award className="w-4 h-4 shrink-0" />
+                    <span>Official Conferred Cards ({cardProfiles.length} Available - Click to Switch Card):</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {cardProfiles.map((cp, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setDirectoryCardIndex(idx)}
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${
+                          directoryCardIndex === idx
+                            ? 'bg-amber-400 text-slate-950 shadow-md font-black scale-105 border border-amber-500'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700'
+                        }`}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>{cp.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <DigitalIdCard profile={activeCard} />
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

@@ -9,7 +9,7 @@ import {
   Sparkles, Award, CreditCard, ChevronRight, X, ShieldCheck,
   Upload, Image as ImageIcon, Truck, Loader2, FileCheck, AlertCircle,
   Edit3, Save, Camera, User, Phone, Mail, MapPin, GraduationCap, Briefcase, Heart,
-  Copy, Check
+  Copy, Check, Lock, Eye, EyeOff, KeyRound
 } from 'lucide-react';
 import { MemberProfile, RoleApplicationRequest, RoleTier } from '../types';
 
@@ -48,6 +48,52 @@ export const MemberDashboard: React.FC = () => {
 
   // Multi-Card Switcher State for Multi-Role Members
   const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0);
+
+  // Member Password Change Modal State
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [showPasswordText, setShowPasswordText] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccessMsg, setPasswordSuccessMsg] = useState('');
+
+  const handleSavePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccessMsg('');
+
+    if (!newPasswordInput || newPasswordInput.trim().length < 6) {
+      setPasswordError('Password kam az kam 6 characters ka hona zaroori hai.');
+      return;
+    }
+
+    if (newPasswordInput.trim() !== confirmPasswordInput.trim()) {
+      setPasswordError('New password aur confirm password aapas mein match nahi kar rahe.');
+      return;
+    }
+
+    setIsSavingPassword(true);
+    try {
+      const targetId = profile?.userId || currentUser?.id || profile?.cnicNumber || currentUser?.cnicNumber || '';
+      const res = await store.updateMemberPassword(targetId, newPasswordInput.trim());
+      if (res.success) {
+        setPasswordSuccessMsg('Aapka password kamyabi se tabdeel ho chuka hai!');
+        setTimeout(() => {
+          setIsPasswordModalOpen(false);
+          setPasswordSuccessMsg('');
+          setNewPasswordInput('');
+          setConfirmPasswordInput('');
+        }, 1500);
+      } else {
+        setPasswordError(res.error || 'Password update nahi ho saka. Dobara koshish karein.');
+      }
+    } catch (err: any) {
+      setPasswordError(err?.message || 'Could not update password.');
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
 
   // Quick Copy Helper
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -433,34 +479,7 @@ export const MemberDashboard: React.FC = () => {
 
       {/* 2. Full Width Official Membership Card Section (SHOWN RIGHT AFTER WELCOME) */}
       {(() => {
-        const memberRoles = store.getCabinetMembers().filter((cm) => 
-          (profile && cm.memberProfileId && cm.memberProfileId === profile.id) ||
-          (profile && profile.cnicNumber && isSameCnic(cm.cnicNumber, profile.cnicNumber)) ||
-          (profile && profile.fullName && cm.fullName && cm.fullName.trim().toLowerCase() === profile.fullName.trim().toLowerCase())
-        );
-
-        const cardProfiles: { title: string; profile: MemberProfile }[] = [];
-        if (profile) {
-          cardProfiles.push({
-            title: profile.assignedDesignation || 'Youth Member Pass',
-            profile: profile,
-          });
-
-          memberRoles.forEach((role, idx) => {
-            cardProfiles.push({
-              title: role.designation || (role.category === 'PARLIAMENTARIAN' ? 'Parliamentary Delegate' : 'Cabinet Official'),
-              profile: {
-                ...profile,
-                id: `${profile.id}-role-${idx}`,
-                assignedDesignation: role.designation,
-                preferredDepartment: role.ministryDepartment || (role.category === 'PARLIAMENTARIAN' ? (role.parliamentaryRole || 'Youth Assembly') : 'Executive Cabinet'),
-                passportPhotoUrl: role.photoUrl || profile.passportPhotoUrl,
-                divisionId: role.divisionId || profile.divisionId,
-              },
-            });
-          });
-        }
-
+        const cardProfiles = store.getMemberCardProfiles(profile);
         const activeCardObj = (cardProfiles[selectedCardIndex] || cardProfiles[0])?.profile || profile;
 
         return (
@@ -520,13 +539,28 @@ export const MemberDashboard: React.FC = () => {
             <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider font-heading">
               Member Credentials Overview
             </h3>
-            <button
-              onClick={handleOpenEditModal}
-              className="bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1.5 transition-colors cursor-pointer"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit My Profile</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setPasswordError('');
+                  setPasswordSuccessMsg('');
+                  setNewPasswordInput('');
+                  setConfirmPasswordInput('');
+                  setIsPasswordModalOpen(true);
+                }}
+                className="bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 dark:hover:bg-amber-900 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700/80 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1.5 transition-colors cursor-pointer shadow-xs"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>Change Password</span>
+              </button>
+              <button
+                onClick={handleOpenEditModal}
+                className="bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1.5 transition-colors cursor-pointer shadow-xs"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit My Profile</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
@@ -828,9 +862,13 @@ export const MemberDashboard: React.FC = () => {
                       type="text"
                       required
                       value={editFormData.fullName}
-                      onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
+                      onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
+                      onKeyDown={(e) => {
+                        if (/[0-9]/.test(e.key)) e.preventDefault();
+                      }}
                       className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
                     />
+                    <span className="text-[10px] text-slate-500 mt-1 block">Letters & space only (no digits)</span>
                   </div>
 
                   <div>
@@ -839,9 +877,13 @@ export const MemberDashboard: React.FC = () => {
                       type="text"
                       required
                       value={editFormData.fatherGuardianName}
-                      onChange={(e) => setEditFormData({ ...editFormData, fatherGuardianName: e.target.value })}
+                      onChange={(e) => setEditFormData({ ...editFormData, fatherGuardianName: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
+                      onKeyDown={(e) => {
+                        if (/[0-9]/.test(e.key)) e.preventDefault();
+                      }}
                       className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-medium"
                     />
+                    <span className="text-[10px] text-slate-500 mt-1 block">Letters & space only (no digits)</span>
                   </div>
 
                   <div>
@@ -1537,6 +1579,118 @@ export const MemberDashboard: React.FC = () => {
                   className="ui-btn-gold text-slate-950 font-black px-6 py-2.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-lg disabled:opacity-50"
                 >
                   SUBMIT PAYMENT PROOF
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5. MEMBER PASSWORD CHANGE MODAL */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full shadow-2xl p-6 relative">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-5">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">
+                    Edit Account Password
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Set a new secure password for your member account
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full cursor-pointer transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {passwordSuccessMsg && (
+              <div className="mb-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 p-3.5 rounded-2xl flex items-center space-x-2.5 text-xs text-emerald-800 dark:text-emerald-300 font-bold">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>{passwordSuccessMsg}</span>
+              </div>
+            )}
+
+            {passwordError && (
+              <div className="mb-4 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-700/60 p-3.5 rounded-2xl flex items-center space-x-2.5 text-xs text-rose-800 dark:text-rose-300 font-bold">
+                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSavePassword} className="space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  New Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswordText ? 'text' : 'password'}
+                    value={newPasswordInput}
+                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                    placeholder="Min 6 characters (e.g. Secret@123)"
+                    required
+                    minLength={6}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white focus:outline-hidden focus:border-amber-500 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordText(!showPasswordText)}
+                    className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  >
+                    {showPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Confirm New Password *
+                </label>
+                <input
+                  type={showPasswordText ? 'text' : 'password'}
+                  value={confirmPasswordInput}
+                  onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                  placeholder="Re-enter new password"
+                  required
+                  minLength={6}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white focus:outline-hidden focus:border-amber-500"
+                />
+              </div>
+
+              <div className="pt-3 flex items-center justify-end space-x-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsPasswordModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingPassword}
+                  className="px-6 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider shadow-lg transition-transform active:scale-95 cursor-pointer disabled:opacity-50 flex items-center space-x-1.5"
+                >
+                  {isSavingPassword ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4" />
+                      <span>Update Password</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

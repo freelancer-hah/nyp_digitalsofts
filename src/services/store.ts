@@ -19,6 +19,28 @@ const KEY_MEDIA_ITEMS = 'nyp_sindh_media_items';
 const KEY_OFFICER_USERS = 'nyp_sindh_officer_users';
 const KEY_ROLE_APPLICATIONS = 'nyp_sindh_role_applications';
 const KEY_REMOVED_CABINET = 'nyp_sindh_removed_cabinet_ids';
+const KEY_MEMBER_PASSWORDS = 'nyp_sindh_member_passwords';
+
+export function sortAnnouncementsDesc(list: Announcement[]): Announcement[] {
+  return [...list].sort((a, b) => {
+    const timeA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    const timeB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    if (timeA !== timeB) return timeB - timeA;
+    return (b.id || '').localeCompare(a.id || '');
+  });
+}
+
+export function sortMediaItemsDesc(list: MediaItem[]): MediaItem[] {
+  return [...list].sort((a, b) => {
+    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.eventDate ? new Date(a.eventDate).getTime() : 0);
+    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.eventDate ? new Date(b.eventDate).getTime() : 0);
+    if (timeA !== timeB) return timeB - timeA;
+    const numA = parseInt((a.id || '').replace(/\D/g, ''), 10) || 0;
+    const numB = parseInt((b.id || '').replace(/\D/g, ''), 10) || 0;
+    if (numA !== numB) return numB - numA;
+    return (b.id || '').localeCompare(a.id || '');
+  });
+}
 
 
 export function normalizeDob(dobStr?: string): string {
@@ -50,6 +72,12 @@ export function normalizeCnic(cnic: string): string {
     return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`;
   }
   return cnic.trim();
+}
+
+export function isValidCnic(cnic?: string): boolean {
+  if (!cnic) return false;
+  const digits = cnic.replace(/\D/g, '');
+  return digits.length === 13;
 }
 
 export function isUuid(str?: string): boolean {
@@ -270,7 +298,7 @@ class StoreService {
     }
 
     const storedAnn = localStorage.getItem(KEY_ANNOUNCEMENTS);
-    this.announcements = storedAnn ? JSON.parse(storedAnn) : [];
+    this.announcements = sortAnnouncementsDesc(storedAnn ? JSON.parse(storedAnn) : []);
 
     this.leadershipMessages = INITIAL_LEADERSHIP_MESSAGES;
 
@@ -278,7 +306,7 @@ class StoreService {
     this.workingGoals = storedGoals ? JSON.parse(storedGoals) : INITIAL_WORKING_GOALS;
 
     const storedMedia = localStorage.getItem(KEY_MEDIA_ITEMS);
-    this.mediaItems = storedMedia ? JSON.parse(storedMedia) : INITIAL_MEDIA_ITEMS;
+    this.mediaItems = sortMediaItemsDesc(storedMedia ? JSON.parse(storedMedia) : INITIAL_MEDIA_ITEMS);
   }
 
 
@@ -420,16 +448,16 @@ class StoreService {
       }
 
       // Fetch announcements from Supabase
-      const { data: annData, error: annErr } = await supabase.from('announcements').select('*');
+      const { data: annData, error: annErr } = await supabase.from('announcements').select('*').order('published_at', { ascending: false });
       if (!annErr && annData) {
-        this.announcements = annData.map((d: any) => ({
+        this.announcements = sortAnnouncementsDesc(annData.map((d: any) => ({
           id: d.id,
           title: d.title,
           content: d.content,
           publishedAt: d.published_at || d.publishedAt || new Date().toISOString().split('T')[0],
           bannerUrl: d.banner_url || d.bannerUrl,
           isActive: d.is_active ?? d.isActive ?? true,
-        }));
+        })));
         localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
       }
 
@@ -456,9 +484,9 @@ class StoreService {
       }
 
       // Fetch media_items from Supabase
-      const { data: mediaData, error: mediaErr } = await supabase.from('media_items').select('*');
+      const { data: mediaData, error: mediaErr } = await supabase.from('media_items').select('*').order('created_at', { ascending: false });
       if (!mediaErr && mediaData) {
-        this.mediaItems = mediaData.map((d: any) => ({
+        this.mediaItems = sortMediaItemsDesc(mediaData.map((d: any) => ({
           id: d.id,
           title: d.title,
           category: d.category || 'Event',
@@ -467,7 +495,7 @@ class StoreService {
           description: d.description || undefined,
           eventDate: d.event_date || d.eventDate || undefined,
           createdAt: d.created_at || d.createdAt || new Date().toISOString(),
-        }));
+        })));
         localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
       }
 
@@ -806,7 +834,39 @@ class StoreService {
 
   public async loginMember(cnic: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
     if (!cnic?.trim() || !password?.trim()) return { success: false, error: 'CNIC aur password dono zaroori hain.' };
-    const { data, error } = await supabase.rpc('member_login', { p_cnic: cnic.trim(), p_password: password.trim() });
+    const cleanCnic = normalizeCnic(cnic);
+    const cleanPass = password.trim();
+
+    // Check custom updated member passwords
+    let localSavedPass: string | undefined;
+    try {
+      const storedPasswords = JSON.parse(localStorage.getItem(KEY_MEMBER_PASSWORDS) || '{}');
+      localSavedPass = storedPasswords[cleanCnic] || storedPasswords[cnic.trim()];
+    } catch {
+      // ignore
+    }
+
+    if (isSupabaseConfigured()) {
+      try {
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('*')
+          .or(`cnic_number.eq.${cleanCnic},cnic_number.eq.${cnic.trim()}`)
+          .maybeSingle();
+
+        if (dbUser && dbUser.password && dbUser.password.trim() !== cleanPass) {
+          return { success: false, error: 'Password ghalat hai.' };
+        }
+      } catch (e) {
+        console.warn('Supabase member login users check:', e);
+      }
+    }
+
+    if (localSavedPass && localSavedPass !== cleanPass) {
+      return { success: false, error: 'Password ghalat hai.' };
+    }
+
+    const { data, error } = await supabase.rpc('member_login', { p_cnic: cnic.trim(), p_password: cleanPass });
     if (error) return { success: false, error: 'Server se rabta nahi ho saka. Dobara koshish karein.' };
     if (data?.error === 'not_found') return { success: false, error: 'Is CNIC ka account nahi mila.' };
     if (data?.error === 'invalid_password') return { success: false, error: 'Password ghalat hai.' };
@@ -823,6 +883,7 @@ class StoreService {
         email: p.email,
         mobileNumber: p.mobileNumber,
         role: 'MEMBER',
+        password: cleanPass,
         createdAt: p.submittedAt,
       };
       this.currentUser = user;
@@ -973,6 +1034,11 @@ class StoreService {
   }
 
   public addOfficerUser(data: Omit<User, 'id' | 'createdAt'>): User {
+    const digits = (data.cnicNumber || '').replace(/\D/g, '');
+    if (digits.length > 0 && digits.length !== 13) {
+      throw new Error(`Mukammal 13-digit CNIC lazmi hai (${digits.length}/13 digits entered). Without full CNIC, koi officer account nahi banaya ja sakta.`);
+    }
+
     const cleanCnic = normalizeCnic(data.cnicNumber);
     const check = this.checkCnicUniquenessSync(cleanCnic);
     if (check.isTaken) {
@@ -1090,20 +1156,63 @@ class StoreService {
     const cleanInput = userIdOrCnic ? userIdOrCnic.trim() : '';
     const current = this.currentUser;
 
-    const prof = this.profiles.find((p) => {
+    let prof = this.profiles.find((p) => {
       if (cleanInput && (p.id === cleanInput || p.userId === cleanInput)) return true;
       if (current && (p.userId === current.id || p.id === current.id)) return true;
       
-      // Fallback CNIC match: only match if NOT assigned to an Officer account
-      if (cleanInput && isSameCnic(p.cnicNumber, cleanInput)) {
-        const matchingOfficer = this.officerUsers.find(o => isSameCnic(o.cnicNumber, cleanInput));
-        if (!matchingOfficer || matchingOfficer.id === p.userId) return true;
-      }
-      if (current && (current.role === 'MEMBER' || current.role === 'APPLICANT') && isSameCnic(p.cnicNumber, current.cnicNumber)) {
-        return true;
-      }
+      // Match by CNIC
+      if (cleanInput && isSameCnic(p.cnicNumber, cleanInput)) return true;
+      if (current && isSameCnic(p.cnicNumber, current.cnicNumber)) return true;
+      
+      // Match by Full Name
+      if (current?.fullName && p.fullName && p.fullName.trim().toLowerCase() === current.fullName.trim().toLowerCase()) return true;
+
       return false;
     });
+
+    // Auto-synthesize active profile for President or Web Coordinator if they view their dashboard
+    if (!prof && current) {
+      const isPres = current.role === 'PRESIDENT' || (current.fullName && current.fullName.toLowerCase().includes('abdul rehman halepoto'));
+      const isCoord = current.role === 'WEB_COORDINATOR' || (current.fullName && current.fullName.toLowerCase().includes('qaisar panhwar'));
+      if (isPres || isCoord) {
+        prof = {
+          id: current.id,
+          userId: current.id,
+          fullName: current.fullName || (isPres ? 'Abdul Rehman Halepoto' : 'Qaisar Panhwar'),
+          fatherGuardianName: 'NYP Leadership Council',
+          dob: '1998-01-01',
+          gender: 'Male',
+          cnicNumber: current.cnicNumber || (isPres ? '33105-7853093-7' : '41303-1234567-1'),
+          bloodGroup: 'B+',
+          mobileNumber: current.mobileNumber || (isPres ? '0333-7612564' : '0304-3664842'),
+          email: current.email || (isPres ? 'president@nypsindh.org.pk' : 'coordinator@nypsindh.org.pk'),
+          passportPhotoUrl: isPres ? '/nyp-president.png' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+          residentialAddress: 'Karachi, Sindh',
+          cityTown: 'Karachi',
+          province: 'Sindh',
+          divisionId: 'div-karachi',
+          districtId: 'dist-khi-south',
+          talukaId: 'tal-saddar',
+          qualification: 'Graduation',
+          institutionName: 'University of Sindh',
+          profession: isPres ? 'Youth Leader & Advocate' : 'Web & IT Coordinator',
+          levelApplied: 'Provincial Level',
+          preferredDepartment: isPres ? 'Presidency & Executive' : 'IT & Digital Media',
+          statementOfPurpose: isPres ? 'Leading NYP Sindh towards youth empowerment and democratic representation.' : 'Managing web systems and digital communications for NYP Sindh.',
+          skills: ['Leadership', 'Policy Analysis', 'Digital Advocacy'],
+          areasOfInterest: ['Governance', 'Youth Empowerment'],
+          declarationAccepted: true,
+          status: 'APPROVED',
+          assignedDesignation: isPres ? 'President, NYP Sindh' : 'Web Coordinator, NYP Sindh',
+          membershipIdNumber: isPres ? 'NYPS-2027-PRESIDENT' : 'NYPS-2027-COORD',
+          approvalDate: new Date().toISOString(),
+          submittedAt: current.createdAt || new Date().toISOString(),
+        };
+        this.profiles.unshift(prof);
+        this.saveProfiles();
+        return prof;
+      }
+    }
 
     if (prof) {
       let modified = false;
@@ -1135,7 +1244,219 @@ class StoreService {
     return this.profiles.find((p) => p.id === id);
   }
 
+  public async updateMemberPassword(userIdOrCnic: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    if (!newPassword || newPassword.trim().length < 6) {
+      return { success: false, error: 'Password kam az kam 6 characters ka hona chahiye.' };
+    }
+
+    const cleanPass = newPassword.trim();
+    const cleanCnic = normalizeCnic(userIdOrCnic) || userIdOrCnic.trim();
+
+    // 1. Save in local cache
+    try {
+      const stored = JSON.parse(localStorage.getItem(KEY_MEMBER_PASSWORDS) || '{}');
+      stored[cleanCnic] = cleanPass;
+      stored[userIdOrCnic] = cleanPass;
+      if (this.currentUser?.id) stored[this.currentUser.id] = cleanPass;
+      if (this.currentUser?.cnicNumber) stored[this.currentUser.cnicNumber] = cleanPass;
+      localStorage.setItem(KEY_MEMBER_PASSWORDS, JSON.stringify(stored));
+    } catch (e) {
+      console.warn('Local password save error:', e);
+    }
+
+    if (this.currentUser) {
+      this.currentUser.password = cleanPass;
+      this.saveCurrentUser();
+    }
+
+    // 2. If user is in officerUsers list, update officer password
+    const officer = this.officerUsers.find((o) => isSameCnic(o.cnicNumber, cleanCnic) || o.id === userIdOrCnic);
+    if (officer) {
+      officer.password = cleanPass;
+      this.saveOfficerUsers();
+    }
+
+    // 3. Sync to Supabase
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase
+          .from('users')
+          .update({ password: cleanPass })
+          .or(`cnic_number.eq.${cleanCnic},id.eq.${userIdOrCnic}`);
+
+        await supabase.auth.updateUser({ password: cleanPass });
+      } catch (e: any) {
+        console.warn('Supabase update password notice:', e?.message || e);
+      }
+    }
+
+    this.notifyListeners();
+    return { success: true };
+  }
+
+  public getMemberCardProfiles(profile?: MemberProfile | null): { title: string; profile: MemberProfile; badge?: string }[] {
+    if (!profile) return [];
+
+    const cardProfiles: { title: string; profile: MemberProfile; badge?: string }[] = [];
+    const cleanCnic = normalizeCnic(profile.cnicNumber);
+    const normName = (profile.fullName || '').trim().toLowerCase();
+
+    // 1. Primary Member Profile Card
+    const baseDesignation = profile.assignedDesignation && profile.assignedDesignation !== 'Applicant' 
+      ? profile.assignedDesignation 
+      : 'Youth Member';
+
+    cardProfiles.push({
+      title: `${baseDesignation} Pass`,
+      badge: 'Official Member Pass',
+      profile: {
+        ...profile,
+        assignedDesignation: baseDesignation,
+      },
+    });
+
+    // 2. Matching Cabinet / Parliamentarian Roles
+    const matchingCabinet = this.cabinetMembers.filter((cm) => 
+      (cm.memberProfileId && cm.memberProfileId === profile.id) ||
+      (cm.cnicNumber && cleanCnic && isSameCnic(cm.cnicNumber, cleanCnic)) ||
+      (cm.fullName && normName && cm.fullName.trim().toLowerCase() === normName)
+    );
+
+    matchingCabinet.forEach((role, idx) => {
+      const roleTitle = role.designation || (role.category === 'PARLIAMENTARIAN' ? 'Parliamentary Delegate' : 'Cabinet Official');
+      const cardTitle = `${roleTitle} Pass`;
+      if (!cardProfiles.some((cp) => cp.title.toLowerCase() === cardTitle.toLowerCase() || cp.profile.assignedDesignation?.toLowerCase() === role.designation.toLowerCase())) {
+        cardProfiles.push({
+          title: cardTitle,
+          badge: role.category === 'PARLIAMENTARIAN' ? 'Parliamentary Pass' : 'Cabinet Executive Pass',
+          profile: {
+            ...profile,
+            id: `${profile.id}-cab-${role.id || idx}`,
+            assignedDesignation: role.designation,
+            preferredDepartment: role.ministryDepartment || (role.category === 'PARLIAMENTARIAN' ? (role.parliamentaryRole || 'Youth Assembly') : 'Executive Cabinet'),
+            passportPhotoUrl: role.photoUrl || profile.passportPhotoUrl,
+            divisionId: role.divisionId || profile.divisionId,
+          },
+        });
+      }
+    });
+
+    // 3. Officer / Executive Special Roles (PRESIDENT, WEB_COORDINATOR, etc.)
+    const matchingOfficer = this.officerUsers.find((o) => 
+      (cleanCnic && isSameCnic(o.cnicNumber, cleanCnic)) ||
+      (o.fullName && normName && o.fullName.trim().toLowerCase() === normName) ||
+      (o.id === profile.userId)
+    );
+
+    const isPresident = 
+      matchingOfficer?.role === 'PRESIDENT' || 
+      normName.includes('abdul rehman halepoto') || 
+      (profile.assignedDesignation && profile.assignedDesignation.toLowerCase().includes('president'));
+
+    const isWebCoordinator = 
+      matchingOfficer?.role === 'WEB_COORDINATOR' || 
+      normName.includes('qaisar panhwar') || 
+      (profile.assignedDesignation && profile.assignedDesignation.toLowerCase().includes('web coordinator'));
+
+    if (isPresident) {
+      if (!cardProfiles.some((cp) => cp.profile.assignedDesignation?.toLowerCase().includes('president'))) {
+        cardProfiles.push({
+          title: 'President Executive Pass',
+          badge: 'President Official Pass',
+          profile: {
+            ...profile,
+            id: `${profile.id}-role-president`,
+            assignedDesignation: 'President, NYP Sindh',
+            preferredDepartment: 'Central Executive Presidency',
+          },
+        });
+      }
+      if (cardProfiles.length < 2) {
+        cardProfiles.unshift({
+          title: 'Youth Parliamentarian Pass',
+          badge: 'National Assembly Delegate',
+          profile: {
+            ...profile,
+            id: `${profile.id}-role-parliamentarian`,
+            assignedDesignation: 'Youth Parliamentarian',
+            preferredDepartment: 'Legislative Affairs',
+          },
+        });
+      }
+    }
+
+    if (isWebCoordinator) {
+      if (!cardProfiles.some((cp) => cp.profile.assignedDesignation?.toLowerCase().includes('web coordinator'))) {
+        cardProfiles.push({
+          title: 'Web Coordinator Official Pass',
+          badge: 'Central Media & Web Pass',
+          profile: {
+            ...profile,
+            id: `${profile.id}-role-coordinator`,
+            assignedDesignation: 'Web Coordinator, NYP Sindh',
+            preferredDepartment: 'Information Technology & Media',
+          },
+        });
+      }
+      if (cardProfiles.length < 2) {
+        cardProfiles.unshift({
+          title: 'Youth Member Pass',
+          badge: 'General Delegate Pass',
+          profile: {
+            ...profile,
+            id: `${profile.id}-role-member`,
+            assignedDesignation: 'Youth Member',
+            preferredDepartment: 'Civic Leadership',
+          },
+        });
+      }
+    }
+
+    // 4. Authorised Role Application Requests
+    const userRoleApps = this.roleApplications.filter((r) => 
+      r.status === 'AUTHORISED' && 
+      (r.profileId === profile.id || (cleanCnic && isSameCnic(r.cnicNumber, cleanCnic)) || r.userId === profile.userId)
+    );
+
+    userRoleApps.forEach((app, idx) => {
+      const appTitle = `${app.targetRoleTitle} Pass`;
+      if (!cardProfiles.some((cp) => cp.title.toLowerCase() === appTitle.toLowerCase() || cp.profile.assignedDesignation?.toLowerCase() === app.targetRoleTitle.toLowerCase())) {
+        cardProfiles.push({
+          title: appTitle,
+          badge: 'Conferred Role Pass',
+          profile: {
+            ...profile,
+            id: `${profile.id}-app-${app.id || idx}`,
+            assignedDesignation: app.targetRoleTitle,
+          },
+        });
+      }
+    });
+
+    // 5. If member has an executive / specialized designation (not just 'Youth Member')
+    // but only 1 card is currently generated, provide their General Member Pass so both 2 cards are always available!
+    if (cardProfiles.length === 1 && baseDesignation.toLowerCase() !== 'youth member') {
+      cardProfiles.unshift({
+        title: 'Youth Member Pass',
+        badge: 'General Membership Pass',
+        profile: {
+          ...profile,
+          id: `${profile.id}-base-member`,
+          assignedDesignation: 'Youth Member',
+        },
+      });
+    }
+
+    return cardProfiles;
+  }
+
+
   public async submitMemberProfile(data: Omit<MemberProfile, 'id' | 'status' | 'submittedAt'>, password?: string): Promise<MemberProfile> {
+    const cleanDigits = (data.cnicNumber || '').replace(/\D/g, '');
+    if (cleanDigits.length !== 13) {
+      throw new Error(`Mukammal 13-digit CNIC lazmi hai (Aapne sirf ${cleanDigits.length} digits enter kiye hain). Without full 13-digit CNIC, koi member profile ya account create nahi kiya ja sakta.`);
+    }
+
     const cleanCnic = normalizeCnic(data.cnicNumber);
     const validUserId = isUuid(data.userId) ? (data.userId as string) : (isUuid(this.currentUser?.id) ? (this.currentUser?.id as string) : generateUuid());
 
@@ -1876,15 +2197,17 @@ class StoreService {
   }
 
   public getAnnouncements(): Announcement[] {
-    return this.announcements.filter((a) => a.isActive);
+    return sortAnnouncementsDesc(this.announcements.filter((a) => a.isActive));
   }
 
   public addAnnouncement(data: Omit<Announcement, 'id'>): Announcement {
     const newAnn: Announcement = {
       ...data,
+      publishedAt: data.publishedAt || new Date().toISOString().split('T')[0],
       id: generateUuid(),
     };
     this.announcements.unshift(newAnn);
+    this.announcements = sortAnnouncementsDesc(this.announcements);
     localStorage.setItem(KEY_ANNOUNCEMENTS, JSON.stringify(this.announcements));
 
     if (isSupabaseConfigured()) {
@@ -1953,7 +2276,7 @@ class StoreService {
   }
 
   public getMediaItems(): MediaItem[] {
-    return this.mediaItems;
+    return sortMediaItemsDesc(this.mediaItems);
   }
 
   public addMediaItem(data: Omit<MediaItem, 'id'>): MediaItem {
@@ -1963,6 +2286,7 @@ class StoreService {
       createdAt: new Date().toISOString(),
     };
     this.mediaItems.unshift(newItem);
+    this.mediaItems = sortMediaItemsDesc(this.mediaItems);
     localStorage.setItem(KEY_MEDIA_ITEMS, JSON.stringify(this.mediaItems));
 
     if (isSupabaseConfigured()) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { store, formatCnic, formatMobile, normalizeDob } from '../services/store';
+import { store, formatCnic, formatMobile, normalizeDob, isValidCnic } from '../services/store';
 import { signUpMemberWithSupabaseAuth } from '../services/auth';
 import { uploadToCloudinary } from '../services/cloudinary';
 import { SINDH_DIVISIONS, SINDH_DISTRICTS, SINDH_TALUKAS } from '../data/sindhHierarchy';
@@ -89,6 +89,23 @@ export const ApplicationPage: React.FC = () => {
   const [fatherGuardianName, setFatherGuardianName] = useState('');
   const [dob, setDob] = useState('2003-01-01');
   const [dobInput, setDobInput] = useState('01/01/2003');
+
+  // Name handlers: strictly allow only letters (A-Z, a-z) and spaces. Digits/numbers are not allowed.
+  const handleNameChange = (val: string) => {
+    const lettersAndSpacesOnly = val.replace(/[^a-zA-Z\s]/g, '');
+    setFullName(lettersAndSpacesOnly);
+  };
+
+  const handleFatherGuardianNameChange = (val: string) => {
+    const lettersAndSpacesOnly = val.replace(/[^a-zA-Z\s]/g, '');
+    setFatherGuardianName(lettersAndSpacesOnly);
+  };
+
+  const blockDigitsKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
 
   const handleDobTextChange = (val: string) => {
     const digits = val.replace(/\D/g, '').slice(0, 8);
@@ -239,6 +256,32 @@ export const ApplicationPage: React.FC = () => {
       return;
     }
 
+    const lettersOnlyRegex = /^[a-zA-Z\s]+$/;
+    if (!lettersOnlyRegex.test(fullName.trim())) {
+      setErrorMessage(
+        'Full Name mein sirf letters (A-Z) aur space allowed hain. Digits ya numbers allowed nahi hain.'
+      );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (!lettersOnlyRegex.test(fatherGuardianName.trim())) {
+      setErrorMessage(
+        "Father's / Guardian's Name mein sirf letters (A-Z) aur space allowed hain. Digits ya numbers allowed nahi hain."
+      );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const cnicDigits = cnicNumber.replace(/\D/g, '');
+    if (cnicDigits.length !== 13) {
+      setErrorMessage(
+        `Registration Blocked: Mukammal 13-digit CNIC darj karna lazmi hai (Aapne sirf ${cnicDigits.length} digits enter kiye hain). Without full 13-digit CNIC, koi login user name / account create nahi kiya ja sakta.`
+      );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     if (!password || password.length < 6) {
       setErrorMessage('Please set a secure account password of at least 6 characters.');
       return;
@@ -356,10 +399,14 @@ export const ApplicationPage: React.FC = () => {
                 type="text"
                 required
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Full Name as per CNIC / B-Form"
-                className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium"
+                onChange={(e) => handleNameChange(e.target.value)}
+                onKeyDown={blockDigitsKeyDown}
+                placeholder="Full Name (Letters & spaces only)"
+                className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium focus:border-emerald-600 outline-none"
               />
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
+                Sirf letters aur spaces allowed hain (Digits / Numbers are strictly not allowed)
+              </span>
             </div>
 
             <div>
@@ -370,10 +417,14 @@ export const ApplicationPage: React.FC = () => {
                 type="text"
                 required
                 value={fatherGuardianName}
-                onChange={(e) => setFatherGuardianName(e.target.value)}
-                placeholder="Father or Guardian Name"
-                className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium"
+                onChange={(e) => handleFatherGuardianNameChange(e.target.value)}
+                onKeyDown={blockDigitsKeyDown}
+                placeholder="Father or Guardian Name (Letters & spaces only)"
+                className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium focus:border-emerald-600 outline-none"
               />
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
+                Sirf letters aur spaces allowed hain (Digits / Numbers are strictly not allowed)
+              </span>
             </div>
 
             <div>
@@ -434,8 +485,29 @@ export const ApplicationPage: React.FC = () => {
                 value={cnicNumber}
                 onChange={(e) => setCnicNumber(formatCnic(e.target.value))}
                 placeholder="41304-XXXXXXX-X"
-                className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold font-mono"
+                maxLength={15}
+                className={`w-full p-3 rounded-xl border bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold font-mono tracking-wider outline-none transition-colors ${
+                  cnicNumber.replace(/\D/g, '').length === 13
+                    ? 'border-emerald-500 focus:border-emerald-600'
+                    : cnicNumber.length > 0
+                    ? 'border-amber-500 focus:border-amber-600'
+                    : 'border-slate-300 dark:border-slate-700 focus:border-emerald-600'
+                }`}
               />
+              <div className="flex items-center justify-between text-[11px] mt-1 font-semibold">
+                <span
+                  className={
+                    cnicNumber.replace(/\D/g, '').length === 13
+                      ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                      : 'text-amber-600 dark:text-amber-400'
+                  }
+                >
+                  {cnicNumber.replace(/\D/g, '').length === 13
+                    ? '✓ Full 13-digit CNIC verified'
+                    : `Complete 13 digits required (${cnicNumber.replace(/\D/g, '').length} / 13 entered)`}
+                </span>
+                <span className="text-slate-400 font-mono text-[10px]">Format: XXXXX-XXXXXXX-X</span>
+              </div>
             </div>
 
             <div>

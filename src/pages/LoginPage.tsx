@@ -24,8 +24,14 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (!cnicNumber) {
+    if (!cnicNumber.trim()) {
       setError('Please enter your 13-digit CNIC number');
+      return;
+    }
+
+    const digits = cnicNumber.replace(/\D/g, '');
+    if (digits.length > 0 && digits.length !== 13 && !cnicNumber.includes('@')) {
+      setError(`Please enter your complete 13-digit CNIC number (${digits.length}/13 digits entered). Incomplete CNIC is not valid.`);
       return;
     }
 
