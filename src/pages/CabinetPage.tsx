@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { store, isSameCnic } from '../services/store';
 import { SINDH_DIVISIONS } from '../data/sindhHierarchy';
@@ -39,40 +39,25 @@ export const CabinetPage: React.FC = () => {
     currentUser?.role === 'WEB_COORDINATOR' ||
     currentUser?.role === 'APPROVAL_AUTHORITY';
 
-  // Tick for forcing re-render when store updates
-  const [, setTick] = useState(0);
+  // Reactive State for Member Profiles & Cabinet Members
+  const [registeredProfiles, setRegisteredProfiles] = useState<MemberProfile[]>(() => store.getAllProfiles());
+  const [allCabinetMembersList, setAllCabinetMembersList] = useState<CabinetMember[]>(() => store.getCabinetMembers());
 
   useEffect(() => {
+    // 1. Initial fresh sync from Supabase
     store.fetchFromSupabase().then(() => {
-      setTick((t) => t + 1);
+      setRegisteredProfiles([...store.getAllProfiles()]);
+      setAllCabinetMembersList([...store.getCabinetMembers()]);
     });
+
+    // 2. Real-time subscription to any store changes (so all members update instantly)
+    const unsubscribe = store.subscribe(() => {
+      setRegisteredProfiles([...store.getAllProfiles()]);
+      setAllCabinetMembersList([...store.getCabinetMembers()]);
+    });
+
+    return () => unsubscribe();
   }, []);
-
-  // Modal State for Assigning / Editing Member
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<CabinetMember | null>(null);
-
-  // Form State
-  const [selectedProfileId, setSelectedProfileId] = useState<string>('');
-  const [profileSearchQuery, setProfileSearchQuery] = useState<string>('');
-  const [fullName, setFullName] = useState('');
-  const [designation, setDesignation] = useState('President NYP Sindh');
-  const [cabinetLevel, setCabinetLevel] = useState<'PROVINCIAL' | 'DIVISIONAL'>('PROVINCIAL');
-  const [divisionId, setDivisionId] = useState(SINDH_DIVISIONS[0].id);
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [bio, setBio] = useState('');
-  const [displayOrderInput, setDisplayOrderInput] = useState<number>(1);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-
-  // Parliamentarian Form State
-  const [parlType, setParlType] = useState<'MPA' | 'MNA' | 'PROVINCIAL_LEADER'>('MPA');
-  const [provincialLeaderRole, setProvincialLeaderRole] = useState<'SPEAKER' | 'DEPUTY_SPEAKER' | 'CHIEF_MINISTER' | 'OPPOSITION_LEADER' | 'MINISTER'>('CHIEF_MINISTER');
-  const [ministryDepartment, setMinistryDepartment] = useState('');
-
-  const registeredProfiles = store.getAllProfiles();
-
-  // Get raw list from store
-  const allCabinetMembersList = store.getCabinetMembers();
 
   // Filter list depending on current View Mode (Cabinets vs Parliamentarians)
   const filteredMembers = allCabinetMembersList.filter((member) => {
@@ -138,37 +123,55 @@ export const CabinetPage: React.FC = () => {
     (a, b) => (Number(a.displayOrder) || 999) - (Number(b.displayOrder) || 999)
   );
 
-  // Filter out profiles that are ALREADY assigned to the Cabinet or Parliament
-  const assignedProfileIds = new Set(
-    allCabinetMembersList
-      .filter((cm) => !editingMember || cm.id !== editingMember.id)
-      .map((cm) => cm.memberProfileId)
-      .filter(Boolean)
-  );
-  const assignedNames = new Set(
-    allCabinetMembersList
-      .filter((cm) => !editingMember || cm.id !== editingMember.id)
-      .map((cm) => cm.fullName.trim().toLowerCase())
-  );
+  // Modal State for Assigning / Editing Member
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<CabinetMember | null>(null);
 
-  const availableProfiles = registeredProfiles;
+  // Form State
+  const [selectedProfileId, setSelectedProfileId] = useState<string>('');
+  const [profileSearchQuery, setProfileSearchQuery] = useState<string>('');
+  const [fullName, setFullName] = useState('');
+  const [designation, setDesignation] = useState('President NYP Sindh');
+  const [cabinetLevel, setCabinetLevel] = useState<'PROVINCIAL' | 'DIVISIONAL'>('PROVINCIAL');
+  const [divisionId, setDivisionId] = useState(SINDH_DIVISIONS[0].id);
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [bio, setBio] = useState('');
+  const [displayOrderInput, setDisplayOrderInput] = useState<number>(1);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
-  const filteredSelectableProfiles = registeredProfiles.filter((p) => {
-    if (!profileSearchQuery.trim()) return true;
+  // Parliamentarian Form State
+  const [parlType, setParlType] = useState<'MPA' | 'MNA' | 'PROVINCIAL_LEADER'>('MPA');
+  const [provincialLeaderRole, setProvincialLeaderRole] = useState<'SPEAKER' | 'DEPUTY_SPEAKER' | 'CHIEF_MINISTER' | 'OPPOSITION_LEADER' | 'MINISTER'>('CHIEF_MINISTER');
+  const [ministryDepartment, setMinistryDepartment] = useState('');
+
+  // ALL registered members are always selectable (whether they currently have assigned roles or not)
+  const filteredSelectableProfiles = useMemo(() => {
+    if (!profileSearchQuery.trim()) {
+      return registeredProfiles;
+    }
     const q = profileSearchQuery.toLowerCase().trim();
     const cleanQ = q.replace(/\D/g, '');
-    const cleanCnic = (p.cnicNumber || '').replace(/\D/g, '');
-    const cleanMobile = (p.mobileNumber || '').replace(/\D/g, '');
 
-    const matchesName = p.fullName.toLowerCase().includes(q);
-    const matchesCnic = (p.cnicNumber || '').toLowerCase().includes(q) || (cleanQ.length > 0 && cleanCnic.includes(cleanQ));
-    const matchesMobile = (p.mobileNumber || '').toLowerCase().includes(q) || (cleanQ.length > 0 && cleanMobile.includes(cleanQ));
-    const matchesDiv = Boolean(p.divisionId && store.getDivisionName(p.divisionId).toLowerCase().includes(q));
+    return registeredProfiles.filter((p) => {
+      const cleanCnic = (p.cnicNumber || '').replace(/\D/g, '');
+      const cleanMobile = (p.mobileNumber || '').replace(/\D/g, '');
 
-    return matchesName || matchesCnic || matchesMobile || matchesDiv;
-  });
+      const matchesName = (p.fullName || '').toLowerCase().includes(q);
+      const matchesCnic = (p.cnicNumber || '').toLowerCase().includes(q) || (cleanQ.length > 0 && cleanCnic.includes(cleanQ));
+      const matchesMobile = (p.mobileNumber || '').toLowerCase().includes(q) || (cleanQ.length > 0 && cleanMobile.includes(cleanQ));
+      const matchesDiv = Boolean(p.divisionId && store.getDivisionName(p.divisionId).toLowerCase().includes(q));
+      const matchesMemId = (p.membershipIdNumber || '').toLowerCase().includes(q);
+      const matchesEmail = (p.email || '').toLowerCase().includes(q);
+      const matchesDesig = (p.assignedDesignation || '').toLowerCase().includes(q);
+
+      return matchesName || matchesCnic || matchesMobile || matchesDiv || matchesMemId || matchesEmail || matchesDesig;
+    });
+  }, [registeredProfiles, profileSearchQuery]);
 
   const handleOpenAddModal = () => {
+    // Fresh pull of all registered members & cabinet records
+    setRegisteredProfiles([...store.getAllProfiles()]);
+    setAllCabinetMembersList([...store.getCabinetMembers()]);
     setEditingMember(null);
     setSelectedProfileId('');
     setProfileSearchQuery('');
@@ -186,6 +189,9 @@ export const CabinetPage: React.FC = () => {
   };
 
   const handleOpenEditModal = (member: CabinetMember) => {
+    // Fresh pull of all registered members & cabinet records
+    setRegisteredProfiles([...store.getAllProfiles()]);
+    setAllCabinetMembersList([...store.getCabinetMembers()]);
     setEditingMember(member);
     setSelectedProfileId(member.memberProfileId || '');
     setProfileSearchQuery('');
@@ -284,6 +290,11 @@ export const CabinetPage: React.FC = () => {
       }
     }
 
+    const targetProfile = selectedProfileId
+      ? registeredProfiles.find((p) => p.id === selectedProfileId || p.userId === selectedProfileId)
+      : undefined;
+    const targetCnic = targetProfile?.cnicNumber || (editingMember ? editingMember.cnicNumber : undefined);
+
     if (editingMember) {
       store.updateCabinetMember(editingMember.id, {
         fullName,
@@ -294,6 +305,7 @@ export const CabinetPage: React.FC = () => {
         bio,
         displayOrder: Number(displayOrderInput) || 1,
         memberProfileId: selectedProfileId || undefined,
+        cnicNumber: targetCnic,
         category: finalCategory,
         parliamentaryRole: finalParlRole,
         ministryDepartment: (parlType === 'PROVINCIAL_LEADER' && provincialLeaderRole === 'MINISTER') ? ministryDepartment : undefined,
@@ -309,6 +321,7 @@ export const CabinetPage: React.FC = () => {
         displayOrder: Number(displayOrderInput) || displayMembers.length + 1,
         isActive: true,
         memberProfileId: selectedProfileId || undefined,
+        cnicNumber: targetCnic,
         category: finalCategory,
         parliamentaryRole: finalParlRole,
         ministryDepartment: (parlType === 'PROVINCIAL_LEADER' && provincialLeaderRole === 'MINISTER') ? ministryDepartment : undefined,
@@ -316,13 +329,15 @@ export const CabinetPage: React.FC = () => {
     }
 
     setIsModalOpen(false);
-    setTick((t) => t + 1);
+    setAllCabinetMembersList([...store.getCabinetMembers()]);
+    setRegisteredProfiles([...store.getAllProfiles()]);
   };
 
   const handleDeleteMember = (id: string, name: string) => {
     if (confirm(`Are you sure you want to remove "${name}"?`)) {
       store.deleteCabinetMember(id);
-      setTick((t) => t + 1);
+      setAllCabinetMembersList([...store.getCabinetMembers()]);
+      setRegisteredProfiles([...store.getAllProfiles()]);
     }
   };
 
@@ -709,7 +724,7 @@ export const CabinetPage: React.FC = () => {
                     SELECT REGISTERED MEMBER PROFILE
                   </label>
                   <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                    {availableProfiles.length} unassigned member{availableProfiles.length === 1 ? '' : 's'} available
+                    {profileSearchQuery.trim() ? `${filteredSelectableProfiles.length} of ${registeredProfiles.length}` : `${registeredProfiles.length}`} Registered Members (All Always Visible)
                   </span>
                 </div>
 
@@ -731,7 +746,7 @@ export const CabinetPage: React.FC = () => {
                         handleProfileSelect(match.id);
                       }
                     }}
-                    placeholder="Search member by Name, CNIC (e.g. 41304...), or Mobile..."
+                    placeholder="Search member by Name, CNIC (e.g. 41304...), Mobile, or Division..."
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
@@ -741,12 +756,14 @@ export const CabinetPage: React.FC = () => {
                   onChange={(e) => handleProfileSelect(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 font-bold"
                 >
-                  <option value="">-- Select Registered Member ({filteredSelectableProfiles.length}) --</option>
+                  <option value="">-- Select Registered Member ({filteredSelectableProfiles.length} Available) --</option>
                   {filteredSelectableProfiles.map((p) => {
                     const existingRoles = allCabinetMembersList
-                      .filter((cm: CabinetMember) => cm.memberProfileId === p.id || (p.cnicNumber && isSameCnic(cm.cnicNumber, p.cnicNumber)) || cm.fullName.trim().toLowerCase() === p.fullName.trim().toLowerCase())
+                      .filter((cm: CabinetMember) => cm.memberProfileId === p.id || (p.cnicNumber && cm.cnicNumber && isSameCnic(cm.cnicNumber, p.cnicNumber)))
                       .map((cm: CabinetMember) => cm.designation);
-                    const rolesBadge = existingRoles.length > 0 ? ` [Active Roles: ${existingRoles.join(', ')}]` : '';
+                    const assignedDesig = (p.assignedDesignation && p.assignedDesignation !== 'Member' && p.assignedDesignation !== 'Youth Member' && p.assignedDesignation !== 'General Member') ? p.assignedDesignation : null;
+                    const combinedRoles = [...new Set([...existingRoles, ...(assignedDesig ? [assignedDesig] : [])])];
+                    const rolesBadge = combinedRoles.length > 0 ? ` [Assigned: ${combinedRoles.join(', ')}]` : ' [No Role Assigned]';
                     return (
                       <option key={p.id} value={p.id}>
                         {p.fullName} ({p.cnicNumber || 'No CNIC'}) - {p.divisionId ? store.getDivisionName(p.divisionId) : 'Sindh'}{rolesBadge}
@@ -755,7 +772,7 @@ export const CabinetPage: React.FC = () => {
                   })}
                 </select>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                  All registered members are selectable. A member can hold multiple official roles simultaneously.
+                  All registered members are displayed at all times (regardless of whether a role is already assigned or not). A member can hold multiple official roles simultaneously.
                 </p>
               </div>
 

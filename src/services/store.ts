@@ -464,21 +464,26 @@ class StoreService {
       // Fetch cabinet_members from Supabase
       const { data: cabData, error: cabErr } = await supabase.from('cabinet_members').select('*');
       if (!cabErr && cabData) {
-        this.cabinetMembers = cabData.map((d: any) => ({
-          id: d.id,
-          fullName: d.full_name || d.fullName || 'Member',
-          designation: d.designation || 'Youth Parliamentarian',
-          cabinetLevel: (d.cabinet_level || d.cabinetLevel || 'PROVINCIAL') as 'PROVINCIAL' | 'DIVISIONAL',
-          divisionId: d.division_id || d.divisionId || undefined,
-          photoUrl: d.photo_url || d.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
-          bio: d.bio || undefined,
-          displayOrder: Number(d.display_order ?? d.displayOrder ?? 1),
-          isActive: d.is_active ?? d.isActive ?? true,
-          memberProfileId: d.member_profile_id || d.memberProfileId || undefined,
-          category: d.category || (d.designation?.toLowerCase().includes('mpa') || d.designation?.toLowerCase().includes('mna') || d.designation?.toLowerCase().includes('minister') ? 'PARLIAMENTARIAN' : 'CABINET'),
-          parliamentaryRole: d.parliamentary_role || undefined,
-          ministryDepartment: d.ministry_department || undefined,
-        }));
+        this.cabinetMembers = cabData.map((d: any) => {
+          const profId = d.member_profile_id || d.memberProfileId || undefined;
+          const matchingProf = profId ? this.profiles.find((p) => p.id === profId) : undefined;
+          return {
+            id: d.id,
+            fullName: d.full_name || d.fullName || 'Member',
+            designation: d.designation || 'Youth Parliamentarian',
+            cabinetLevel: (d.cabinet_level || d.cabinetLevel || 'PROVINCIAL') as 'PROVINCIAL' | 'DIVISIONAL',
+            divisionId: d.division_id || d.divisionId || undefined,
+            photoUrl: d.photo_url || d.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+            bio: d.bio || undefined,
+            displayOrder: Number(d.display_order ?? d.displayOrder ?? 1),
+            isActive: d.is_active ?? d.isActive ?? true,
+            memberProfileId: profId,
+            cnicNumber: matchingProf?.cnicNumber || d.cnic_number || d.cnicNumber || undefined,
+            category: d.category || (d.designation?.toLowerCase().includes('mpa') || d.designation?.toLowerCase().includes('mna') || d.designation?.toLowerCase().includes('minister') ? 'PARLIAMENTARIAN' : 'CABINET'),
+            parliamentaryRole: d.parliamentary_role || undefined,
+            ministryDepartment: d.ministry_department || undefined,
+          };
+        });
         localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
         this.profiles.forEach((p) => this.syncProfilePrimaryDesignation(p.id));
       }
@@ -1160,12 +1165,9 @@ class StoreService {
       if (cleanInput && (p.id === cleanInput || p.userId === cleanInput)) return true;
       if (current && (p.userId === current.id || p.id === current.id)) return true;
       
-      // Match by CNIC
+      // Match strictly by unique CNIC
       if (cleanInput && isSameCnic(p.cnicNumber, cleanInput)) return true;
       if (current && isSameCnic(p.cnicNumber, current.cnicNumber)) return true;
-      
-      // Match by Full Name
-      if (current?.fullName && p.fullName && p.fullName.trim().toLowerCase() === current.fullName.trim().toLowerCase()) return true;
 
       return false;
     });
@@ -1315,11 +1317,10 @@ class StoreService {
       },
     });
 
-    // 2. Matching Cabinet / Parliamentarian Roles
+    // 2. Matching Cabinet / Parliamentarian Roles (Strictly by memberProfileId or unique CNIC only)
     const matchingCabinet = this.cabinetMembers.filter((cm) => 
       (cm.memberProfileId && cm.memberProfileId === profile.id) ||
-      (cm.cnicNumber && cleanCnic && isSameCnic(cm.cnicNumber, cleanCnic)) ||
-      (cm.fullName && normName && cm.fullName.trim().toLowerCase() === normName)
+      (cm.cnicNumber && cleanCnic && isSameCnic(cm.cnicNumber, cleanCnic))
     );
 
     matchingCabinet.forEach((role, idx) => {
@@ -1344,13 +1345,12 @@ class StoreService {
     // 3. Officer / Executive Special Roles (PRESIDENT, WEB_COORDINATOR, etc.)
     const matchingOfficer = this.officerUsers.find((o) => 
       (cleanCnic && isSameCnic(o.cnicNumber, cleanCnic)) ||
-      (o.fullName && normName && o.fullName.trim().toLowerCase() === normName) ||
       (o.id === profile.userId)
     );
 
     const isPresident = 
       matchingOfficer?.role === 'PRESIDENT' || 
-      normName.includes('abdul rehman halepoto') || 
+      (cleanCnic && isSameCnic(cleanCnic, '41103-6727923-9')) || 
       (profile.assignedDesignation && profile.assignedDesignation.toLowerCase().includes('president'));
 
     const isWebCoordinator = 
@@ -1678,19 +1678,18 @@ class StoreService {
       }
     }
 
-    // Delete associated cabinet member cards from local state
+    // Delete associated cabinet member cards from local state (match by memberProfileId or CNIC only)
     this.cabinetMembers = this.cabinetMembers.filter(
-      (m) => m.id !== profileId && m.memberProfileId !== profileId && (!profile || (m.memberProfileId !== profile.id && m.fullName.trim().toLowerCase() !== profile.fullName.trim().toLowerCase()))
+      (m) => m.id !== profileId && m.memberProfileId !== profileId && (!profile || (m.memberProfileId !== profile.id && (!m.cnicNumber || !profile.cnicNumber || !isSameCnic(m.cnicNumber, profile.cnicNumber))))
     );
     localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
 
-    // Remove from profiles array
+    // Remove from profiles array (strictly match by profile ID or CNIC only)
     this.profiles = this.profiles.filter((p) => {
       if (p.id === profileId) return false;
       if (profile) {
         if (p.id === profile.id) return false;
         if (profile.cnicNumber && isSameCnic(p.cnicNumber, profile.cnicNumber)) return false;
-        if (profile.fullName && p.fullName.trim().toLowerCase() === profile.fullName.trim().toLowerCase()) return false;
       }
       return true;
     });
@@ -2018,12 +2017,14 @@ class StoreService {
     // Instantly sync to Supabase database
     this.pushCabinetMemberToSupabase(newMember);
 
-    // If linked to a profile or matching member name, update their card designation!
+    // If linked to a profile or matching member CNIC, update their card designation!
     let targetProfile = data.memberProfileId
       ? this.profiles.find((p) => p.id === data.memberProfileId)
-      : this.profiles.find((p) => p.fullName.trim().toLowerCase() === data.fullName.trim().toLowerCase());
+      : (data.cnicNumber ? this.profiles.find((p) => isSameCnic(p.cnicNumber, data.cnicNumber)) : undefined);
 
     if (targetProfile) {
+      newMember.memberProfileId = targetProfile.id;
+      newMember.cnicNumber = targetProfile.cnicNumber;
       targetProfile.status = 'APPROVED';
       if (data.photoUrl && (!targetProfile.passportPhotoUrl || targetProfile.passportPhotoUrl.includes('unsplash'))) {
         targetProfile.passportPhotoUrl = data.photoUrl;
@@ -2068,6 +2069,7 @@ class StoreService {
       };
       this.profiles.unshift(autoProfile);
       newMember.memberProfileId = autoProfile.id;
+      newMember.cnicNumber = autoProfile.cnicNumber;
       this.saveProfiles();
       this.pushProfileToSupabase(autoProfile);
       // Update cabinet member with linked memberProfileId in Supabase
@@ -2079,11 +2081,12 @@ class StoreService {
   }
 
   public syncProfilePrimaryDesignation(profileId: string) {
-    const profile = this.profiles.find((p) => p.id === profileId || (p.cnicNumber && p.cnicNumber === profileId));
+    const profile = this.profiles.find((p) => p.id === profileId || (p.cnicNumber && isSameCnic(p.cnicNumber, profileId)));
     if (!profile) return;
 
+    // Strictly match by unique memberProfileId OR unique CNIC - NEVER by full name!
     const linkedCards = this.cabinetMembers.filter(
-      (m) => m.isActive && (m.memberProfileId === profile.id || (m.fullName && m.fullName.trim().toLowerCase() === profile.fullName.trim().toLowerCase()))
+      (m) => m.isActive && (m.memberProfileId === profile.id || (m.cnicNumber && profile.cnicNumber && isSameCnic(m.cnicNumber, profile.cnicNumber)))
     );
 
     const cabinetRole = linkedCards.find((m) => m.category === 'CABINET');
@@ -2104,19 +2107,22 @@ class StoreService {
     const member = this.cabinetMembers.find((m) => m.id === id);
     if (member) {
       Object.assign(member, data);
-      localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
-      this.pushCabinetMemberToSupabase(member);
 
-      // Update linked profile designation
+      // Update linked profile designation strictly by memberProfileId or CNIC
       const targetProfile = member.memberProfileId
         ? this.profiles.find((p) => p.id === member.memberProfileId)
-        : this.profiles.find((p) => p.fullName.trim().toLowerCase() === member.fullName.trim().toLowerCase());
+        : (member.cnicNumber ? this.profiles.find((p) => isSameCnic(p.cnicNumber, member.cnicNumber)) : undefined);
 
       if (targetProfile) {
+        member.memberProfileId = targetProfile.id;
+        member.cnicNumber = targetProfile.cnicNumber;
         if (data.photoUrl) targetProfile.passportPhotoUrl = data.photoUrl;
         this.saveProfiles();
         this.syncProfilePrimaryDesignation(targetProfile.id);
       }
+
+      localStorage.setItem(KEY_CABINET, JSON.stringify(this.cabinetMembers));
+      this.pushCabinetMemberToSupabase(member);
 
       return member;
     }
