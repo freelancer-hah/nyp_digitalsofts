@@ -798,15 +798,15 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
               </div>
 
               {/* COLUMN 3: Signatures (President & Gen Sec) & Verification QR Code */}
-              <div style={{ width: '130px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: '6px', paddingTop: '16px', paddingLeft: '8px', borderLeft: '1.5px solid #e2e8f0' }}>
+              <div style={{ width: '132px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: '5px', paddingTop: '8px', paddingLeft: '8px', borderLeft: '1.5px solid #e2e8f0' }}>
 
                 {/* President Signature */}
                 <div style={{ textAlign: 'center', width: '100%' }}>
-                  <div style={{ height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2px' }}>
+                  <div style={{ height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5px' }}>
                     <img
                       src="/president-signature.png"
                       alt="President Signature"
-                      style={{ maxHeight: '22px', maxWidth: '100%', objectFit: 'contain' }}
+                      style={{ maxHeight: '42px', maxWidth: '100%', objectFit: 'contain' }}
                     />
                   </div>
                   <div style={{ borderTop: '1px solid #0f172a', paddingTop: '1.5px' }}>
@@ -821,11 +821,11 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
 
                 {/* General Secretary Signature */}
                 <div style={{ textAlign: 'center', width: '100%' }}>
-                  <div style={{ height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2px' }}>
+                  <div style={{ height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5px' }}>
                     <img
                       src="/general-secretary-signature.png"
                       alt="General Secretary Signature"
-                      style={{ maxHeight: '22px', maxWidth: '100%', objectFit: 'contain' }}
+                      style={{ maxHeight: '38px', maxWidth: '100%', objectFit: 'contain' }}
                     />
                   </div>
                   <div style={{ borderTop: '1px solid #0f172a', paddingTop: '1.5px' }}>
@@ -841,7 +841,7 @@ export const DigitalIdCard: React.FC<Props> = ({ profile, hideDownload = false }
                 {/* QR Code */}
                 <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, marginTop: '2px' }}>
                   <div style={{ padding: '2px', background: '#ffffff', borderRadius: '5px', border: '1.2px solid #0f172a', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                    <img src={qrCodeUrl} alt="Verification QR" style={{ width: '40px', height: '40px', display: 'block', borderRadius: '3px' }} />
+                    <img src={qrCodeUrl} alt="Verification QR" style={{ width: '38px', height: '38px', display: 'block', borderRadius: '3px' }} />
                   </div>
                   <span style={{ fontSize: '6px', fontWeight: 800, color: '#1e293b', display: 'block', marginTop: '1px', whiteSpace: 'nowrap' }}>
                     Scan to Verify
