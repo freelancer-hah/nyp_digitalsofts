@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "build:public": "tsc -b && vite build --mode public",
-    "build:admin": "tsc -b && vite build --mode admin",
+    "dev": "node init && vite",
+    "build": "node init && tsc -b && vite build",
+    "build:public": "node init && tsc -b && vite build --mode public",
+    "build:admin": "node init && tsc -b && vite build --mode admin",
     "lint": "oxlint",
     "preview": "vite preview"
   },
